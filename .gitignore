@@ -1,0 +1,22 @@
+# Geheimnisse: API-Schlüssel nur als Supabase-Secrets, nie im Git
+.env
+.env.*
+!.env.example
+supabase/.env
+supabase/.temp/
+*.pem
+*.key
+
+# Abhängigkeiten und Logs
+node_modules/
+npm-debug.log*
+
+# System
+.DS_Store
+Thumbs.db
+
+# Lokale Claude-Einstellungen (launch.json bleibt im Repo)
+.claude/settings.local.json
+
+# Bauplan bleibt privat (nur lokal)
+FurniqAI.md

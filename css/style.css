@@ -1,0 +1,562 @@
+/* ---------- Schriften (lokal, SIL OFL – siehe fonts/Fraunces-OFL.txt) ---------- */
+@font-face {
+  font-family: "Fraunces";
+  src: url("../fonts/fraunces-latin-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("../fonts/fraunces-latin-italic.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ---------- Farbwelt: Holz und Creme ---------- */
+:root {
+  --creme: #f5efe5;
+  --papier: #fffcf7;
+  --weiss: #ffffff;
+  --text: #2b231c;
+  --text-leise: #6e6255;
+  --linie: #e7ddcf;
+  --linie-stark: #d4c6b2;
+  --akzent: #7b4a22;
+  --akzent-dunkel: #5c3615;
+  --akzent-hell: #f1e5d4;
+  --messing: #b08a4f;
+  --dunkel: #2b231c;
+  --fehler: #a4281f;
+  --erfolg: #2f6b45;
+
+  --serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+
+  --radius: 14px;
+  --radius-klein: 10px;
+  --schatten: 0 1px 1px rgba(43, 35, 28, 0.04), 0 8px 24px -12px rgba(43, 35, 28, 0.18);
+  --rand-seite: clamp(1rem, 4vw, 2rem);
+
+  font-family: var(--sans);
+  color: var(--text);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--creme);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+[hidden] { display: none !important; }
+
+h1, h2, h3, legend {
+  font-family: var(--serif);
+  font-optical-sizing: auto;
+  color: var(--text);
+}
+h1 {
+  font-size: clamp(2rem, 4.2vw, 2.9rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.6rem;
+}
+h2 { font-size: 1.25rem; font-weight: 550; margin: 0 0 0.6rem; letter-spacing: -0.005em; }
+h3 { font-size: 1.05rem; font-weight: 550; margin: 1.25rem 0 0.5rem; }
+
+/* ---------- Kopf (White-Label) ---------- */
+.kopf { border-bottom: 1px solid var(--linie); background: var(--papier); }
+.kopf-innen {
+  max-width: 1200px; margin: 0 auto; padding: 0.9rem var(--rand-seite);
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+.marke { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+.marke-logo { height: 40px; width: auto; max-width: 160px; object-fit: contain; }
+.marke-monogramm {
+  flex: none; width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--akzent); color: var(--akzent-hell);
+  font-family: var(--serif); font-size: 1.3rem; font-weight: 500;
+  box-shadow: inset 0 0 0 3px var(--akzent), inset 0 0 0 4px rgba(241, 229, 212, 0.45);
+}
+.marke-text { display: flex; flex-direction: column; min-width: 0; }
+.marke-name { font-family: var(--serif); font-size: 1.15rem; font-weight: 550; line-height: 1.2; }
+.marke-claim { font-size: 0.78rem; color: var(--text-leise); letter-spacing: 0.04em; }
+.kopf-produkt {
+  font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-leise); white-space: nowrap;
+}
+
+/* ---------- Schrittleiste ---------- */
+.schritte { border-bottom: 1px solid var(--linie); background: var(--papier); }
+.schritte ol {
+  list-style: none; margin: 0 auto; padding: 0 var(--rand-seite); max-width: 1200px;
+  display: flex; gap: 0.25rem; counter-reset: schritt;
+}
+/* Nummern zählen nur sichtbare Schritte */
+.schritte li:not([hidden]) { counter-increment: schritt; display: flex; align-items: center; }
+.schritte li:not([hidden]) + li:not([hidden])::before {
+  content: ""; width: clamp(0.75rem, 3vw, 2.5rem); height: 1px; background: var(--linie-stark); margin-right: 0.25rem;
+}
+.schritte .nr::before { content: counter(schritt); }
+.schritte button {
+  display: flex; align-items: center; gap: 0.55rem;
+  background: none; border: 0; padding: 0.85rem 0.4rem;
+  font: inherit; font-size: 0.92rem; color: var(--text-leise);
+  cursor: pointer; white-space: nowrap; position: relative;
+}
+.schritte .nr {
+  width: 1.75rem; height: 1.75rem; border-radius: 50%;
+  display: inline-grid; place-items: center;
+  font-family: var(--serif); font-size: 0.9rem; font-weight: 550;
+  border: 1px solid var(--linie-stark); color: var(--text-leise); background: var(--papier);
+}
+.schritte button[aria-current="step"] { color: var(--text); font-weight: 600; }
+.schritte button[aria-current="step"] .nr { background: var(--akzent); border-color: var(--akzent); color: var(--akzent-hell); }
+.schritte button[aria-current="step"]::after {
+  content: ""; position: absolute; left: 0.4rem; right: 0.4rem; bottom: -1px; height: 2px; background: var(--akzent);
+}
+.schritte button.erledigt .nr { background: var(--akzent-hell); border-color: var(--akzent-hell); color: var(--akzent-dunkel); }
+.schritte button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+/* ---------- Grundlayout ---------- */
+main { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: clamp(1.75rem, 4vw, 3rem) var(--rand-seite) 4rem; }
+
+.schritt-kopf { margin-bottom: clamp(1.5rem, 3vw, 2.25rem); max-width: 46rem; }
+.kicker {
+  margin: 0 0 0.6rem; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--messing);
+}
+.einleitung { color: var(--text-leise); margin: 0; font-size: 1.05rem; max-width: 40rem; }
+
+.karte {
+  background: var(--papier); border: 1px solid var(--linie);
+  border-radius: var(--radius); box-shadow: var(--schatten);
+  padding: clamp(1.1rem, 2.5vw, 1.5rem); margin: 0 0 1rem;
+}
+fieldset.karte { min-width: 0; }
+fieldset.karte legend {
+  float: left; width: 100%; padding: 0; margin-bottom: 0.9rem;
+  font-size: 1.25rem; font-weight: 550;
+}
+/* Alle Geschwister nach der gefloateten Legend darunter, auch wenn das erste ausgeblendet ist */
+fieldset.karte > legend ~ * { clear: both; }
+
+.tipp { color: var(--text-leise); font-size: 0.875rem; margin: 0.4rem 0 0; }
+.optional {
+  font-family: var(--sans); font-weight: 500; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-leise); margin-left: 0.4rem; vertical-align: 0.2em;
+}
+.hinweis-wunsch {
+  font-size: 0.875rem; margin: 0 0 1rem; padding: 0.65rem 0.85rem; border-radius: var(--radius-klein);
+  background: var(--akzent-hell); color: var(--akzent-dunkel);
+}
+.hinweis-platz {
+  font-size: 0.875rem; margin: 0 0 1rem; padding: 0.65rem 0.85rem; border-radius: var(--radius-klein);
+  background: #fbeee4; color: #8a3c1c; border-left: 3px solid #b4532a;
+}
+
+/* ---------- Knöpfe ---------- */
+.knopf {
+  font: inherit; font-weight: 600; border-radius: 12px; cursor: pointer;
+  padding: 0.85rem 1.4rem; border: 1px solid transparent;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.knopf:active { transform: translateY(1px); }
+.knopf-haupt { background: var(--akzent); color: #fff8ee; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset, 0 6px 14px -8px rgba(92, 54, 21, 0.8); }
+.knopf-haupt:hover { background: var(--akzent-dunkel); }
+.knopf-haupt:disabled { background: #c9bba8; box-shadow: none; cursor: not-allowed; }
+.knopf-leise { background: transparent; color: var(--akzent-dunkel); border-color: var(--linie-stark); }
+.knopf-leise:hover { border-color: var(--akzent); background: var(--papier); }
+.knopf:focus-visible, input:focus-visible, textarea:focus-visible, .schritte button:focus-visible,
+.umschalter button:focus-visible, .link-zurueck:focus-visible {
+  outline: 3px solid rgba(123, 74, 34, 0.3); outline-offset: 2px;
+}
+.aktionen { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 0.5rem; }
+.link-zurueck {
+  background: none; border: 0; padding: 0.5rem 0; margin-top: 0.25rem;
+  font: inherit; font-size: 0.9rem; color: var(--text-leise); cursor: pointer;
+}
+.link-zurueck:hover { color: var(--akzent-dunkel); }
+
+/* ---------- Schritt 1: Raum ---------- */
+.raum-raster { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.raum-masse .karte:last-child { margin-bottom: 0; }
+
+.upload {
+  display: block; position: relative; cursor: pointer; margin-top: 0.4rem;
+  border: 1.5px dashed var(--linie-stark); border-radius: var(--radius-klein);
+  background:
+    repeating-linear-gradient(135deg, rgba(123, 74, 34, 0.025) 0 10px, transparent 10px 20px),
+    var(--creme);
+  overflow: hidden; transition: border-color 0.15s, background-color 0.15s;
+}
+.upload:hover, .upload.ziehen { border-color: var(--akzent); }
+.upload.ziehen { background-color: var(--akzent-hell); }
+.upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-leer {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem;
+  min-height: clamp(240px, 32vw, 380px); padding: 2rem 1rem; color: var(--text-leise); text-align: center;
+}
+.upload-leer strong { color: var(--text); font-family: var(--serif); font-size: 1.15rem; font-weight: 550; }
+.upload-symbol {
+  width: 3.5rem; height: 3.5rem; border-radius: 50%; display: grid; place-items: center;
+  background: var(--papier); color: var(--akzent); margin-bottom: 0.6rem;
+  border: 1px solid var(--linie);
+}
+.upload-aktionen { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.9rem; }
+.upload-aktionen .knopf { padding: 0.6rem 1rem; font-size: 0.9rem; }
+.upload-aktionen .knopf:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Referenzmarkierung */
+.markier-schritte { list-style: none; margin: 0.4rem 0 1rem; padding: 0; display: grid; gap: 0.5rem; }
+.markier-schritt {
+  display: flex; gap: 0.75rem; align-items: flex-start;
+  padding: 0.7rem 0.85rem; border-radius: var(--radius-klein);
+  border: 1px solid var(--linie); background: var(--weiss); color: var(--text-leise);
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.markier-schritt p { margin: 0.1rem 0 0; font-size: 0.92rem; }
+.markier-schritt.aktiv { border-color: var(--akzent); color: var(--text); box-shadow: 0 0 0 1px var(--akzent); }
+.markier-schritt.erledigt { background: var(--akzent-hell); border-color: var(--akzent-hell); color: var(--akzent-dunkel); }
+.markier-nr {
+  flex: none; width: 1.6rem; height: 1.6rem; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--serif); font-size: 0.85rem; font-weight: 600;
+  border: 1px solid currentColor;
+}
+.markier-schritt.aktiv .markier-nr { background: var(--akzent); border-color: var(--akzent); color: #fff8ee; }
+.markier-schritt.erledigt .markier-nr { background: var(--akzent); border-color: var(--akzent); color: #fff8ee; font-size: 0; }
+.markier-schritt.erledigt .markier-nr::before { content: "✓"; font-size: 0.8rem; }
+.markier-text { min-width: 0; flex: 1; }
+.feld-referenz { margin: 0.6rem 0 0; max-width: 15rem; }
+.feld-referenz > span:first-child { color: var(--text); }
+
+.markier-flaeche {
+  position: relative; width: fit-content; max-width: 100%; margin: 0 auto;
+  border-radius: var(--radius-klein); overflow: hidden; background: var(--dunkel);
+  /* Tippen und Ziehen auf dem Foto, ohne dass die Seite scrollt oder zoomt */
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  cursor: crosshair;
+}
+.markier-flaeche.fertig { cursor: default; }
+.foto-vorschau { display: block; max-width: 100%; max-height: 520px; width: auto; height: auto; pointer-events: none; }
+.markier-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.markier-svg .griff { pointer-events: all; cursor: grab; fill: transparent; }
+.markier-svg .ziehen .griff { cursor: grabbing; }
+.markier-svg .ref-linie { stroke: #fff; stroke-width: 3; stroke-dasharray: 8 6; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6)); }
+.markier-svg .ref-punkt { fill: #fff; stroke: var(--messing); stroke-width: 3; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5)); }
+.markier-svg .etikett-flaeche { fill: rgba(43, 35, 28, 0.82); }
+.markier-svg .etikett-text { fill: #fff8ee; font: 600 13px var(--sans); }
+.markier-svg .tisch-ring { fill: rgba(123, 74, 34, 0.25); stroke: #fff; stroke-width: 2; }
+.markier-svg .tisch-kern { fill: var(--akzent); stroke: #fff; stroke-width: 3; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5)); }
+.markier-svg .tisch-symbol { fill: #fff8ee; }
+.markier-svg .tisch-etikett { fill: var(--akzent); }
+.markier-status { margin: 0.6rem 0 0; font-size: 0.85rem; color: var(--text-leise); text-align: center; min-height: 1.3em; }
+
+/* Felder */
+.feldreihe { display: flex; align-items: flex-end; gap: 0.75rem; margin-top: 0.9rem; }
+.feldreihe .feld { flex: 1; min-width: 0; margin-bottom: 0; }
+.feldreihe-drei { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mal { padding-bottom: 0.7rem; color: var(--text-leise); font-family: var(--serif); }
+.feld { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; font-size: 0.875rem; }
+.feld > span:first-child { font-weight: 500; color: var(--text-leise); }
+.feld input, .feld textarea {
+  font: inherit; font-size: 1rem; padding: 0.65rem 0.8rem; border: 1px solid var(--linie-stark);
+  border-radius: var(--radius-klein); background: var(--weiss); color: var(--text); width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.feld input::placeholder { color: #b7a994; }
+.feld input:focus, .feld textarea:focus { border-color: var(--akzent); box-shadow: 0 0 0 3px rgba(123, 74, 34, 0.12); outline: none; }
+.feld input.ungueltig { border-color: var(--fehler); }
+.einheit-feld { display: flex; align-items: center; gap: 0.45rem; }
+.einheit-feld input { flex: 1; min-width: 0; }
+.einheit-feld span { color: var(--text-leise); font-size: 0.9rem; }
+
+.fehler {
+  color: var(--fehler); background: #fbeae6; border: 1px solid #f1cfc8; border-radius: var(--radius-klein);
+  padding: 0.7rem 0.9rem; font-size: 0.9rem; margin: 1rem 0;
+}
+
+/* ---------- Schritt 2: Baukasten ---------- */
+.baukasten {
+  display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(330px, 1fr);
+  gap: clamp(1rem, 2.5vw, 2rem); align-items: start;
+}
+.baukasten-buehne { position: sticky; top: 1rem; }
+
+/* Bühne */
+.buehne { margin: 0 0 1rem; }
+.buehne-flaeche {
+  position: relative; overflow: hidden; isolation: isolate;
+  /* so hoch, dass Preisleiste und Knopf beim Öffnen von Schritt 2 noch im Bild sind */
+  aspect-ratio: 4 / 3; max-height: calc(100vh - 28rem); min-height: 280px; width: 100%;
+  border-radius: var(--radius); background: var(--dunkel);
+  box-shadow: 0 24px 48px -28px rgba(43, 35, 28, 0.55);
+}
+/* Unscharfe Fassung des Bildes als Hintergrund, damit Hochformat-Fotos nicht leer wirken */
+.buehne-flaeche::before {
+  content: ""; position: absolute; inset: -40px; z-index: -1;
+  background: var(--buehne-bild, none) center / cover no-repeat;
+  filter: blur(28px) brightness(0.6) saturate(1.1);
+}
+.buehne-bild { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.3s; }
+.buehne-draufsicht {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  /* Zeichenpapier */
+  background:
+    linear-gradient(rgba(123, 74, 34, 0.07) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, rgba(123, 74, 34, 0.07) 1px, transparent 1px) 0 0 / 24px 24px,
+    var(--papier);
+}
+.draufsicht { width: min(72%, 560px); max-height: 78%; height: auto; display: block; }
+.buehne-etikett {
+  position: absolute; left: 1rem; bottom: 1rem;
+  padding: 0.35rem 0.75rem; border-radius: 999px;
+  background: rgba(43, 35, 28, 0.6); color: #f8efe2; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  font-size: 0.8rem; letter-spacing: 0.04em;
+}
+.buehne-flaeche.zeigt-draufsicht .buehne-etikett { background: var(--akzent-hell); color: var(--akzent-dunkel); }
+.umschalter {
+  position: absolute; top: 1rem; right: 1rem; display: flex; padding: 3px;
+  border-radius: 999px; background: rgba(255, 252, 247, 0.88);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px -6px rgba(0, 0, 0, 0.35);
+}
+.umschalter button {
+  font: inherit; font-size: 0.82rem; font-weight: 600; border: 0; border-radius: 999px;
+  padding: 0.4rem 0.9rem; background: transparent; color: var(--text-leise); cursor: pointer;
+}
+.umschalter button[aria-pressed="true"] { background: var(--akzent); color: #fff8ee; }
+
+/* Preisleiste */
+.preisleiste {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  background: var(--papier); border: 1px solid var(--linie); border-radius: var(--radius);
+  box-shadow: var(--schatten); padding: 1rem 1.25rem;
+}
+.preis-info { display: flex; flex-direction: column; min-width: 0; }
+.preis-label { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-leise); }
+.preis-zeile { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.preis-summe {
+  font-family: var(--serif); font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 550;
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums lining-nums; line-height: 1.15;
+  transition: color 0.4s;
+}
+.preis-summe.aendert { color: var(--akzent); }
+.preis-mwst { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.preis-rahmen { font-size: 0.875rem; color: var(--text); opacity: 0.8; font-variant-numeric: tabular-nums; }
+.preisleiste .knopf { flex: none; }
+.nur-klein { display: none; }
+
+/* Auswahlkarten */
+.wahl { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.6rem; }
+.wahl label {
+  position: relative; display: flex; flex-direction: column; gap: 0.1rem;
+  background: var(--weiss); border: 1px solid var(--linie); border-radius: var(--radius-klein);
+  padding: 0.7rem 0.85rem; cursor: pointer; font-size: 0.92rem;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.wahl label:hover { border-color: var(--linie-stark); transform: translateY(-1px); }
+.wahl input { position: absolute; opacity: 0; pointer-events: none; }
+.wahl label:has(input:checked) { border-color: var(--akzent); box-shadow: 0 0 0 1px var(--akzent), 0 6px 16px -10px rgba(92, 54, 21, 0.6); }
+.wahl label:has(input:checked)::after {
+  content: "✓"; position: absolute; top: 0.45rem; right: 0.45rem;
+  width: 1.3rem; height: 1.3rem; border-radius: 50%; display: grid; place-items: center;
+  background: var(--akzent); color: #fff8ee; font-size: 0.72rem; font-weight: 700;
+}
+.wahl label:has(input:focus-visible) { outline: 3px solid rgba(123, 74, 34, 0.3); outline-offset: 2px; }
+.wahl label:has(input:disabled) { opacity: 0.4; cursor: not-allowed; transform: none; }
+.wahl .aufpreis { color: var(--text-leise); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+
+.wahl-formen { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.wahl-formen label { align-items: center; text-align: center; padding: 0.85rem 0.4rem 0.7rem; }
+.form-symbol { width: 44px; height: 30px; margin-bottom: 0.35rem; }
+.form-symbol * { fill: var(--akzent-hell); stroke: var(--akzent); stroke-width: 1.6; }
+.wahl-formen label:has(input:checked) .form-symbol * { fill: #e3cba9; }
+
+/* Holz-Musterflächen: Foto aus assets/materialien/<id>.jpg, sonst CSS-Maserung */
+.wahl-material { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+.wahl-material label { padding: 0; overflow: hidden; }
+.wahl-material label > span:last-child { padding: 0.55rem 0.75rem 0.65rem; font-weight: 500; }
+.muster {
+  display: block; height: 64px;
+  --holz-dunkel: color-mix(in srgb, var(--holz, #c69c6d) 78%, #2b1a0c);
+  --holz-hell: color-mix(in srgb, var(--holz, #c69c6d) 82%, #fff);
+  background-color: var(--holz, #c69c6d);
+  background-image:
+    var(--muster-bild, none),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.1)),
+    repeating-linear-gradient(176deg,
+      transparent 0 5px, var(--holz-dunkel) 5px 6px, transparent 6px 13px,
+      var(--holz-hell) 13px 15px, transparent 15px 22px, var(--holz-dunkel) 22px 22.6px, transparent 22.6px 31px),
+    radial-gradient(ellipse 60% 140% at 30% 120%, var(--holz-dunkel), transparent 60%);
+  background-size: cover, auto, auto, auto;
+  background-position: center;
+  border-bottom: 1px solid var(--linie);
+}
+.muster.ohne-maserung { background-image: var(--muster-bild, none), linear-gradient(160deg, rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0.06)); }
+.muster.mit-foto { background-image: var(--muster-bild); }
+
+.wahl-liste { grid-template-columns: 1fr; gap: 0.45rem; }
+.wahl-liste label { flex-direction: row; justify-content: space-between; align-items: center; padding: 0.75rem 2.6rem 0.75rem 0.95rem; }
+.wahl-liste label:has(input:checked)::after { top: 50%; transform: translateY(-50%); right: 0.75rem; }
+
+/* Regler */
+.regler {
+  display: grid; grid-template-columns: 1fr auto; align-items: baseline;
+  gap: 0.15rem 0.75rem; margin-bottom: 1.15rem;
+}
+.regler:last-child { margin-bottom: 0; }
+.regler label { font-weight: 500; }
+.regler output { font-family: var(--serif); font-size: 1.15rem; font-weight: 550; font-variant-numeric: tabular-nums lining-nums; }
+.regler .grenze { grid-column: 1 / -1; font-size: 0.78rem; color: var(--text-leise); }
+.regler input[type="range"] {
+  grid-column: 1 / -1; width: 100%; margin: 0.45rem 0 0.2rem; height: 22px;
+  -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer;
+}
+.regler input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--akzent) var(--fuellung, 50%), var(--linie) var(--fuellung, 50%));
+}
+.regler input[type="range"]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--linie); }
+.regler input[type="range"]::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--akzent); }
+.regler input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 22px; height: 22px; margin-top: -9px; border-radius: 50%;
+  background: var(--papier); border: 2px solid var(--akzent); box-shadow: 0 2px 6px rgba(43, 35, 28, 0.25);
+}
+.regler input[type="range"]::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--papier); border: 2px solid var(--akzent); box-shadow: 0 2px 6px rgba(43, 35, 28, 0.25);
+}
+.regler input[type="range"]:focus-visible { outline: none; }
+.regler input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(123, 74, 34, 0.25); }
+
+/* ---------- Schritt 5: Kostenvoranschlag ---------- */
+.kv { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 1rem 1.5rem; align-items: start; }
+.kv-zusammenfassung { grid-row: span 2; }
+.kv-foto { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-klein); display: block; margin-bottom: 1.1rem; }
+.kv-daten { display: grid; grid-template-columns: auto 1fr; gap: 0.45rem 0.9rem; margin: 0 0 1.25rem; font-size: 0.9rem; }
+.kv-daten dt { color: var(--text-leise); }
+.kv-daten dd { margin: 0; font-weight: 500; }
+.kv-zusammenfassung .knopf { width: 100%; }
+
+.kv-dokument {
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+  background:
+    linear-gradient(var(--akzent), var(--akzent)) top / 100% 4px no-repeat,
+    var(--papier);
+}
+.kv-briefkopf {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+  padding-bottom: 1rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--linie);
+}
+.kv-briefkopf > div { display: flex; flex-direction: column; }
+.kv-betrieb { font-family: var(--serif); font-size: 1.35rem; font-weight: 550; }
+.kv-titel { font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--messing); font-weight: 600; }
+.kv-datum { font-size: 0.85rem; color: var(--text-leise); white-space: nowrap; }
+
+.positionen { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.positionen th, .positionen td { text-align: left; padding: 0.75rem 0; border-bottom: 1px solid var(--linie); vertical-align: top; }
+.positionen thead th { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-leise); font-weight: 600; }
+.positionen .betrag { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 1rem; }
+.positionen .detail { display: block; color: var(--text-leise); font-size: 0.82rem; font-weight: 400; }
+.positionen tbody th { font-weight: 500; }
+.positionen tfoot th, .positionen tfoot td { border-bottom: 0; }
+.positionen .summe th, .positionen .summe td { padding-top: 1rem; font-weight: 600; }
+.positionen .rahmen th, .positionen .rahmen td {
+  font-family: var(--serif); font-size: clamp(1.2rem, 2.4vw, 1.5rem); font-weight: 550; color: var(--akzent-dunkel);
+  border-top: 2px solid var(--text); padding-top: 0.9rem;
+}
+.positionen .rahmen span { display: block; font-family: var(--sans); font-weight: 500; font-size: 0.82rem; color: var(--text); opacity: 0.75; }
+
+.sonderliste { margin: 0; padding-left: 1.1rem; }
+.sonderliste li { margin-bottom: 0.25rem; }
+.sonderliste .auf-anfrage { color: var(--text-leise); font-style: italic; }
+
+.disclaimer {
+  margin: 1.25rem 0 0; padding: 0.8rem 1rem; border-radius: var(--radius-klein);
+  background: var(--akzent-hell); color: var(--akzent-dunkel); font-size: 0.88rem;
+  font-family: var(--serif); font-style: italic;
+}
+
+.feld-raster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1rem; }
+.kv-kunde .knopf { width: 100%; margin-top: 0.25rem; }
+
+.erfolg { text-align: center; padding: 2.5rem 1.25rem; }
+.erfolg-symbol {
+  display: inline-grid; place-items: center; width: 3.5rem; height: 3.5rem; border-radius: 50%;
+  background: #e2efe5; color: var(--erfolg); font-size: 1.6rem; font-weight: 700; margin-bottom: 0.75rem;
+}
+.erfolg h2 { font-size: 1.6rem; }
+.erfolg p { color: var(--text-leise); max-width: 46ch; margin: 0 auto 1.25rem; }
+
+/* ---------- Fuß ---------- */
+.fuss {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1.5rem;
+  max-width: 1200px; width: 100%; margin: 0 auto;
+  color: var(--text-leise); font-size: 0.78rem; padding: 1.5rem var(--rand-seite);
+  border-top: 1px solid var(--linie);
+}
+.fuss-powered { letter-spacing: 0.06em; }
+.fuss-powered strong { font-family: var(--serif); font-weight: 600; letter-spacing: 0; color: var(--text); }
+
+/* ---------- Bewegung reduzieren ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* ---------- Tablet & Handy ---------- */
+@media (max-width: 900px) {
+  .raum-raster, .baukasten, .kv { grid-template-columns: minmax(0, 1fr); }
+  .baukasten-buehne { position: static; }
+  .buehne-flaeche { max-height: none; }
+  .kv-zusammenfassung { grid-row: auto; }
+
+  /* Preis als feste Leiste unten */
+  #schritt-2 { padding-bottom: 6.5rem; }
+  .preisleiste {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    border-radius: 18px 18px 0 0; border-width: 1px 0 0;
+    padding: 0.8rem var(--rand-seite) calc(0.8rem + env(safe-area-inset-bottom));
+    box-shadow: 0 -10px 30px -14px rgba(43, 35, 28, 0.4);
+  }
+  .preis-label { display: none; }
+  .preis-summe { font-size: 1.55rem; }
+  .preis-rahmen { font-size: 0.8rem; }
+  .nur-gross { display: none; }
+  .nur-klein { display: inline; }
+}
+
+@media (max-width: 600px) {
+  .kopf-produkt { display: none; }
+  .schritte .txt { display: none; }
+  .schritte button[aria-current="step"] .txt { display: inline; }
+  .schritte li:not([hidden]) + li:not([hidden])::before { width: 1.25rem; }
+
+  /* Am Handy zuerst der Preis, dann die Auswahl */
+  .kv-dokument { order: -1; }
+  .kv-foto { aspect-ratio: 16 / 9; }
+
+  .buehne-flaeche { border-radius: var(--radius-klein); min-height: 220px; }
+  .umschalter { top: 0.6rem; right: 0.6rem; }
+  .umschalter button { padding: 0.35rem 0.75rem; }
+  .buehne-etikett { left: 0.6rem; bottom: 0.6rem; }
+  .draufsicht { width: 86%; }
+
+  .wahl-formen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wahl-material { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .feld-raster { grid-template-columns: minmax(0, 1fr); }
+  .feldreihe-drei { gap: 0.5rem; }
+  .feldreihe-drei .einheit-feld { gap: 0.3rem; }
+  .aktionen .knopf { width: 100%; }
+  .kv-briefkopf { flex-direction: column; gap: 0.25rem; }
+}
