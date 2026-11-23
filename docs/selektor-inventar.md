@@ -69,3 +69,7 @@ Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf
 
 ## Neu in dieser Runde (js/kopf.js)
 - `.kopfbereich` (fester Container), Klassen `verdichtet`, `kopf-weg`, `nicht-fest`; `.kopf-sentinel`; CSS-Variable `--kopf-hoehe` auf `html`
+
+## Landingpage (tischlereien.html, js/landing.js)
+- `#menue-knopf` (`aria-expanded`), `#hauptnavigation` (`hidden` auf schmalen Bildschirmen)
+- `#pilot-form` (Felder name, betrieb, ort, email, telefon, nachricht, einwilligung, website = Spamfalle), `#pilot-fehler`, `#pilot-senden`, `#pilot-erfolg`
