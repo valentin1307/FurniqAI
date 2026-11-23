@@ -35,5 +35,5 @@ test('Prüfung: fehlende oder unbrauchbare Angaben', () => {
   assert.match(pruefeMarkierung({ p1, p2: { x: 0.21, y: 0.5 }, laengeCm: 220 }, tisch), /zu nah/);
   assert.match(pruefeMarkierung({ p1, p2, laengeCm: null }, tisch), /Länge/);
   assert.match(pruefeMarkierung({ p1, p2, laengeCm: 5 }, tisch), /Länge/);
-  assert.match(pruefeMarkierung({ p1, p2, laengeCm: 220 }, null), /Tisch/);
+  assert.match(pruefeMarkierung({ p1, p2, laengeCm: 220 }, null), /Möbelstück/);
 });

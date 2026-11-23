@@ -44,7 +44,7 @@ export function pruefeMarkierung(referenz, tischPosition) {
     return `Bitte geben Sie die Länge des markierten Gegenstands in cm an (${REFERENZ_GRENZEN.min}–${REFERENZ_GRENZEN.max} cm).`;
   }
   if (!tischPosition) {
-    return 'Bitte tippen Sie auf dem Foto an, wo der Tisch stehen soll.';
+    return 'Bitte tippen Sie auf dem Foto an, wo das Möbelstück stehen soll.';
   }
   return null;
 }

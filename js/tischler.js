@@ -199,7 +199,7 @@ function detailZeichnen() {
 
   const bildHtml = bild
     ? `<figure class="t-bild">
-        <img src="${escape(bild)}" alt="${zeigeKi ? 'KI-Vorschau des Tisches im Raum' : 'Raumfoto der Kundin/des Kunden'}">
+        <img src="${escape(bild)}" alt="${zeigeKi ? 'KI-Vorschau des Möbelstücks im Raum' : 'Raumfoto der Kundin/des Kunden'}">
         <figcaption>${zeigeKi ? 'KI-Vorschau' : 'Raumfoto'}</figcaption>
         ${
           hatKi && a.fotoUrl
@@ -258,7 +258,7 @@ function detailZeichnen() {
 
     <div class="t-abschnitte">
       <section>
-        <h3>Tisch</h3>
+        <h3>Möbelstück</h3>
         <dl class="kv-daten">
           ${zeile('Möbel', BETRIEB.moebelart)}
           ${zeile('Form', n.form || k.form)}
@@ -268,7 +268,7 @@ function detailZeichnen() {
           ${zeile('Oberfläche', n.oberflaeche)}
           ${zeile('Optionen', optionen.length ? optionen.join(', ') : 'keine')}
         </dl>
-        ${a.passtInFreienPlatz === false ? '<p class="hinweis-platz">Der Tisch ist größer als der angegebene freie Platz.</p>' : ''}
+        ${a.passtInFreienPlatz === false ? '<p class="hinweis-platz">Das Möbelstück ist größer als der angegebene freie Platz.</p>' : ''}
         ${
           sonder.length
             ? `<h4>Sonderwünsche</h4><ul class="sonderliste">${sonder

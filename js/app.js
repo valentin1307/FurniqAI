@@ -192,7 +192,7 @@ function punktVerschieben(name, p) {
 const STATUS_TEXT = {
   ref1: 'Tippen Sie auf das erste Ende des Gegenstands.',
   ref2: 'Jetzt auf das andere Ende tippen.',
-  tisch: 'Tippen Sie auf die Stelle, an der der Tisch stehen soll.',
+  tisch: 'Tippen Sie auf die Stelle, an der das Möbelstück stehen soll.',
   fertig: 'Fertig. Punkte lassen sich mit Finger oder Maus verschieben.',
 };
 
@@ -252,7 +252,7 @@ function markierungZeichnen() {
       <circle class="griff" r="28"/>
     </svg>`);
     // Etikett unter dem Marker, am unteren Bildrand darüber
-    teile.push(etikett(t, 'Tisch', t.y > 0.8 ? -42 : 42, 'tisch-etikett'));
+    teile.push(etikett(t, 'Möbel', t.y > 0.8 ? -42 : 42, 'tisch-etikett'));
   }
   $('#markier-svg').innerHTML = teile.join('');
 }
@@ -328,7 +328,7 @@ function pruefeRaum() {
 /** Wunschmaße prüfen (optional). Fehlermeldung oder null. */
 function pruefeWunsch() {
   const falsch = Object.values(zustand.wunsch).some((w) => w !== null && (w <= 0 || w > 1000));
-  return falsch ? 'Bitte geben Sie die ungefähren Tischmaße in cm an.' : null;
+  return falsch ? 'Bitte geben Sie die ungefähren Maße des Möbelstücks in cm an.' : null;
 }
 
 /** Liefert eine Fehlermeldung oder null, wenn der freie Platz passt. */
@@ -670,8 +670,8 @@ function platzHinweisZeigen() {
   const hinweis = $('#platz-hinweis');
   hinweis.hidden = u.passt;
   hinweis.textContent =
-    `Der Tisch ist ${teile.join(' und ')} als Ihr freier Platz (${zustand.freiLaenge} × ${zustand.freiBreite} cm). ` +
-    'Sie können ihn trotzdem so anfragen.';
+    `Das Möbelstück ist ${teile.join(' und ')} als Ihr freier Platz (${zustand.freiLaenge} × ${zustand.freiBreite} cm). ` +
+    'Sie können es trotzdem so anfragen.';
 }
 
 function tischUeberstand() {
@@ -913,7 +913,7 @@ function bildSchrittAnzeigen() {
   const daten = [
     ['Form', n.form],
     ['Maße', masseText()],
-    ['Holz', n.material],
+    ['Material', n.material],
     ['Gestell', n.gestell],
     ['Oberfläche', n.oberflaeche],
   ];
@@ -1062,7 +1062,7 @@ function kostenvoranschlagAnzeigen() {
 
   $('#kunden-code-feld').hidden = Boolean(demoCodeLesen()); // evtl. schon in Schritt 4 eingegeben
   $('#kv-foto').src = aktuellesKiBild() || zustand.foto;
-  $('#kv-foto').alt = aktuellesKiBild() ? 'KI-Vorschau Ihres Tisches in Ihrem Raum' : 'Ihr Raumfoto';
+  $('#kv-foto').alt = aktuellesKiBild() ? 'KI-Vorschau Ihres Möbelstücks in Ihrem Raum' : 'Ihr Raumfoto';
   $('#kv-betrieb').textContent = BETRIEB.name;
   $('#kv-datum').textContent = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
   const daten = [
@@ -1076,7 +1076,7 @@ function kostenvoranschlagAnzeigen() {
   ];
   daten.push(['Referenz', `${formatZahl(zustand.referenz.laengeCm)} cm`]);
   if (zustand.raumLaenge !== null && zustand.raumBreite !== null) daten.push(['Raum', raumText()]);
-  if (!tischUeberstand().passt) daten.push(['Hinweis', 'Tisch ist größer als der freie Platz']);
+  if (!tischUeberstand().passt) daten.push(['Hinweis', 'Möbelstück ist größer als der freie Platz']);
   if (wunschText()) daten.push(['Ihr Wunschmaß', wunschText()]);
   $('#kv-daten').innerHTML = daten.map(([k, v]) => `<dt>${k}</dt><dd>${escape(v)}</dd>`).join('');
 
@@ -1195,7 +1195,7 @@ function markeSetzen() {
   $('#betrieb-claim').textContent = BETRIEB.claim || '';
   $('#betrieb-claim').hidden = !BETRIEB.claim;
   $('#betrieb-monogramm').textContent = BETRIEB.name.trim().charAt(0).toUpperCase();
-  document.title = `Couchtisch nach Maß – ${BETRIEB.name}`;
+  document.title = `Möbel nach Maß – ${BETRIEB.name}`;
   if (BETRIEB.logo) {
     const logo = $('#betrieb-logo');
     logo.onload = () => {

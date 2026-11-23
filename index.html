@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Couchtisch nach Maß</title>
+  <title>Möbel nach Maß</title>
   <link rel="preload" href="fonts/fraunces-latin-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <script type="module" src="js/app.js"></script>
@@ -19,7 +19,7 @@
           <span class="marke-claim" id="betrieb-claim"></span>
         </span>
       </div>
-      <span class="kopf-produkt">Couchtisch nach Maß</span>
+      <span class="kopf-produkt">Bauen Sie Ihre neuen Möbel</span>
     </div>
   </header>
 
@@ -40,7 +40,7 @@
       <header class="schritt-kopf">
         <p class="kicker"></p>
         <h1 id="titel-1">Zeigen Sie uns Ihren Raum</h1>
-        <p class="einleitung">Ein Foto und ein paar Maße genügen. Daraus planen wir Ihren Couchtisch, passend zu Ihrem Wohnzimmer.</p>
+        <p class="einleitung">Ein Foto und ein paar Maße genügen. Daraus bauen wir Ihr neues Traummöbelstück.</p>
       </header>
 
       <div class="raum-raster">
@@ -74,7 +74,7 @@
               <li class="markier-schritt" id="markier-schritt-tisch">
                 <span class="markier-nr" aria-hidden="true">2</span>
                 <div class="markier-text">
-                  <p>Tippen Sie, wo der <strong>Tisch</strong> stehen soll.</p>
+                  <p>Tippen Sie, wo das <strong>Möbelstück</strong> stehen soll.</p>
                 </div>
               </li>
             </ol>
@@ -90,13 +90,13 @@
               <button type="button" class="knopf knopf-leise" id="foto-wechseln">Anderes Foto wählen</button>
             </div>
           </div>
-          <p class="tipp" id="foto-tipp">Tipp: Fotografieren Sie so, dass Sofa und Boden gut zu sehen sind.</p>
+          <p class="tipp" id="foto-tipp">Tipp: Fotografieren Sie so, dass der Boden gut zu sehen ist und die KI einen Anhaltspunkt hat, z. B. ein Sofa.</p>
         </div>
 
         <div class="raum-masse">
           <div class="karte">
             <h2>Freier Platz</h2>
-            <p class="tipp">Die Fläche, die der Tisch höchstens einnehmen darf. Die Länge verläuft parallel zum Sofa.</p>
+            <p class="tipp">Die Fläche, die das Möbelstück höchstens einnehmen darf.</p>
             <div class="feldreihe">
               <label class="feld">
                 <span>Länge</span>
@@ -112,7 +112,7 @@
 
           <div class="karte">
             <h2>Raummaße <span class="optional">optional</span></h2>
-            <p class="tipp">Wie groß ist der Raum, in dem der Tisch stehen soll?</p>
+            <p class="tipp">Wie groß ist der Raum, in dem das Möbelstück stehen soll?</p>
             <div class="feldreihe">
               <label class="feld">
                 <span>Länge</span>
@@ -127,7 +127,7 @@
           </div>
 
           <div class="karte">
-            <h2>Ungefähre Tischmaße <span class="optional">optional</span></h2>
+            <h2>Ungefähre Maße des Möbelstücks <span class="optional">optional</span></h2>
             <p class="tipp">Haben Sie schon eine Größe im Kopf? Dann starten wir damit.</p>
             <div class="feldreihe feldreihe-drei">
               <label class="feld">
@@ -158,8 +158,8 @@
     <section class="schritt" id="schritt-2" aria-labelledby="titel-2" hidden>
       <header class="schritt-kopf">
         <p class="kicker"></p>
-        <h1 id="titel-2">Gestalten Sie Ihren Tisch</h1>
-        <p class="einleitung">Form, Holz, Maße und Gestell – der Preis rechnet sofort mit.</p>
+        <h1 id="titel-2">Gestalten Sie Ihr Traumprojekt</h1>
+        <p class="einleitung">Form, Material, Maße und Gestell – der Preis rechnet sofort mit.</p>
       </header>
 
       <div class="baukasten">
@@ -172,12 +172,12 @@
             <div class="buehne-flaeche" id="buehne-flaeche">
               <img id="buehne-bild" class="buehne-bild" alt="Ihr Raum">
               <div class="buehne-draufsicht" id="buehne-draufsicht" hidden>
-                <svg id="draufsicht" class="draufsicht" role="img" aria-label="Draufsicht: Tisch im freien Platz"></svg>
+                <svg id="draufsicht" class="draufsicht" role="img" aria-label="Draufsicht: Möbelstück im freien Platz"></svg>
               </div>
               <figcaption class="buehne-etikett" id="buehne-etikett">Ihr Raum</figcaption>
               <div class="buehne-laden" id="buehne-laden" hidden>
                 <span class="laden-kreis" aria-hidden="true"></span>
-                <p class="laden-text">Ihr Tisch wird in Ihren Raum gesetzt …</p>
+                <p class="laden-text">Ihr Möbelstück wird in Ihren Raum gesetzt …</p>
                 <p class="laden-zeit"><span id="laden-sekunden">0</span> s · dauert etwa 10–30 Sekunden</p>
               </div>
               <div class="umschalter" role="group" aria-label="Ansicht">
@@ -216,7 +216,7 @@
           </fieldset>
 
           <fieldset class="karte">
-            <legend>Holz</legend>
+            <legend>Material</legend>
             <div class="wahl wahl-material" id="wahl-material"></div>
           </fieldset>
 
@@ -292,8 +292,8 @@
     <section class="schritt" id="schritt-4" aria-labelledby="titel-4" hidden>
       <header class="schritt-kopf">
         <p class="kicker"></p>
-        <h1 id="titel-4">Ihr Tisch in Ihrem Raum</h1>
-        <p class="einleitung">Eine KI-Vorschau zeigt Ihren Tisch an der markierten Stelle in Ihrem Foto.</p>
+        <h1 id="titel-4">Ihre neue Einrichtung</h1>
+        <p class="einleitung">Eine KI-Vorschau zeigt Ihr Möbelstück an der markierten Stelle in Ihrem Foto.</p>
       </header>
 
       <div class="bild-raster">
@@ -322,7 +322,7 @@
       </div>
 
       <div class="aktionen aktionen-zwischen">
-        <button type="button" class="link-zurueck" id="zurueck-4"><span aria-hidden="true">←</span> Tisch ändern</button>
+        <button type="button" class="link-zurueck" id="zurueck-4"><span aria-hidden="true">←</span> Möbelstück ändern</button>
         <button type="button" class="knopf knopf-haupt" id="weiter-4">Zum Kostenvoranschlag <span aria-hidden="true">→</span></button>
       </div>
     </section>
