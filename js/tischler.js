@@ -7,7 +7,17 @@ import {
   pruefeBetrieb,
   einstellungenSpeichern,
   einstellungenZuruecksetzen,
+  materialArt,
+  neueId,
 } from './betrieb.js';
+import {
+  DEMO_MOEBEL,
+  portfolioLaden,
+  portfolioSpeichern,
+  moebelHinzufuegen,
+  moebelEntfernen,
+  nochNichtAngeboten,
+} from './portfolio.js';
 import { formatEuro, formatZahl } from './preis.js';
 import { demoCodeLesen, demoCodeSpeichern, rufeFunction } from './supabase.js';
 
@@ -97,8 +107,9 @@ function bereichZeigen(bereich) {
   $('#zugang').hidden = true;
   $('#posteingang').hidden = bereich !== 'posteingang';
   $('#einstellungen').hidden = bereich !== 'einstellungen';
-  if (bereich === 'einstellungen') einstellungenZeichnen();
+  if (bereich === 'einstellungen') einstellungenZeigen();
   if (bereich === 'posteingang') {
+    if (location.hash) history.replaceState(null, '', location.pathname + location.search);
     if (!demoCodeLesen()) zugangZeigen();
     else listeLaden();
   }
@@ -396,37 +407,255 @@ function posteingangEinrichten() {
   });
 }
 
-// ---------- Einstellungen ----------
+// ---------- Einstellungen: Portfolio und Möbel ----------
+// Ansichten: 'portfolio' (alle Möbel), 'couchtisch' (eingerichtet, Daten aus betrieb.js),
+// andere Möbel-IDs (Seite noch leer). Die Ansicht steht im Hash, z. B. #einstellungen/couchtisch.
 
-// Was bearbeitet werden kann: [Liste, Titel, Preisfeld, Einheit]
+const einst = {
+  ansicht: 'portfolio',
+  portfolio: portfolioLaden(),
+  entwurf: null, // Kopie von BETRIEB, die im Couchtisch-Formular bearbeitet wird
+  art: 'holz', // gewählte Materialart
+  fokus: null, // data-pfad oder Selektor, der nach dem Neuzeichnen den Fokus bekommt
+  neuNr: 0, // Zähler für vorläufige IDs neuer Einträge
+};
+
+// Linien-Symbole 32 × 32 für das Portfolio
+const MOEBEL_SYMBOL = {
+  couchtisch: '<rect x="3" y="12" width="26" height="3" rx="1"/><path d="M6 15v9M26 15v9M6 20h20"/>',
+  esstisch: '<rect x="3" y="9" width="26" height="3" rx="1"/><path d="M6 12v15M26 12v15"/>',
+  schreibtisch: '<rect x="3" y="9" width="26" height="3" rx="1"/><path d="M5 12v15M19 12v15M27 12v15M19 18h8"/>',
+  stuhl: '<path d="M10 4v23M10 16h12v11M8 16h16"/>',
+  sessel: '<path d="M9 12V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v4"/><rect x="4" y="12" width="5" height="10" rx="2"/><rect x="23" y="12" width="5" height="10" rx="2"/><path d="M9 17h14M9 22h14M7 22v4M25 22v4"/>',
+  sofa: '<path d="M6 13V9a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4"/><rect x="2" y="13" width="5" height="9" rx="2"/><rect x="25" y="13" width="5" height="9" rx="2"/><path d="M7 17h18M7 22h18M5 22v3M27 22v3"/>',
+  lampe: '<path d="M11 4h10l3 8H8z"/><path d="M16 12v15M11 28h10"/>',
+  schrank: '<rect x="7" y="3" width="18" height="24" rx="1"/><path d="M16 3v24M14 14v3M18 14v3M9 27v2M23 27v2"/>',
+  kommode: '<rect x="5" y="7" width="22" height="18" rx="1"/><path d="M5 13h22M5 19h22M14 10h4M14 16h4M14 22h4M7 25v3M25 25v3"/>',
+  sideboard: '<rect x="2" y="11" width="28" height="11" rx="1"/><path d="M11.3 11v11M20.7 11v11M4 22v4M28 22v4"/>',
+  regal: '<path d="M6 3v26M26 3v26M6 10h20M6 17h20M6 24h20"/>',
+  bett: '<path d="M3 27V8M3 19h26v8M3 15h26v4"/><rect x="5" y="11" width="7" height="4" rx="1.5"/>',
+  nachttisch: '<rect x="8" y="9" width="16" height="15" rx="1"/><path d="M8 16h16M14 12.5h4M14 20h4M10 24v3M22 24v3"/>',
+  garderobe: '<path d="M16 3v24M10 28h12M16 7l-6 4M16 7l6 4M16 12l-4 3M16 12l4 3"/>',
+  eigen: '<rect x="5" y="9" width="22" height="16" rx="2"/><path d="M5 14h22M14 19h4"/>',
+  plus: '<path d="M16 8v16M8 16h16"/>',
+};
+const symbol = (id) =>
+  `<svg viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${
+    MOEBEL_SYMBOL[id] || MOEBEL_SYMBOL.eigen
+  }</svg>`;
+
+function einstellungenZeigen(ansicht = einst.ansicht) {
+  const bekannt = ansicht === 'portfolio' || einst.portfolio.moebel.some((m) => m.id === ansicht);
+  if (!bekannt) ansicht = 'portfolio';
+  const wechsel = ansicht !== einst.ansicht;
+  einst.ansicht = ansicht;
+  $('#portfolio-ansicht').hidden = ansicht !== 'portfolio';
+  $('#couchtisch-ansicht').hidden = ansicht !== DEMO_MOEBEL;
+  $('#moebel-leer').hidden = ansicht === 'portfolio' || ansicht === DEMO_MOEBEL;
+  const hash = ansicht === 'portfolio' ? '#einstellungen' : `#einstellungen/${ansicht}`;
+  if (location.hash !== hash) history.replaceState(null, '', hash);
+
+  if (ansicht === 'portfolio') portfolioZeichnen();
+  else if (ansicht === DEMO_MOEBEL) {
+    if (!einst.entwurf) einst.entwurf = structuredClone(BETRIEB);
+    einstellungenZeichnen();
+  } else leerZeichnen(ansicht);
+
+  if (wechsel) {
+    window.scrollTo({ top: 0 });
+    const titel = document.querySelector(`#${ansicht === 'portfolio' ? 'portfolio-ansicht' : ansicht === DEMO_MOEBEL ? 'couchtisch-ansicht' : 'moebel-leer'} h1`);
+    titel?.setAttribute('tabindex', '-1');
+    titel?.focus({ preventScroll: true });
+  }
+}
+
+// ---------- Portfolio ----------
+
+function portfolioZeichnen() {
+  const offen = !$('#portfolio-auswahl').hidden;
+  const karten = einst.portfolio.moebel.map((m) => {
+    const fertig = m.id === DEMO_MOEBEL;
+    return `<li><button type="button" class="t-moebel${fertig ? ' t-moebel-fertig' : ''}" data-moebel="${escape(m.id)}">
+        <span class="t-moebel-symbol">${symbol(m.id)}</span>
+        <span class="t-moebel-name">${escape(m.name)}</span>
+        <span class="t-moebel-status">${fertig ? 'Eingerichtet · im Konfigurator' : 'Noch nicht eingerichtet'}</span>
+      </button></li>`;
+  });
+  karten.push(`<li><button type="button" class="t-moebel t-moebel-neu" id="moebel-hinzufuegen" aria-expanded="${offen}" aria-controls="portfolio-auswahl">
+      <span class="t-moebel-symbol">${symbol('plus')}</span>
+      <span class="t-moebel-name">Möbel hinzufügen</span>
+      <span class="t-moebel-status">Tische, Stühle, Schränke …</span>
+    </button></li>`);
+  $('#portfolio-liste').innerHTML = karten.join('');
+  const frei = nochNichtAngeboten(einst.portfolio);
+  $('#katalog-liste').innerHTML = frei.length
+    ? frei
+        .map(
+          (k) => `<li><button type="button" class="t-katalog-eintrag" data-katalog="${escape(k.id)}">
+            <span class="t-katalog-symbol">${symbol(k.id)}</span><span>${escape(k.name)}</span><span class="t-katalog-plus" aria-hidden="true">+</span>
+          </button></li>`,
+        )
+        .join('')
+    : '<li class="tipp">Alle Möbel aus der Auswahl sind in Ihrem Portfolio.</li>';
+}
+
+function portfolioMelden(text) {
+  $('#portfolio-status').textContent = text;
+  $('#portfolio-status').hidden = !text;
+}
+
+function portfolioAendern(neu, meldung) {
+  einst.portfolio = neu;
+  const gespeichert = portfolioSpeichern(neu);
+  portfolioZeichnen();
+  portfolioMelden(gespeichert ? meldung : `${meldung} Hinweis: Der Browser-Speicher ist gesperrt, es gilt nur bis zum Neuladen.`);
+}
+
+function katalogOeffnen(offen) {
+  $('#portfolio-auswahl').hidden = !offen;
+  $('#moebel-hinzufuegen')?.setAttribute('aria-expanded', String(offen));
+  if (offen) {
+    $('#portfolio-auswahl').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    ($('.t-katalog-eintrag') || $('#eigenes-moebel')).focus({ preventScroll: true });
+  } else $('#moebel-hinzufuegen')?.focus();
+}
+
+function leerZeichnen(id) {
+  const m = einst.portfolio.moebel.find((x) => x.id === id);
+  $('#moebel-leer-titel').textContent = m.name;
+  $('#moebel-leer-symbol').innerHTML = symbol(m.id);
+  $('#moebel-entfernen').dataset.id = m.id;
+}
+
+function portfolioEinrichten() {
+  $('#einstellungen').addEventListener('click', (e) => {
+    const moebel = e.target.closest('[data-moebel]');
+    if (moebel) return einstellungenZeigen(moebel.dataset.moebel);
+    if (e.target.closest('[data-portfolio="zurueck"]')) return einstellungenZeigen('portfolio');
+    if (e.target.closest('#moebel-hinzufuegen')) return katalogOeffnen($('#portfolio-auswahl').hidden);
+    if (e.target.closest('#katalog-schliessen')) return katalogOeffnen(false);
+    const katalog = e.target.closest('[data-katalog]');
+    if (katalog) {
+      const knoepfe = [...document.querySelectorAll('.t-katalog-eintrag')];
+      const index = knoepfe.indexOf(katalog);
+      const name = katalog.textContent.replace('+', '').trim();
+      portfolioAendern(moebelHinzufuegen(einst.portfolio, katalog.dataset.katalog), `${name} ist jetzt in Ihrem Portfolio.`);
+      const rest = document.querySelectorAll('.t-katalog-eintrag');
+      (rest[Math.min(index, rest.length - 1)] || $('#eigenes-moebel')).focus({ preventScroll: true });
+      return;
+    }
+    if (e.target.closest('#moebel-entfernen')) {
+      const id = $('#moebel-entfernen').dataset.id;
+      const m = einst.portfolio.moebel.find((x) => x.id === id);
+      if (!m || !window.confirm(`${m.name} aus dem Portfolio entfernen?`)) return;
+      portfolioAendern(moebelEntfernen(einst.portfolio, id), `${m.name} wurde aus dem Portfolio entfernt.`);
+      einstellungenZeigen('portfolio');
+    }
+  });
+  $('#eigenes-moebel-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = $('#eigenes-moebel').value.trim();
+    if (!name) return $('#eigenes-moebel').focus();
+    const vorher = einst.portfolio.moebel.length;
+    const neu = moebelHinzufuegen(einst.portfolio, { name });
+    $('#eigenes-moebel').value = '';
+    if (neu.moebel.length === vorher) portfolioMelden(`${name} ist bereits in Ihrem Portfolio.`);
+    else portfolioAendern(neu, `${neu.moebel.at(-1).name} ist jetzt in Ihrem Portfolio.`);
+    $('#eigenes-moebel').focus();
+  });
+}
+
+// ---------- Couchtisch: Materialien, Preise, Maßgrenzen, Optionen ----------
+
+// Weitere Listen unter den Materialien: [Liste, Titel, Preisfeld, Einheit, Text des Plus-Knopfs]
 const LISTEN = [
-  ['materialien', 'Materialien', 'preisProQm', '€ je m² Platte'],
-  ['gestelle', 'Gestelle', 'preis', '€ Aufpreis'],
-  ['oberflaechen', 'Oberflächen', 'preis', '€ Aufpreis'],
-  ['optionen', 'Optionen', 'preis', '€ Aufpreis'],
+  ['gestelle', 'Gestelle', 'preis', '€ Aufpreis', 'Gestell hinzufügen'],
+  ['oberflaechen', 'Oberflächen', 'preis', '€ Aufpreis', 'Oberfläche hinzufügen'],
+  ['optionen', 'Optionen', 'preis', '€ Aufpreis', 'Option hinzufügen'],
 ];
+const EINZELNAME = { materialien: 'Material', gestelle: 'Gestell', oberflaechen: 'Oberfläche', optionen: 'Option' };
 const MASSE = [['laenge', 'Länge'], ['breite', 'Breite'], ['hoehe', 'Höhe']];
 
-// Zahlen ohne Tausenderpunkt, Komma als Dezimalzeichen (12,5)
-const zahlText = (w) => String(w).replace('.', ',');
+// Zahlen ohne Tausenderpunkt, Komma als Dezimalzeichen (12,5); leere Felder bleiben leer
+const zahlText = (w) => (Number.isFinite(w) ? String(w).replace('.', ',') : '');
 const zahlFeld = (pfad, wert, label) =>
-  `<input type="text" inputmode="decimal" data-pfad="${pfad}" value="${escape(zahlText(wert))}" aria-label="${escape(label)}">`;
+  `<input type="text" inputmode="decimal" data-pfad="${pfad}" value="${escape(zahlText(wert))}" aria-label="${escape(label)}" placeholder="0">`;
 
-function einstellungenZeichnen(b = BETRIEB) {
+/** Eine Zeile: Name, Preis, bei eigenen Einträgen ein Entfernen-Knopf. */
+function zeileFelder(liste, i, e, feld, einheit) {
+  const titel = EINZELNAME[liste];
+  const name = e.name?.trim() || 'Neuer Eintrag';
+  return `<input type="text" data-pfad="${liste}.${i}.name" value="${escape(e.name)}" aria-label="${escape(titel)}: Name" placeholder="Name" maxlength="80">
+    ${zahlFeld(`${liste}.${i}.${feld}`, e[feld], `${name}: ${einheit}`)}
+    ${
+      e.eigen
+        ? `<button type="button" class="t-entfernen" data-entfernen="${liste}.${i}" aria-label="${escape(name)} entfernen" title="Entfernen">×</button>`
+        : '<span class="t-standard" title="Standard der Demo">·</span>'
+    }`;
+}
+
+function materialienHtml(b) {
+  if (!b.materialarten.some((a) => a.id === einst.art)) einst.art = b.materialarten[0].id;
+  const anzahl = (id) => b.materialien.filter((m) => materialArt(m) === id).length;
+  const reiter = b.materialarten
+    .map(
+      (a) => `<button type="button" role="tab" id="art-reiter-${escape(a.id)}" aria-controls="art-panel-${escape(a.id)}"
+        aria-selected="${a.id === einst.art}" tabindex="${a.id === einst.art ? 0 : -1}" data-art="${escape(a.id)}">
+        <span class="t-art-titel">${escape(a.name.trim() || 'Neue Art')}</span><span class="t-anzahl">${anzahl(a.id)}</span>
+      </button>`,
+    )
+    .join('');
+  const panels = b.materialarten
+    .map((a, ai) => {
+      const zeilen = b.materialien.map((m, i) => [m, i]).filter(([m]) => materialArt(m) === a.id);
+      const artName = a.name.trim() || 'Neue Materialart';
+      return `<div class="t-art-panel" role="tabpanel" id="art-panel-${escape(a.id)}" aria-labelledby="art-reiter-${escape(a.id)}" ${
+        a.id === einst.art ? '' : 'hidden'
+      }>
+        ${
+          a.eigen
+            ? `<div class="t-art-name">
+                <label class="feld"><span>Name der Materialart</span>
+                  <input type="text" data-pfad="materialarten.${ai}.name" value="${escape(a.name)}" maxlength="80" placeholder="z. B. Keramik">
+                </label>
+                ${zeilen.length ? '' : `<button type="button" class="link-zurueck" data-art-entfernen="${escape(a.id)}">Materialart entfernen</button>`}
+              </div>`
+            : ''
+        }
+        ${
+          zeilen.length
+            ? `<div class="t-einst-zeilen t-mit-entfernen">
+                <span class="t-einst-spalte">Material</span><span class="t-einst-spalte">€ je m² Platte</span><span></span>
+                ${zeilen.map(([m, i]) => zeileFelder('materialien', i, m, 'preisProQm', '€ je m² Platte')).join('')}
+              </div>`
+            : `<p class="t-leer-hinweis">Noch keine Materialien unter „${escape(artName)}“. Legen Sie das erste an.</p>`
+        }
+        <button type="button" class="t-plus" data-neu="materialien" data-art="${escape(a.id)}"><span aria-hidden="true">+</span> Material hinzufügen</button>
+      </div>`;
+    })
+    .join('');
+  return `<fieldset class="karte t-einst t-einst-breit">
+      <legend>Materialien</legend>
+      <p class="tipp t-einst-tipp">Zuerst die Materialart, darin die einzelnen Materialien. Preise je m² Tischplatte.</p>
+      <div class="t-arten">
+        <div class="t-arten-reiter" role="tablist" aria-label="Materialart">${reiter}</div>
+        <button type="button" class="t-plus t-plus-art" data-neu="materialart"><span aria-hidden="true">+</span> Materialart</button>
+      </div>
+      ${panels}
+    </fieldset>`;
+}
+
+function einstellungenZeichnen() {
+  const b = einst.entwurf;
   const listen = LISTEN.map(
-    ([liste, titel, feld, einheit]) => `
+    ([liste, titel, feld, einheit, plus]) => `
     <fieldset class="karte t-einst">
       <legend>${titel}</legend>
-      <div class="t-einst-zeilen">
-        <span class="t-einst-spalte">Name</span><span class="t-einst-spalte">${einheit}</span>
-        ${b[liste]
-          .map(
-            (e, i) => `
-          <input type="text" data-pfad="${liste}.${i}.name" value="${escape(e.name)}" aria-label="${escape(titel)}: Name">
-          ${zahlFeld(`${liste}.${i}.${feld}`, e[feld], `${e.name}: ${einheit}`)}`,
-          )
-          .join('')}
+      <div class="t-einst-zeilen t-mit-entfernen">
+        <span class="t-einst-spalte">Name</span><span class="t-einst-spalte">${einheit}</span><span></span>
+        ${b[liste].map((e, i) => zeileFelder(liste, i, e, feld, einheit)).join('')}
       </div>
+      <button type="button" class="t-plus" data-neu="${liste}"><span aria-hidden="true">+</span> ${plus}</button>
     </fieldset>`,
   ).join('');
 
@@ -448,9 +677,17 @@ function einstellungenZeichnen(b = BETRIEB) {
           ).join('')}
         </div>
       </fieldset>
+      ${materialienHtml(b)}
       ${listen}
     </div>
-    <p class="tipp">Gespeichert wird nur in diesem Browser (Demo). Der Konfigurator in diesem Browser nutzt die Werte beim nächsten Laden.</p>`;
+    <p class="tipp">Gespeichert wird nur in diesem Browser (Demo). Der Konfigurator in diesem Browser nutzt die Werte beim nächsten Laden.
+      Mit + angelegte Einträge erscheinen dort ebenfalls.</p>`;
+
+  if (einst.fokus) {
+    const ziel = einst.fokus.startsWith('#') ? $(einst.fokus) : $(`[data-pfad="${einst.fokus}"]`);
+    einst.fokus = null;
+    ziel?.focus();
+  }
 }
 
 /** „1.300“ → 1300, „12,5“ → 12.5, „12.5“ → 12.5; leer/ungültig → NaN. */
@@ -461,24 +698,113 @@ function leseZahl(text) {
   return t === '' ? NaN : Number(t);
 }
 
-/** Formularwerte in eine Kopie des Betriebs schreiben. */
-function einstellungenAusFormular() {
-  const b = structuredClone(BETRIEB);
-  document.querySelectorAll('#einstellungen-felder [data-pfad]').forEach((input) => {
-    const teile = input.dataset.pfad.split('.');
-    let ziel = b;
-    for (const t of teile.slice(0, -1)) ziel = ziel[t];
-    const feld = teile.at(-1);
-    ziel[feld] = feld === 'name' ? input.value.trim() : leseZahl(input.value);
-  });
+/** Wert eines Feldes in den Entwurf schreiben (Pfad wie „materialien.3.name“). */
+function inEntwurf(pfad, wert) {
+  const teile = pfad.split('.');
+  let ziel = einst.entwurf;
+  for (const t of teile.slice(0, -1)) ziel = ziel[t];
+  const feld = teile.at(-1);
+  ziel[feld] = feld === 'name' ? wert : leseZahl(wert);
+}
+
+const vorlaeufigeId = () => `neu-${++einst.neuNr}`;
+
+/** Vorläufige IDs neuer Einträge durch lesbare ersetzen (aus dem Namen), Namen trimmen. */
+function idsVergeben(b) {
+  const alle = () => [...b.materialarten, ...b.materialien, ...b.gestelle, ...b.oberflaechen, ...b.optionen].map((e) => e.id);
+  for (const a of b.materialarten) {
+    a.name = a.name.trim();
+    if (!a.id.startsWith('neu-')) continue;
+    const id = neueId(a.name, alle());
+    for (const m of b.materialien) if (m.art === a.id) m.art = id;
+    a.id = id;
+  }
+  for (const liste of ['materialien', 'gestelle', 'oberflaechen', 'optionen']) {
+    for (const e of b[liste]) {
+      e.name = (e.name || '').trim();
+      if (e.id.startsWith('neu-')) e.id = neueId(e.name, alle());
+    }
+  }
   return b;
 }
 
 function einstellungenEinrichten() {
+  const felder = $('#einstellungen-felder');
+  felder.addEventListener('input', (e) => {
+    const pfad = e.target.dataset.pfad;
+    if (!pfad) return;
+    inEntwurf(pfad, e.target.value);
+    if (pfad.startsWith('materialarten.')) {
+      const a = einst.entwurf.materialarten[Number(pfad.split('.')[1])];
+      const titel = document.querySelector(`#art-reiter-${CSS.escape(a.id)} .t-art-titel`);
+      if (titel) titel.textContent = a.name.trim() || 'Neue Art';
+    }
+  });
+
+  felder.addEventListener('click', (e) => {
+    const b = einst.entwurf;
+    const reiter = e.target.closest('[role="tab"][data-art]');
+    if (reiter) {
+      einst.art = reiter.dataset.art;
+      einst.fokus = `#art-reiter-${CSS.escape(einst.art)}`;
+      return einstellungenZeichnen();
+    }
+    const neu = e.target.closest('[data-neu]');
+    if (neu) {
+      const liste = neu.dataset.neu;
+      if (liste === 'materialart') {
+        const id = vorlaeufigeId();
+        b.materialarten.push({ id, name: '', eigen: true });
+        einst.art = id;
+        einst.fokus = `materialarten.${b.materialarten.length - 1}.name`;
+      } else {
+        const feld = liste === 'materialien' ? 'preisProQm' : 'preis';
+        const eintrag = { id: vorlaeufigeId(), name: '', [feld]: NaN, eigen: true };
+        if (liste === 'materialien') eintrag.art = neu.dataset.art;
+        b[liste].push(eintrag);
+        einst.fokus = `${liste}.${b[liste].length - 1}.name`;
+      }
+      $('#einstellungen-ok').hidden = true;
+      return einstellungenZeichnen();
+    }
+    const weg = e.target.closest('[data-entfernen]');
+    if (weg) {
+      const [liste, i] = weg.dataset.entfernen.split('.');
+      const eintrag = b[liste][Number(i)];
+      b[liste].splice(Number(i), 1);
+      einst.fokus = liste === 'materialien' ? `#art-reiter-${CSS.escape(materialArt(eintrag))}` : null;
+      $('#einstellungen-ok').hidden = true;
+      einstellungenZeichnen();
+      if (!einst.fokus && liste !== 'materialien') felder.querySelector(`[data-neu="${liste}"]`)?.focus();
+      return;
+    }
+    const artWeg = e.target.closest('[data-art-entfernen]');
+    if (artWeg) {
+      b.materialarten = b.materialarten.filter((a) => a.id !== artWeg.dataset.artEntfernen);
+      einst.art = b.materialarten[0].id;
+      einst.fokus = `#art-reiter-${CSS.escape(einst.art)}`;
+      einstellungenZeichnen();
+    }
+  });
+
+  // Reiter der Materialarten mit Pfeiltasten (Tab-Muster)
+  felder.addEventListener('keydown', (e) => {
+    const reiter = e.target.closest('[role="tab"][data-art]');
+    if (!reiter || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    e.preventDefault();
+    const alle = [...felder.querySelectorAll('[role="tab"][data-art]')];
+    const i = alle.indexOf(reiter);
+    const ziel = { ArrowLeft: i - 1, ArrowRight: i + 1, Home: 0, End: alle.length - 1 }[e.key];
+    const neu = alle[(ziel + alle.length) % alle.length];
+    einst.art = neu.dataset.art;
+    einst.fokus = `#art-reiter-${CSS.escape(einst.art)}`;
+    einstellungenZeichnen();
+  });
+
   $('#einstellungen-form').addEventListener('submit', (e) => {
     e.preventDefault();
     $('#einstellungen-ok').hidden = true;
-    const b = einstellungenAusFormular();
+    const b = idsVergeben(structuredClone(einst.entwurf));
     const fehler = pruefeBetrieb(b);
     if (fehler.length) {
       zeigeFehler('einstellungen-fehler', fehler.join(' '));
@@ -490,13 +816,20 @@ function einstellungenEinrichten() {
     }
     zeigeFehler('einstellungen-fehler', null);
     Object.assign(BETRIEB, mischeBetrieb(BETRIEB_STANDARD, bearbeitbareWerte(b)));
+    // vorläufige ID der gewählten Art auf die gespeicherte umstellen
+    const index = einst.entwurf.materialarten.findIndex((a) => a.id === einst.art);
+    einst.entwurf = structuredClone(BETRIEB);
+    if (index >= 0 && einst.entwurf.materialarten[index]) einst.art = einst.entwurf.materialarten[index].id;
     einstellungenZeichnen();
     $('#einstellungen-ok').hidden = false;
   });
   $('#einstellungen-standard').addEventListener('click', () => {
-    if (!window.confirm('Alle Einstellungen auf die Standardwerte zurücksetzen?')) return;
+    if (!window.confirm('Alle Einstellungen des Couchtischs auf die Standardwerte zurücksetzen? Selbst angelegte Materialien, Gestelle, Oberflächen und Optionen werden entfernt.')) return;
     einstellungenZuruecksetzen();
     Object.assign(BETRIEB, structuredClone(BETRIEB_STANDARD));
+    // Object.assign ersetzt Listen, eigene Einträge sind damit weg
+    einst.entwurf = structuredClone(BETRIEB);
+    einst.art = 'holz';
     zeigeFehler('einstellungen-fehler', null);
     einstellungenZeichnen();
     $('#einstellungen-ok').hidden = false;
@@ -514,8 +847,11 @@ function start() {
     b.addEventListener('click', () => bereichZeigen(b.dataset.bereich));
   });
   posteingangEinrichten();
+  portfolioEinrichten();
   einstellungenEinrichten();
-  bereichZeigen(location.hash === '#einstellungen' ? 'einstellungen' : 'posteingang');
+  const ziel = location.hash.match(/^#einstellungen(?:\/([a-z0-9-]+))?$/);
+  if (ziel) einst.ansicht = ziel[1] || 'portfolio';
+  bereichZeigen(ziel ? 'einstellungen' : 'posteingang');
 }
 
 start();

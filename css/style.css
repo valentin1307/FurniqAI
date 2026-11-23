@@ -587,6 +587,11 @@ fieldset.karte > legend ~ * { clear: both; }
 }
 .muster.ohne-maserung { background-image: var(--muster-bild, none), linear-gradient(160deg, rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0.06)); }
 .muster.mit-foto { background-image: var(--muster-bild); }
+/* Zwischenüberschrift je Materialart (nur wenn die Tischlerei mehrere Arten anbietet) */
+.wahl-gruppe {
+  grid-column: 1 / -1; margin: var(--a1) 0 -0.25rem; font-size: var(--s-fein); font-weight: 600; color: var(--text-sekundaer);
+}
+.wahl-gruppe:first-child { margin-top: 0; }
 
 /* Segmented Control im iOS-Stil: Form, Oberfläche */
 .wahl-segmente {

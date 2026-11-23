@@ -1,5 +1,5 @@
 // Ablauf der Kundenseite. Meilenstein 1: Schritte 1, 2 und 5 (noch ohne KI und Supabase).
-import { BETRIEB } from './betrieb.js';
+import { BETRIEB, materialArt } from './betrieb.js';
 import {
   berechnePreis,
   masseGrenzen,
@@ -40,6 +40,35 @@ const MATERIAL_FARBE = {
   'mdf-lackiert': '#ece8e1',
 };
 const OHNE_MASERUNG = ['mdf-lackiert'];
+// Selbst angelegte Materialien anderer Arten: ruhige Fläche in typischer Farbe, ohne Maserung
+const ART_FARBE = { stein: '#bdb7ad', stahl: '#6f7378', glas: '#d3e4e6' };
+
+function materialFarbe(id) {
+  const m = BETRIEB.materialien.find((x) => x.id === id);
+  return MATERIAL_FARBE[id] || ART_FARBE[materialArt(m)] || (materialArt(m) === 'holz' ? '#c69c6d' : '#cfc8bd');
+}
+
+/** Materialkarten, bei mehreren Materialarten mit Zwischenüberschrift je Art. */
+function materialKarten() {
+  const arten = BETRIEB.materialarten || [{ id: 'holz', name: 'Holz' }];
+  const genutzt = arten.filter((a) => BETRIEB.materialien.some((m) => materialArt(m) === a.id));
+  return genutzt
+    .map((a) => {
+      const kopf = genutzt.length > 1 ? `<p class="wahl-gruppe">${escape(a.name)}</p>` : '';
+      const karten = BETRIEB.materialien
+        .filter((m) => materialArt(m) === a.id)
+        .map((m) => {
+          const glatt = OHNE_MASERUNG.includes(m.id) || a.id !== 'holz';
+          return wahlKarte(
+            'material',
+            m,
+            `<span class="${glatt ? 'muster ohne-maserung' : 'muster'}" data-material="${escape(m.id)}" style="--holz:${materialFarbe(m.id)}"></span><span>${escape(m.name)}</span>`,
+          );
+        });
+      return kopf + karten.join('');
+    })
+    .join('');
+}
 const MATERIAL_BILD_ORDNER = 'assets/materialien';
 
 const FOTO_MAX_KANTE = 1600; // px, verkleinert vor dem Speichern
@@ -430,13 +459,7 @@ function schritt2Einrichten() {
       wahlKarte('form', f, `<svg class="form-symbol" viewBox="0 0 40 28" aria-hidden="true">${FORM_SYMBOL[f.id] || ''}</svg><span>${escape(f.name)}</span>`),
     )
     .join('');
-  $('#wahl-material').innerHTML = BETRIEB.materialien
-    .map((m) => {
-      const klasse = OHNE_MASERUNG.includes(m.id) ? 'muster ohne-maserung' : 'muster';
-      const farbe = MATERIAL_FARBE[m.id] || '#c69c6d';
-      return wahlKarte('material', m, `<span class="${klasse}" data-material="${escape(m.id)}" style="--holz:${farbe}"></span><span>${escape(m.name)}</span>`);
-    })
-    .join('');
+  $('#wahl-material').innerHTML = materialKarten();
   musterBilderLaden();
   $('#wahl-gestell').innerHTML = BETRIEB.gestelle
     .map((g) => wahlKarte('gestell', g, `<span>${escape(g.name)}</span><span class="aufpreis">${escape(aufpreisText(g.preis))}</span>`))
@@ -723,7 +746,7 @@ function draufsichtZeichnen() {
   const rand = gross * 0.08;
   const schrift = gross * 0.05;
   const steht = !tischUeberstand().passt;
-  const farbe = MATERIAL_FARBE[zustand.materialId] || '#c69c6d';
+  const farbe = materialFarbe(zustand.materialId);
   const kontur = `stroke="${steht ? '#b4532a' : '#6e4620'}" stroke-width="${gross * (steht ? 0.009 : 0.006)}"`;
 
   let tisch;

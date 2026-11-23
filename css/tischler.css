@@ -129,8 +129,129 @@
   border-radius: 0 var(--r-element) var(--r-element) 0; white-space: pre-wrap; font-size: var(--s-klein);
 }
 
-/* Einstellungen */
+/* ---------- Portfolio ---------- */
+.t-portfolio {
+  list-style: none; margin: 0 0 var(--a3); padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--a2);
+}
+.t-moebel {
+  width: 100%; height: 100%; min-height: 148px; display: grid; align-content: start; justify-items: start; gap: 0.25rem;
+  text-align: left; font: inherit; color: var(--text-primaer); cursor: pointer;
+  padding: var(--a3); border-radius: var(--r-karte); border: 1px solid var(--trenner); background: var(--flaeche);
+  transition: border-color var(--dauer) var(--kurve), box-shadow var(--dauer) var(--kurve), transform 150ms var(--kurve);
+  -webkit-tap-highlight-color: transparent;
+}
+.t-moebel:hover { border-color: var(--trenner-stark); box-shadow: var(--schatten-weich); }
+.t-moebel:active { transform: scale(0.99); }
+/* konzentrisch: 20 px außen − 24 px Abstand → eigenständiges Symbolfeld mit 12 px */
+.t-moebel-symbol {
+  width: 3rem; height: 3rem; margin-bottom: var(--a1); border-radius: var(--r-element);
+  display: grid; place-items: center; background: var(--hintergrund); color: var(--text-sekundaer);
+}
+.t-moebel-name { font-family: var(--serif); font-size: var(--s-kopf); font-weight: 550; line-height: 1.2; }
+.t-moebel-status { font-size: var(--s-fein); color: var(--text-sekundaer); }
+.t-moebel-fertig { border-color: var(--akzent); box-shadow: inset 0 0 0 1px var(--akzent); }
+.t-moebel-fertig .t-moebel-symbol { background: var(--akzent); color: var(--akzent-auf); }
+.t-moebel-fertig .t-moebel-status { color: var(--akzent-text); font-weight: 600; }
+.t-moebel-fertig .t-moebel-status::before { content: "✓ "; }
+.t-moebel-neu { border-style: dashed; border-color: var(--trenner-stark); background: transparent; }
+.t-moebel-neu .t-moebel-symbol { background: var(--akzent-flaeche); color: var(--akzent-text); }
+.t-moebel-neu .t-moebel-name { font-family: var(--ui); font-size: var(--s-text); font-weight: 600; color: var(--akzent-text); }
+.t-moebel-neu[aria-expanded="true"] { border-style: solid; border-color: var(--akzent); background: var(--flaeche); }
+
+#portfolio-status { margin: 0 0 var(--a2); }
+
+.t-katalog { scroll-margin-top: calc(var(--kopf-hoehe) + var(--a2)); }
+.t-katalog-kopf { display: flex; justify-content: space-between; align-items: center; gap: var(--a2); }
+.t-katalog-kopf h2 { margin: 0; }
+.t-katalog-liste {
+  list-style: none; margin: var(--a2) 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(208px, 1fr)); gap: var(--a1);
+}
+.t-katalog-eintrag {
+  width: 100%; min-height: 56px; display: flex; align-items: center; gap: 0.75rem;
+  font: inherit; font-size: var(--s-klein); font-weight: 500; text-align: left; color: var(--text-primaer); cursor: pointer;
+  padding: var(--a1) 0.75rem var(--a1) var(--a1); border-radius: var(--r-element); border: 1px solid var(--trenner); background: var(--feld);
+  transition: border-color var(--dauer) var(--kurve), background-color var(--dauer) var(--kurve);
+}
+.t-katalog-eintrag:hover { border-color: var(--akzent); }
+.t-katalog-eintrag:active { background: var(--akzent-flaeche); }
+.t-katalog-symbol {
+  flex: none; width: 2.5rem; height: 2.5rem; border-radius: 8px; display: grid; place-items: center;
+  background: var(--hintergrund); color: var(--text-sekundaer);
+}
+.t-katalog-symbol svg { width: 26px; height: 26px; }
+.t-katalog-eintrag > span:nth-child(2) { flex: 1; min-width: 0; }
+.t-katalog-plus { flex: none; font-size: 1.25rem; line-height: 1; color: var(--akzent-text); }
+.t-katalog-eigen { display: flex; align-items: flex-end; gap: 0.75rem; border-top: 1px solid var(--trenner); padding-top: var(--a2); }
+.t-katalog-eigen .feld { flex: 1; margin: 0; max-width: 24rem; }
+
+/* Möbel ohne Einstellungen */
+.t-zurueck { margin: 0 0 var(--a2) -0.25rem; }
+.t-leer-karte { max-width: 36rem; text-align: center; padding: var(--a5) var(--a3); }
+.t-leer-symbol {
+  display: inline-grid; place-items: center; width: 4rem; height: 4rem; border-radius: 16px; margin-bottom: var(--a2);
+  background: var(--hintergrund); color: var(--text-sekundaer);
+}
+.t-leer-symbol svg { width: 40px; height: 40px; }
+.t-leer-karte p { color: var(--text-sekundaer); margin: 0 auto var(--a3); max-width: 44ch; }
+.t-leer-aktionen { display: flex; flex-direction: column; align-items: center; gap: var(--a1); }
+
+/* ---------- Einstellungen des Couchtischs ---------- */
 .t-einst-raster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--a2); align-items: start; }
+.t-einst-breit { grid-column: 1 / -1; }
+.t-einst-tipp { margin: 0 0 var(--a2); }
+
+/* Materialarten als Reiter (Segmented Control) mit Plus daneben */
+.t-arten { display: flex; flex-wrap: wrap; align-items: center; gap: var(--a1) 0.75rem; margin-bottom: var(--a2); }
+.t-arten-reiter {
+  display: flex; flex-wrap: wrap; gap: 2px; padding: 2px; border-radius: var(--r-segment); background: var(--flaeche-tief);
+}
+.t-arten-reiter [role="tab"] {
+  font: inherit; font-size: var(--s-klein); font-weight: 500; border: 0; border-radius: var(--r-segment-innen); cursor: pointer;
+  min-height: 40px; padding: 0.375rem 0.875rem; background: transparent; color: var(--text-primaer);
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  transition: background-color var(--dauer) var(--kurve);
+}
+.t-arten-reiter [role="tab"][aria-selected="true"] {
+  background: var(--flaeche); font-weight: 600;
+  box-shadow: 0 1px 3px rgba(43, 35, 28, 0.14), 0 0 0 0.5px rgba(43, 35, 28, 0.06);
+}
+.t-anzahl {
+  min-width: 1.375rem; height: 1.375rem; padding: 0 0.375rem; border-radius: 999px;
+  display: inline-grid; place-items: center; font-size: var(--s-fein); font-weight: 600; font-variant-numeric: tabular-nums;
+  background: var(--hintergrund); color: var(--text-sekundaer);
+}
+[aria-selected="true"] .t-anzahl { background: var(--akzent-flaeche); color: var(--akzent-text); }
+.t-art-panel { border-top: 1px solid var(--trenner); padding-top: var(--a2); }
+.t-art-name { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--a1) var(--a2); margin-bottom: var(--a2); }
+.t-art-name .feld { margin: 0; flex: 1 1 14rem; max-width: 22rem; }
+.t-leer-hinweis { color: var(--text-sekundaer); font-size: var(--s-klein); margin: 0 0 var(--a1); }
+
+/* Plus: weitere Einträge anlegen (leiser Knopf) */
+.t-plus {
+  display: inline-flex; align-items: center; gap: 0.5rem; min-height: 44px; margin-top: 0.75rem; padding: 0.5rem 0.875rem 0.5rem 0.625rem;
+  font: inherit; font-size: var(--s-klein); font-weight: 600; color: var(--akzent-text); cursor: pointer;
+  border: 1px dashed var(--trenner-stark); border-radius: var(--r-element); background: transparent;
+  transition: border-color var(--dauer) var(--kurve), background-color var(--dauer) var(--kurve);
+}
+.t-plus > span[aria-hidden] {
+  width: 1.5rem; height: 1.5rem; border-radius: 50%; display: grid; place-items: center;
+  background: var(--akzent-flaeche); font-size: 1.125rem; line-height: 1;
+}
+.t-plus:hover { border-color: var(--akzent); border-style: solid; background: var(--flaeche); }
+.t-plus:active { background: var(--akzent-flaeche); }
+.t-plus-art { margin-top: 0; }
+
+/* Zeilen mit Entfernen-Spalte */
+.t-einst-zeilen.t-mit-entfernen { grid-template-columns: minmax(0, 1fr) 8.5rem 2.75rem; }
+.t-entfernen {
+  width: 44px; height: 44px; justify-self: center; border-radius: 50%; border: 0; cursor: pointer;
+  font: inherit; font-size: 1.25rem; line-height: 1; background: transparent; color: var(--text-sekundaer);
+  transition: color var(--dauer) var(--kurve), background-color var(--dauer) var(--kurve);
+}
+.t-entfernen:hover { color: var(--fehler); background: var(--fehler-flaeche); }
+.t-standard { justify-self: center; color: var(--trenner-stark); }
 .t-einst { margin: 0; }
 .t-einst-zeilen { display: grid; grid-template-columns: minmax(0, 1fr) 8.5rem; gap: var(--a1) 0.75rem; align-items: center; }
 .t-einst-drei { grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem; }
@@ -163,6 +284,15 @@
   .t-abschnitte { grid-template-columns: minmax(0, 1fr); }
   .t-einst-zeilen { grid-template-columns: minmax(0, 1fr) 6.5rem; }
   .t-einst-drei { grid-template-columns: minmax(0, 1fr) 4.75rem 4.75rem; }
+  .t-einst-zeilen.t-mit-entfernen { grid-template-columns: minmax(0, 1fr) 5.5rem 2.75rem; }
+  .t-portfolio { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+  .t-moebel { padding: var(--a2); min-height: 132px; }
+  .t-katalog-liste { grid-template-columns: minmax(0, 1fr); }
+  .t-katalog-eigen { flex-wrap: wrap; }
+  .t-katalog-eigen .knopf { width: 100%; }
+  .t-arten { align-items: stretch; }
+  .t-arten-reiter { width: 100%; }
+  .t-arten-reiter [role="tab"] { flex: 1 1 auto; justify-content: center; }
 }
 @media (max-height: 520px) {
   .t-detail { position: static; }

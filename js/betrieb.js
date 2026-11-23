@@ -25,6 +25,15 @@ export const BETRIEB_STANDARD = {
     { id: 'oval', name: 'Oval' },
   ],
 
+  // Materialarten: Gruppen für die Materialien. Einträge ohne „art“ gehören zu Holz.
+  // Stein, Stahl und Glas sind leer, bis die Tischlerei eigene Materialien anlegt.
+  materialarten: [
+    { id: 'holz', name: 'Holz' },
+    { id: 'stein', name: 'Stein' },
+    { id: 'stahl', name: 'Stahl' },
+    { id: 'glas', name: 'Glas' },
+  ],
+
   // Preis je m² Tischplatte
   materialien: [
     { id: 'eiche-massiv', name: 'Eiche massiv', preisProQm: 900 },
@@ -70,19 +79,59 @@ export const EINSTELLUNGEN_SCHLUESSEL = 'furniqai.betrieb';
 const LISTEN = { materialien: 'preisProQm', gestelle: 'preis', oberflaechen: 'preis', optionen: 'preis' };
 
 const zahl = (w) => typeof w === 'number' && Number.isFinite(w);
+const textOk = (t) => typeof t === 'string' && t.trim().length > 0 && t.trim().length <= 80;
+// IDs für eigene Einträge der Tischlerei (siehe neueId)
+const ID_MUSTER = /^[a-z0-9][a-z0-9-]{0,60}$/;
+
+/** Materialart eines Materials; ältere Einträge ohne Angabe sind Holz. */
+export const materialArt = (m) => m?.art || 'holz';
+
+/** Neue, eindeutige ID für einen eigenen Eintrag, z. B. 'eigen-marmor-carrara'. */
+export function neueId(name, vorhandeneIds) {
+  const slug = String(name || '')
+    .toLowerCase()
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+  const basis = `eigen-${slug || 'eintrag'}`;
+  const ids = new Set(vorhandeneIds);
+  let id = basis;
+  for (let n = 2; ids.has(id); n++) id = `${basis}-${n}`;
+  return id;
+}
 
 /**
- * Gespeicherte Änderungen über den Standard legen. Übernommen werden nur bekannte Einträge
- * (per id) und gültige Werte; alles andere bleibt Standard.
+ * Gespeicherte Änderungen über den Standard legen. Übernommen werden bekannte Einträge (per id)
+ * mit gültigen Werten und von der Tischlerei angelegte Einträge (eigen: true, gültige id, Name
+ * und Preis). Alles andere wird ignoriert und bleibt Standard.
  */
 export function mischeBetrieb(standard, aenderungen) {
   const b = structuredClone(standard);
   if (!aenderungen || typeof aenderungen !== 'object') return b;
   for (const feld of ['grundpreis', 'rahmenProzent']) if (zahl(aenderungen[feld])) b[feld] = aenderungen[feld];
+  for (const neu of aenderungen.materialarten || []) {
+    const art = b.materialarten.find((a) => a.id === neu?.id);
+    if (art) {
+      if (textOk(neu.name)) art.name = neu.name.trim();
+    } else if (neu?.eigen === true && ID_MUSTER.test(String(neu.id)) && textOk(neu.name)) {
+      b.materialarten.push({ id: neu.id, name: neu.name.trim(), eigen: true });
+    }
+  }
   for (const [liste, preisFeld] of Object.entries(LISTEN)) {
     for (const neu of aenderungen[liste] || []) {
       const eintrag = b[liste].find((e) => e.id === neu?.id);
-      if (!eintrag) continue;
+      if (!eintrag) {
+        // eigener Eintrag der Tischlerei
+        if (neu?.eigen !== true || !ID_MUSTER.test(String(neu.id)) || !textOk(neu.name) || !zahl(neu[preisFeld])) continue;
+        const e = { id: neu.id, name: neu.name.trim(), [preisFeld]: neu[preisFeld], eigen: true };
+        if (liste === 'materialien') {
+          if (!b.materialarten.some((a) => a.id === neu.art)) continue;
+          e.art = neu.art;
+        }
+        b[liste].push(e);
+        continue;
+      }
       if (typeof neu.name === 'string' && neu.name.trim()) eintrag.name = neu.name.trim();
       if (zahl(neu[preisFeld])) eintrag[preisFeld] = neu[preisFeld];
     }
@@ -101,11 +150,19 @@ export function pruefeBetrieb(b) {
   if (!zahl(b.rahmenProzent) || b.rahmenProzent < 0 || b.rahmenProzent > 50) {
     fehler.push('Der Preisrahmen muss zwischen 0 und 50 % liegen.');
   }
+  for (const a of b.materialarten || []) {
+    if (!a.name || !a.name.trim()) fehler.push('Materialart: Der Name darf nicht leer sein.');
+  }
   const titel = { materialien: 'Material', gestelle: 'Gestell', oberflaechen: 'Oberfläche', optionen: 'Option' };
   for (const [liste, preisFeld] of Object.entries(LISTEN)) {
     for (const e of b[liste]) {
       if (!e.name || !e.name.trim()) fehler.push(`${titel[liste]}: Der Name darf nicht leer sein.`);
-      if (!zahl(e[preisFeld]) || e[preisFeld] < 0) fehler.push(`${titel[liste]} „${e.name}“: Der Preis muss 0 oder mehr sein.`);
+      if (!zahl(e[preisFeld]) || e[preisFeld] < 0) {
+        fehler.push(`${titel[liste]} „${(e.name || '').trim() || 'ohne Namen'}“: Der Preis muss 0 oder mehr sein.`);
+      }
+      if (liste === 'materialien' && b.materialarten && !b.materialarten.some((a) => a.id === materialArt(e))) {
+        fehler.push(`Material „${e.name}“: Die Materialart fehlt.`);
+      }
     }
   }
   const namen = { laenge: 'Länge', breite: 'Breite', hoehe: 'Höhe' };
@@ -120,8 +177,15 @@ export function pruefeBetrieb(b) {
 /** Nur die bearbeitbaren Werte, so wie sie gespeichert werden. */
 export function bearbeitbareWerte(b) {
   const werte = { grundpreis: b.grundpreis, rahmenProzent: b.rahmenProzent, grenzen: structuredClone(b.grenzen) };
+  werte.materialarten = b.materialarten.map((a) => ({ id: a.id, name: a.name, ...(a.eigen ? { eigen: true } : {}) }));
   for (const [liste, preisFeld] of Object.entries(LISTEN)) {
-    werte[liste] = b[liste].map((e) => ({ id: e.id, name: e.name, [preisFeld]: e[preisFeld] }));
+    werte[liste] = b[liste].map((e) => ({
+      id: e.id,
+      name: e.name,
+      [preisFeld]: e[preisFeld],
+      ...(e.art ? { art: e.art } : {}),
+      ...(e.eigen ? { eigen: true } : {}),
+    }));
   }
   return werte;
 }

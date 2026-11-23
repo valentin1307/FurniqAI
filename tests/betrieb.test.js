@@ -1,7 +1,7 @@
 // Tests für die Einstellungen der Tischlerseite (Betriebsdaten bearbeiten).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { BETRIEB, BETRIEB_STANDARD, mischeBetrieb, pruefeBetrieb, bearbeitbareWerte } from '../js/betrieb.js';
+import { BETRIEB, BETRIEB_STANDARD, mischeBetrieb, pruefeBetrieb, bearbeitbareWerte, materialArt, neueId } from '../js/betrieb.js';
 
 test('Ohne gespeicherte Einstellungen gilt der Standard', () => {
   assert.deepEqual(BETRIEB, BETRIEB_STANDARD);
@@ -40,6 +40,54 @@ test('Prüfung der Einstellungen', () => {
 
 test('Gespeichert werden nur bearbeitbare Werte', () => {
   const w = bearbeitbareWerte(BETRIEB_STANDARD);
-  assert.deepEqual(Object.keys(w).sort(), ['gestelle', 'grenzen', 'grundpreis', 'materialien', 'oberflaechen', 'optionen', 'rahmenProzent']);
+  assert.deepEqual(Object.keys(w).sort(), ['gestelle', 'grenzen', 'grundpreis', 'materialarten', 'materialien', 'oberflaechen', 'optionen', 'rahmenProzent']);
   assert.deepEqual(mischeBetrieb(BETRIEB_STANDARD, w), BETRIEB_STANDARD);
+});
+
+test('Materialarten: Standard, Umbenennen, eigene Art', () => {
+  assert.deepEqual(BETRIEB_STANDARD.materialarten.map((a) => a.id), ['holz', 'stein', 'stahl', 'glas']);
+  assert.equal(materialArt(BETRIEB_STANDARD.materialien[0]), 'holz', 'ohne Angabe gilt Holz');
+  const b = mischeBetrieb(BETRIEB_STANDARD, {
+    materialarten: [
+      { id: 'stein', name: ' Naturstein ' },
+      { id: 'eigen-keramik', name: 'Keramik', eigen: true },
+      { id: 'ohne-kennzeichen', name: 'Wird ignoriert' },
+      { id: 'Ungültig!', name: 'X', eigen: true },
+    ],
+  });
+  assert.deepEqual(b.materialarten.map((a) => a.name), ['Holz', 'Naturstein', 'Stahl', 'Glas', 'Keramik']);
+});
+
+test('Eigene Einträge der Tischlerei werden übernommen, ungültige ignoriert', () => {
+  const b = mischeBetrieb(BETRIEB_STANDARD, {
+    materialien: [
+      { id: 'eigen-marmor', name: 'Marmor Carrara', preisProQm: 1800, art: 'stein', eigen: true },
+      { id: 'eigen-ohne-art', name: 'X', preisProQm: 10, art: 'gibts-nicht', eigen: true },
+      { id: 'eigen-ohne-preis', name: 'Y', eigen: true },
+    ],
+    gestelle: [{ id: 'eigen-kufen-messing', name: 'Kufen Messing', preis: 480, eigen: true }],
+    optionen: [{ id: 'eigen-leer', name: '  ', preis: 5, eigen: true }],
+  });
+  assert.equal(b.materialien.length, 6);
+  assert.deepEqual(b.materialien.at(-1), { id: 'eigen-marmor', name: 'Marmor Carrara', preisProQm: 1800, eigen: true, art: 'stein' });
+  assert.deepEqual(b.gestelle.at(-1), { id: 'eigen-kufen-messing', name: 'Kufen Messing', preis: 480, eigen: true });
+  assert.equal(b.optionen.length, BETRIEB_STANDARD.optionen.length);
+  assert.deepEqual(mischeBetrieb(BETRIEB_STANDARD, bearbeitbareWerte(b)), b, 'Speichern und Laden ergibt dasselbe');
+});
+
+test('Prüfung: Materialart muss existieren, eigene Einträge brauchen Name und Preis', () => {
+  const b = structuredClone(BETRIEB_STANDARD);
+  b.materialien.push({ id: 'eigen-a', name: '', preisProQm: NaN, art: 'stein', eigen: true });
+  b.materialien.push({ id: 'eigen-b', name: 'Onyx', preisProQm: 10, art: 'weg', eigen: true });
+  const f = pruefeBetrieb(b).join(' | ');
+  assert.match(f, /Material: Der Name darf nicht leer sein/);
+  assert.match(f, /„ohne Namen“: Der Preis muss 0 oder mehr sein/);
+  assert.match(f, /„Onyx“: Die Materialart fehlt/);
+});
+
+test('Neue IDs sind lesbar und eindeutig', () => {
+  assert.equal(neueId('Marmor Carrara', []), 'eigen-marmor-carrara');
+  assert.equal(neueId('Größe XL', []), 'eigen-groesse-xl');
+  assert.equal(neueId('', []), 'eigen-eintrag');
+  assert.equal(neueId('Marmor', ['eigen-marmor', 'eigen-marmor-2']), 'eigen-marmor-3');
 });

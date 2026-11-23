@@ -75,21 +75,70 @@
 
     <!-- Einstellungen -->
     <section id="einstellungen" class="t-bereich" hidden>
-      <header class="schritt-kopf">
-        <h1>Einstellungen</h1>
-        <p class="einleitung">
-          Materialien, Preise, Maßgrenzen und Optionen Ihres Betriebs. Gilt sofort für den Konfigurator in diesem Browser.
-        </p>
-      </header>
-      <form id="einstellungen-form" class="t-einstellungen" novalidate>
-        <div id="einstellungen-felder"></div>
-        <p class="fehler" id="einstellungen-fehler" role="alert" hidden></p>
-        <p class="t-gespeichert" id="einstellungen-ok" role="status" hidden>Gespeichert.</p>
-        <div class="aktionen aktionen-zwischen">
-          <button type="button" class="knopf knopf-leise" id="einstellungen-standard">Auf Standard zurücksetzen</button>
-          <button type="submit" class="knopf knopf-haupt">Speichern</button>
+      <!-- Portfolio: Möbel, die der Betrieb anbietet -->
+      <div id="portfolio-ansicht">
+        <header class="schritt-kopf">
+          <h1>Ihr Portfolio</h1>
+          <p class="einleitung">
+            Diese Möbel bieten Sie im Konfigurator an. Öffnen Sie ein Möbel, um Materialien, Preise und Optionen einzustellen.
+          </p>
+        </header>
+        <ul class="t-portfolio" id="portfolio-liste" aria-label="Möbel im Portfolio"></ul>
+        <p class="t-gespeichert" id="portfolio-status" role="status" hidden></p>
+
+        <section class="karte t-katalog" id="portfolio-auswahl" aria-labelledby="katalog-titel" hidden>
+          <header class="t-katalog-kopf">
+            <h2 id="katalog-titel">Möbel hinzufügen</h2>
+            <button type="button" class="link-zurueck" id="katalog-schliessen">Fertig</button>
+          </header>
+          <p class="tipp">Tippen Sie auf ein Möbel, um es in Ihr Portfolio aufzunehmen.</p>
+          <ul class="t-katalog-liste" id="katalog-liste"></ul>
+          <form class="t-katalog-eigen" id="eigenes-moebel-form">
+            <label class="feld">
+              <span>Anderes Möbel</span>
+              <input type="text" id="eigenes-moebel" maxlength="60" placeholder="z. B. Hocker" autocomplete="off">
+            </label>
+            <button type="submit" class="knopf knopf-leise">Hinzufügen</button>
+          </form>
+        </section>
+      </div>
+
+      <!-- Möbel ohne Einstellungen (Demo: nur Couchtisch eingerichtet) -->
+      <div id="moebel-leer" hidden>
+        <button type="button" class="link-zurueck t-zurueck" data-portfolio="zurueck"><span aria-hidden="true">←</span> Portfolio</button>
+        <header class="schritt-kopf">
+          <h1 id="moebel-leer-titel"></h1>
+        </header>
+        <div class="karte t-leer-karte">
+          <span class="t-leer-symbol" id="moebel-leer-symbol" aria-hidden="true"></span>
+          <h2>Noch nicht eingerichtet</h2>
+          <p>Materialien, Preise und Optionen für dieses Möbel folgen. In der Demo ist der Couchtisch vollständig eingerichtet.</p>
+          <div class="t-leer-aktionen">
+            <button type="button" class="knopf knopf-leise" data-moebel="couchtisch">Couchtisch öffnen</button>
+            <button type="button" class="link-zurueck" id="moebel-entfernen">Aus dem Portfolio entfernen</button>
+          </div>
         </div>
-      </form>
+      </div>
+
+      <!-- Couchtisch: Einstellungen aus betrieb.js -->
+      <div id="couchtisch-ansicht" hidden>
+        <button type="button" class="link-zurueck t-zurueck" data-portfolio="zurueck"><span aria-hidden="true">←</span> Portfolio</button>
+        <header class="schritt-kopf">
+          <h1>Couchtisch</h1>
+          <p class="einleitung">
+            Materialien, Preise, Maßgrenzen und Optionen. Gilt sofort für den Konfigurator in diesem Browser.
+          </p>
+        </header>
+        <form id="einstellungen-form" class="t-einstellungen" novalidate>
+          <div id="einstellungen-felder"></div>
+          <p class="fehler" id="einstellungen-fehler" role="alert" hidden></p>
+          <p class="t-gespeichert" id="einstellungen-ok" role="status" hidden>Gespeichert.</p>
+          <div class="aktionen aktionen-zwischen">
+            <button type="button" class="knopf knopf-leise" id="einstellungen-standard">Auf Standard zurücksetzen</button>
+            <button type="submit" class="knopf knopf-haupt">Speichern</button>
+          </div>
+        </form>
+      </div>
     </section>
   </main>
 

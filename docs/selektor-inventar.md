@@ -55,7 +55,12 @@ Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf
 - `#detail`, `[data-bild]`, `[data-aktion]` (annehmen, ablehnen, abbrechen, zuruecksetzen), `#ablehnen-form`, `#ablehnen-grund`, `#detail-fehler`
 - Klassen aus JS: `t-hinweis`, `t-vorschau`, `t-eintrag-*`, `t-status`, `t-status-neu|angenommen|abgelehnt`, `t-leer`, `t-detail-kopf`, `t-bild`, `umschalter`, `t-ohne-bild`, `t-aktionen`, `t-ablehnen`, `t-knopf-ablehnen`, `t-ergebnis-*`, `t-grund`, `t-abschnitte`, `t-preis`, `t-nachricht`, `kv-daten`, `positionen`, `hinweis-platz`, `sonderliste`, `link-zurueck`, `knopf`, `knopf-haupt`, `knopf-leise`
 - `#einstellungen-form`, `#einstellungen-felder` (`[data-pfad]`), `#einstellungen-fehler`, `#einstellungen-ok`, `#einstellungen-standard`
-- Klassen aus JS: `t-einst-raster`, `t-einst`, `t-einst-zeilen`, `t-einst-drei`, `t-einst-spalte`, `t-einst-name`
+- Portfolio: `#portfolio-ansicht`, `#portfolio-liste` (`.t-moebel[data-moebel]`, `#moebel-hinzufuegen` mit `aria-expanded`), `#portfolio-status`, `#portfolio-auswahl`, `#katalog-liste` (`[data-katalog]`), `#katalog-schliessen`, `#eigenes-moebel-form`, `#eigenes-moebel`
+- Leere Möbelseite: `#moebel-leer`, `#moebel-leer-titel`, `#moebel-leer-symbol`, `#moebel-entfernen` (`data-id`), `[data-portfolio="zurueck"]`
+- Couchtisch: `#couchtisch-ansicht`; im Formular `[role="tab"][data-art]` (`#art-reiter-<id>`, `.t-art-titel`, `aria-selected`), `#art-panel-<id>`, `[data-neu]` (materialien mit `data-art`, materialart, gestelle, oberflaechen, optionen), `[data-entfernen]`, `[data-art-entfernen]`
+- Hash-Ansichten: `#einstellungen`, `#einstellungen/<möbel-id>`
+- Klassen aus JS: `t-einst-raster`, `t-einst`, `t-einst-breit`, `t-einst-zeilen`, `t-einst-drei`, `t-mit-entfernen`, `t-einst-spalte`, `t-einst-name`, `t-arten`, `t-arten-reiter`, `t-anzahl`, `t-art-panel`, `t-art-name`, `t-leer-hinweis`, `t-plus`, `t-entfernen`, `t-standard`, `t-moebel*`, `t-katalog*`
+- Kundenseite: `.wahl-gruppe` (Zwischenüberschrift je Materialart im Baukasten)
 
 ## Neu in dieser Runde (js/kopf.js)
 - `.kopfbereich` (fester Container), Klassen `verdichtet`, `kopf-weg`, `nicht-fest`; `.kopf-sentinel`; CSS-Variable `--kopf-hoehe` auf `html`
