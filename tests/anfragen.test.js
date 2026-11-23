@@ -1,7 +1,8 @@
 // Tests für die Daten der Edge Function anfragen (Prüfung und Umwandlung).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { zeileAusAnfrage, anfrageAusZeile, pruefeStatus, bildAusDataUrl } from '../supabase/functions/anfragen/daten.ts';
+import { FREIGESCHALTET, istFreigeschaltet, moebelAus } from '../supabase/functions/_shared/moebel.ts';
+import { KONFIG_PRUEFUNG, zeileAusAnfrage, anfrageAusZeile, pruefeStatus, bildAusDataUrl } from '../supabase/functions/anfragen/daten.ts';
 
 const anfrage = {
   kunde: { name: ' Anna Muster ', email: 'anna@example.com', telefon: '', ort: 'Wien', nachricht: 'Gern mit Ablage' },
@@ -27,9 +28,32 @@ test('Anfrage → Zeile: Felder umbenannt, Text gekürzt und getrimmt', () => {
 test('Anfrage → Zeile: Pflichtangaben', () => {
   assert.throws(() => zeileAusAnfrage({ ...anfrage, kunde: { name: '', email: 'a@b.de' } }), /Namen/);
   assert.throws(() => zeileAusAnfrage({ ...anfrage, kunde: { name: 'A', email: 'kaputt' } }), /E-Mail/);
-  assert.throws(() => zeileAusAnfrage({ ...anfrage, konfiguration: null }), /Tischauswahl/);
+  assert.throws(() => zeileAusAnfrage({ ...anfrage, konfiguration: null }), /Auswahl zum Möbelstück/);
   assert.throws(() => zeileAusAnfrage({ ...anfrage, preis: {} }), /Preis/);
   assert.throws(() => zeileAusAnfrage({ ...anfrage, freierPlatz: null }), /freie Platz/);
+});
+
+test('Möbel: fehlt → Couchtisch (ältere Kundenseite), sonst nur freigeschaltete', () => {
+  const alt = zeileAusAnfrage(anfrage);
+  assert.equal(alt.moebel, 'couchtisch');
+  assert.equal(alt.moebel_name, null);
+  const neu = zeileAusAnfrage({ ...anfrage, moebel: 'couchtisch', moebelName: ' Couchtisch ' });
+  assert.equal(neu.moebel, 'couchtisch');
+  assert.equal(neu.moebel_name, 'Couchtisch');
+  assert.throws(() => zeileAusAnfrage({ ...anfrage, moebel: 'esstisch' }), /noch nicht angefragt/);
+  assert.throws(() => zeileAusAnfrage({ ...anfrage, moebel: 'DROP TABLE' }), /Unbekanntes Möbelstück/);
+  assert.throws(() => zeileAusAnfrage({ ...anfrage, moebel: 42 }), /Unbekanntes Möbelstück/);
+});
+
+test('Möbel: Freischaltliste und Konfigurationsprüfung passen zusammen', () => {
+  assert.equal(moebelAus(undefined), 'couchtisch');
+  assert.equal(moebelAus('eigen-hocker'), 'eigen-hocker');
+  assert.equal(moebelAus('-x'), null);
+  assert.equal(istFreigeschaltet('couchtisch'), true);
+  assert.equal(istFreigeschaltet('esstisch'), false);
+  assert.equal(istFreigeschaltet(null), false);
+  // Jedes freigeschaltete Möbel braucht eine Prüfung, sonst scheitert jede Anfrage dafür
+  for (const id of FREIGESCHALTET) assert.equal(typeof KONFIG_PRUEFUNG[id], 'function', id);
 });
 
 test('Zeile → Anfrage für die Tischlerseite', () => {
@@ -37,6 +61,8 @@ test('Zeile → Anfrage für die Tischlerseite', () => {
   assert.deepEqual(a.freierPlatz, { laenge: 1, breite: 2 });
   assert.equal(a.kiBildUrl, 'https://bild');
   assert.equal(a.fotoUrl, null);
+  assert.equal(a.moebel, 'couchtisch'); // Zeile von vor der Migration
+  assert.equal(anfrageAusZeile({ id: 'y', moebel: 'couchtisch', moebel_name: 'Couchtisch' }).moebelName, 'Couchtisch');
 });
 
 test('Status: Ablehnen nur mit Begründung', () => {

@@ -12,6 +12,8 @@ import {
 } from './betrieb.js';
 import {
   DEMO_MOEBEL,
+  MOEBEL_KATALOG,
+  moebelSymbol,
   portfolioLaden,
   portfolioSpeichern,
   moebelHinzufuegen,
@@ -23,6 +25,9 @@ import { demoCodeLesen, demoCodeSpeichern, rufeFunction } from './supabase.js';
 
 const $ = (sel) => document.querySelector(sel);
 const escape = (s) => String(s ?? '').replace(/[&<>"']/g, (z) => `&#${z.charCodeAt(0)};`);
+/** Möbel einer Anfrage: gespeicherter Name, sonst Katalogname, sonst ID (ältere Anfragen: Couchtisch). */
+const moebelVon = (a) =>
+  a.moebelName || MOEBEL_KATALOG.find((m) => m.id === (a.moebel || DEMO_MOEBEL))?.name || a.moebel;
 
 const STATUS_TEXT = { neu: 'Neu', angenommen: 'Angenommen', abgelehnt: 'Abgelehnt' };
 
@@ -158,7 +163,7 @@ function listeZeichnen() {
           <span class="t-vorschau">${bild ? `<img src="${escape(bild)}" alt="" loading="lazy">` : ''}</span>
           <span class="t-eintrag-text">
             <span class="t-eintrag-kopf"><strong>${escape(a.kunde?.name)}</strong>${statusMarke(a.status)}</span>
-            <span class="t-eintrag-tisch">${escape(k.namen?.form || k.form)} · ${escape(masseText(k))}</span>
+            <span class="t-eintrag-tisch">${escape(moebelVon(a))} · ${escape(k.namen?.form || k.form)} · ${escape(masseText(k))}</span>
             <span class="t-eintrag-fuss">${escape(k.namen?.material || '')} · ${
               a.preis?.rahmen ? `${formatEuro(a.preis.rahmen.von)} – ${formatEuro(a.preis.rahmen.bis)}` : ''
             }</span>
@@ -271,7 +276,7 @@ function detailZeichnen() {
       <section>
         <h3>Möbelstück</h3>
         <dl class="kv-daten">
-          ${zeile('Möbel', BETRIEB.moebelart)}
+          ${zeile('Möbel', moebelVon(a))}
           ${zeile('Form', n.form || k.form)}
           ${zeile('Maße', masseText(k))}
           ${zeile('Material', n.material)}
@@ -421,28 +426,7 @@ const einst = {
 };
 
 // Linien-Symbole 32 × 32 für das Portfolio
-const MOEBEL_SYMBOL = {
-  couchtisch: '<rect x="3" y="12" width="26" height="3" rx="1"/><path d="M6 15v9M26 15v9M6 20h20"/>',
-  esstisch: '<rect x="3" y="9" width="26" height="3" rx="1"/><path d="M6 12v15M26 12v15"/>',
-  schreibtisch: '<rect x="3" y="9" width="26" height="3" rx="1"/><path d="M5 12v15M19 12v15M27 12v15M19 18h8"/>',
-  stuhl: '<path d="M10 4v23M10 16h12v11M8 16h16"/>',
-  sessel: '<path d="M9 12V8a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v4"/><rect x="4" y="12" width="5" height="10" rx="2"/><rect x="23" y="12" width="5" height="10" rx="2"/><path d="M9 17h14M9 22h14M7 22v4M25 22v4"/>',
-  sofa: '<path d="M6 13V9a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4"/><rect x="2" y="13" width="5" height="9" rx="2"/><rect x="25" y="13" width="5" height="9" rx="2"/><path d="M7 17h18M7 22h18M5 22v3M27 22v3"/>',
-  lampe: '<path d="M11 4h10l3 8H8z"/><path d="M16 12v15M11 28h10"/>',
-  schrank: '<rect x="7" y="3" width="18" height="24" rx="1"/><path d="M16 3v24M14 14v3M18 14v3M9 27v2M23 27v2"/>',
-  kommode: '<rect x="5" y="7" width="22" height="18" rx="1"/><path d="M5 13h22M5 19h22M14 10h4M14 16h4M14 22h4M7 25v3M25 25v3"/>',
-  sideboard: '<rect x="2" y="11" width="28" height="11" rx="1"/><path d="M11.3 11v11M20.7 11v11M4 22v4M28 22v4"/>',
-  regal: '<path d="M6 3v26M26 3v26M6 10h20M6 17h20M6 24h20"/>',
-  bett: '<path d="M3 27V8M3 19h26v8M3 15h26v4"/><rect x="5" y="11" width="7" height="4" rx="1.5"/>',
-  nachttisch: '<rect x="8" y="9" width="16" height="15" rx="1"/><path d="M8 16h16M14 12.5h4M14 20h4M10 24v3M22 24v3"/>',
-  garderobe: '<path d="M16 3v24M10 28h12M16 7l-6 4M16 7l6 4M16 12l-4 3M16 12l4 3"/>',
-  eigen: '<rect x="5" y="9" width="22" height="16" rx="2"/><path d="M5 14h22M14 19h4"/>',
-  plus: '<path d="M16 8v16M8 16h16"/>',
-};
-const symbol = (id) =>
-  `<svg viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${
-    MOEBEL_SYMBOL[id] || MOEBEL_SYMBOL.eigen
-  }</svg>`;
+const symbol = (id) => moebelSymbol(id);
 
 function einstellungenZeigen(ansicht = einst.ansicht) {
   const bekannt = ansicht === 'portfolio' || einst.portfolio.moebel.some((m) => m.id === ansicht);

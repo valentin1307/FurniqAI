@@ -1,7 +1,9 @@
-// Edge Function render-table: setzt den konfigurierten Tisch per Bild-KI ins Raumfoto.
+// Edge Function render-table: setzt das konfigurierte Möbelstück per Bild-KI ins Raumfoto.
 //
-// POST { foto, fotoMarkiert, fotoBreite, fotoHoehe, referenz:{p1,p2,laengeCm}, tischPosition:{x,y},
+// POST { moebel?, foto, fotoMarkiert, fotoBreite, fotoHoehe, referenz:{p1,p2,laengeCm}, tischPosition:{x,y},
 //        tisch:{ form, laenge, breite, hoehe, materialId, gestellId, oberflaecheId, namen:{…}, promptZusatz? } }
+//   moebel fehlt → 'couchtisch'. Nur freigeschaltete Möbel mit Eintrag in PROMPTS (prompt.ts).
+//   tischPosition/tisch heißen aus Kompatibilität so, gelten aber für jedes Möbel.
 //   → 200 { bild, mimeType, modell, anbieter, dauerMs, seitenverhaeltnis }
 //   → 4xx/5xx { fehler: { code, meldung } }   (meldung auf Deutsch für die Kundenseite)
 // POST { aktion: "modelle" } → { modell, verfuegbar: [...] }   (Prüfung, welche Bildmodelle der Schlüssel kann)
@@ -11,8 +13,9 @@
 
 import { type BildAnbieter, AnbieterFehler, fehler } from './anbieter/typ.ts';
 import { GeminiAnbieter } from './anbieter/gemini.ts';
-import { bauePrompt, naechstesSeitenverhaeltnis, type TischParameter } from './prompt.ts';
+import { naechstesSeitenverhaeltnis, PROMPTS } from './prompt.ts';
 import { pruefeDemoCode } from '../_shared/zugang.ts';
+import { istFreigeschaltet, moebelAus } from '../_shared/moebel.ts';
 import { json, vorpruefung } from '../_shared/http.ts';
 
 const STANDARD_MODELL = 'gemini-3.1-flash-image';
@@ -32,9 +35,27 @@ const istZahl = (w: unknown): w is number => typeof w === 'number' && Number.isF
 const istPunkt = (p: Roh) => p && istZahl(p.x) && istZahl(p.y) && p.x >= 0 && p.x <= 1 && p.y >= 0 && p.y <= 1;
 const ohnePraefix = (s: string) => s.replace(/^data:[^,]*,/, '');
 
-/** Eingabe prüfen; wirft AnbieterFehler('eingabe') mit konkretem Hinweis. */
-function pruefeEingabe(e: Roh) {
+type Mangel = (was: string) => Error;
+
+/** Angaben je Möbel prüfen (Schlüssel wie in PROMPTS). */
+const MOEBEL_PRUEFUNG: Record<string, (t: Roh, mangel: Mangel) => void> = {
+  couchtisch(t, mangel) {
+    if (!t || !['rechteckig', 'quadratisch', 'rund', 'oval'].includes(t.form)) throw mangel('Form fehlt');
+    for (const m of ['laenge', 'breite', 'hoehe']) if (!istZahl(t[m]) || t[m] <= 0) throw mangel(`Maß ${m} fehlt`);
+    for (const f of ['materialId', 'gestellId', 'oberflaecheId']) if (typeof t[f] !== 'string') throw mangel(`${f} fehlt`);
+    for (const n of ['form', 'material', 'gestell', 'oberflaeche']) {
+      if (typeof t.namen?.[n] !== 'string') throw mangel(`Name ${n} fehlt`);
+    }
+  },
+};
+
+/** Eingabe prüfen; wirft AnbieterFehler('eingabe') mit konkretem Hinweis. Gibt die Möbel-ID zurück. */
+function pruefeEingabe(e: Roh): string {
   const mangel = (was: string) => fehler('eingabe', was, `Die Angaben für das Bild sind unvollständig: ${was}.`);
+  const moebel = moebelAus(e?.moebel);
+  if (!istFreigeschaltet(moebel) || !PROMPTS[moebel!] || !MOEBEL_PRUEFUNG[moebel!]) {
+    throw fehler('eingabe', `Möbel ${String(e?.moebel)} nicht freigeschaltet`, 'Für dieses Möbelstück gibt es noch keine Bildvorschau.');
+  }
   if (typeof e?.foto !== 'string' || e.foto.length < 100) throw mangel('Raumfoto fehlt');
   if (typeof e?.fotoMarkiert !== 'string' || e.fotoMarkiert.length < 100) throw mangel('markiertes Foto fehlt');
   if (e.foto.length > MAX_BILD_ZEICHEN || e.fotoMarkiert.length > MAX_BILD_ZEICHEN) throw mangel('Foto ist zu groß');
@@ -45,14 +66,9 @@ function pruefeEingabe(e: Roh) {
   if (!istPunkt(r?.p1) || !istPunkt(r?.p2) || !istZahl(r?.laengeCm) || r.laengeCm <= 0) {
     throw mangel('Referenzmarkierung fehlt');
   }
-  if (!istPunkt(e.tischPosition)) throw mangel('Tischposition fehlt');
-  const t = e.tisch;
-  if (!t || !['rechteckig', 'quadratisch', 'rund', 'oval'].includes(t.form)) throw mangel('Form fehlt');
-  for (const m of ['laenge', 'breite', 'hoehe']) if (!istZahl(t[m]) || t[m] <= 0) throw mangel(`Maß ${m} fehlt`);
-  for (const f of ['materialId', 'gestellId', 'oberflaecheId']) if (typeof t[f] !== 'string') throw mangel(`${f} fehlt`);
-  for (const n of ['form', 'material', 'gestell', 'oberflaeche']) {
-    if (typeof t.namen?.[n] !== 'string') throw mangel(`Name ${n} fehlt`);
-  }
+  if (!istPunkt(e.tischPosition)) throw mangel('Standort fehlt');
+  MOEBEL_PRUEFUNG[moebel!](e.tisch, mangel);
+  return moebel!;
 }
 
 Deno.serve(async (req) => {
@@ -78,10 +94,9 @@ Deno.serve(async (req) => {
       return json({ modell: anbieter.modell, verfuegbar: await anbieter.bildModelle() }, 200, origin);
     }
 
-    pruefeEingabe(eingabe);
-    const tisch: TischParameter = eingabe.tisch;
+    const moebel = pruefeEingabe(eingabe);
     const seitenverhaeltnis = naechstesSeitenverhaeltnis(eingabe.fotoBreite, eingabe.fotoHoehe);
-    const prompt = bauePrompt(tisch, eingabe.referenz.laengeCm);
+    const prompt = PROMPTS[moebel](eingabe.tisch, eingabe.referenz.laengeCm);
 
     const abbruch = new AbortController();
     const uhr = setTimeout(() => abbruch.abort(), ZEITLIMIT_MS);
@@ -97,7 +112,7 @@ Deno.serve(async (req) => {
         abbruch.signal,
       );
       const dauerMs = Date.now() - start;
-      console.log(JSON.stringify({ ok: true, modell: ergebnis.modell, dauerMs, seitenverhaeltnis }));
+      console.log(JSON.stringify({ ok: true, moebel, modell: ergebnis.modell, dauerMs, seitenverhaeltnis }));
       return json({ ...ergebnis, anbieter: anbieter.name, dauerMs, seitenverhaeltnis }, 200, origin);
     } finally {
       clearTimeout(uhr);

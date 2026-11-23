@@ -1,5 +1,7 @@
 // Umwandlung und Prüfung der Anfrage-Daten. Ohne Deno-Globals, damit mit Node testbar.
 
+import { istFreigeschaltet, moebelAus } from '../_shared/moebel.ts';
+
 // deno-lint-ignore no-explicit-any
 type Roh = any;
 
@@ -11,6 +13,14 @@ export class DatenFehler extends Error {}
 const text = (w: unknown, max: number) => (typeof w === 'string' ? w.trim().slice(0, max) : '');
 const istZahl = (w: unknown) => typeof w === 'number' && Number.isFinite(w);
 const istObjekt = (w: unknown) => typeof w === 'object' && w !== null && !Array.isArray(w);
+
+/**
+ * Prüfung der Konfiguration je Möbel. Jedes freigeschaltete Möbel (_shared/moebel.ts) braucht hier
+ * einen Eintrag, sonst wird die Anfrage abgelehnt statt mit unpassenden Daten gespeichert.
+ */
+export const KONFIG_PRUEFUNG: Record<string, (k: Roh) => boolean> = {
+  couchtisch: (k) => typeof k.form === 'string' && istZahl(k.laenge) && istZahl(k.hoehe),
+};
 
 /**
  * Anfrage von der Kundenseite (camelCase) → Tabellenzeile (snake_case).
@@ -28,16 +38,23 @@ export function zeileAusAnfrage(a: Roh) {
   if (!kunde.name) throw new DatenFehler('Bitte geben Sie Ihren Namen an.');
   if (!/^\S+@\S+\.\S+$/.test(kunde.email)) throw new DatenFehler('Bitte geben Sie eine gültige E-Mail-Adresse an.');
 
-  const k = a.konfiguration;
-  if (!istObjekt(k) || typeof k.form !== 'string' || !istZahl(k.laenge) || !istZahl(k.hoehe)) {
-    throw new DatenFehler('Die Tischauswahl fehlt.');
+  // Ältere Kundenseiten schicken kein Möbel mit → Couchtisch
+  const moebel = moebelAus(a.moebel);
+  if (moebel === null) throw new DatenFehler('Unbekanntes Möbelstück.');
+  const pruefe = KONFIG_PRUEFUNG[moebel];
+  if (!istFreigeschaltet(moebel) || !pruefe) {
+    throw new DatenFehler('Dieses Möbelstück kann noch nicht angefragt werden.');
   }
+  const k = a.konfiguration;
+  if (!istObjekt(k) || !pruefe(k)) throw new DatenFehler('Die Auswahl zum Möbelstück fehlt.');
   if (!istObjekt(a.preis) || !istZahl(a.preis.summe)) throw new DatenFehler('Der Preis fehlt.');
   if (!istObjekt(a.freierPlatz) || !istZahl(a.freierPlatz.laenge) || !istZahl(a.freierPlatz.breite)) {
     throw new DatenFehler('Der freie Platz fehlt.');
   }
 
   return {
+    moebel,
+    moebel_name: text(a.moebelName, 80) || null,
     kunde,
     konfiguration: k,
     preis: a.preis,
@@ -57,6 +74,8 @@ export function anfrageAusZeile(z: Roh, urls: { foto?: string | null; kiBild?: s
     id: z.id,
     erstellt: z.erstellt,
     status: z.status,
+    moebel: z.moebel ?? 'couchtisch', // Zeilen von vor der Migration
+    moebelName: z.moebel_name ?? null,
     ablehnungsgrund: z.ablehnungsgrund ?? null,
     bearbeitet: z.bearbeitet ?? null,
     kunde: z.kunde,

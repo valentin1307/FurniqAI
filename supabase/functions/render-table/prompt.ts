@@ -67,6 +67,14 @@ export function bauePrompt(p: TischParameter, referenzCm: number): string {
   ].join('\n');
 }
 
+/**
+ * Prompt je Möbel (IDs wie _shared/moebel.ts). Ein neu freigeschaltetes Möbel bekommt hier einen eigenen
+ * Prompt-Bauer mit eigenem Parametertyp; ohne Eintrag lehnt render-table die Anfrage ab.
+ */
+export const PROMPTS: Record<string, (p: TischParameter, referenzCm: number) => string> = {
+  couchtisch: bauePrompt,
+};
+
 // Seitenverhältnisse, die Gemini für Bilder annimmt
 const VERHAELTNISSE = ['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9'];
 

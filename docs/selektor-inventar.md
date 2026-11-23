@@ -6,12 +6,17 @@ Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf
 ## Kundenseite (index.html, js/app.js)
 
 **Struktur und Navigation**
-- `.schritt` (alle Schritt-Sections), `#schritt-1`, `#schritt-2`, `#schritt-4`, `#schritt-5`, `#schritt-N .kicker`
+- `.schritt` (alle Schritt-Sections), `#schritt-0`, `#schritt-1`, `#schritt-2`, `#schritt-4`, `#schritt-5`, `#schritt-N .kicker`
 - `.schritte button`, `.schritte li:not([hidden]) button`, `data-schritt`, `aria-current="step"`, Klasse `erledigt`, `disabled`
 - Schritt 3 bleibt `li hidden`
 
 **Kopf (White-Label)**
 - `#betrieb-logo`, `#betrieb-monogramm`, `#betrieb-name`, `#betrieb-claim` (alle `hidden`-gesteuert)
+
+**Schritt 0 (Möbel wählen)**
+- `#wahl-moebel` (change-Listener), `#moebel-raster`, `.moebel-karte` (Klasse `bald` = noch nicht freigeschaltet), `input[type=radio][name=moebel]` (`disabled` wenn nicht freigeschaltet), `.moebel-symbol`, `.moebel-name`, `.moebel-status`
+- `#weiter-0`, `#zurueck-1` (Schritt 1 → 0), `#kv-titel` (Titel des Kostenvoranschlags mit Möbelname)
+- `.nur-vorleser` (nur für Screenreader)
 
 **Schritt 1**
 - `#foto-input`, `#upload-zone` (Klasse `ziehen`), `#upload-leer`, `#foto-tipp`, `#markierung`

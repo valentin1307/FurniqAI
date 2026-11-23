@@ -10,12 +10,26 @@ import {
   moebelEntfernen,
   nochNichtAngeboten,
   portfolioLaden,
+  startPortfolio,
+  START_MOEBEL,
+  FREIGESCHALTET,
+  istFreigeschaltet,
+  moebelSymbol,
 } from '../js/portfolio.js';
 
-test('Start: nur der Couchtisch, auch ohne Browser-Speicher', () => {
+test('Start: Vorschlagsauswahl mit Couchtisch vorn, auch ohne Browser-Speicher', () => {
   assert.deepEqual(leeresPortfolio(), { moebel: [{ id: 'couchtisch', name: 'Couchtisch' }] });
-  assert.deepEqual(portfolioLaden(), leeresPortfolio());
+  assert.deepEqual(portfolioLaden(), startPortfolio());
+  assert.deepEqual(startPortfolio().moebel.map((m) => m.id), START_MOEBEL);
   assert.equal(DEMO_MOEBEL, 'couchtisch');
+});
+
+test('Freigeschaltet ist nur der Couchtisch; Symbole für alle Möbel', () => {
+  assert.deepEqual(FREIGESCHALTET, ['couchtisch']);
+  assert.equal(istFreigeschaltet('couchtisch'), true);
+  assert.equal(istFreigeschaltet('esstisch'), false);
+  assert.match(moebelSymbol('bett', 48), /width="48"/);
+  assert.equal(moebelSymbol('eigen-hocker'), moebelSymbol('gibts-nicht'));
 });
 
 test('Gespeichertes Portfolio: Couchtisch immer vorn, Ungültiges und Doppeltes fällt weg', () => {

@@ -80,3 +80,10 @@ test('Demo-Code: richtig, falsch, fehlt, nicht eingerichtet', () => {
   assert.equal(pruefeDemoCode('', 'tisch2026'), 'fehlt');
   assert.equal(pruefeDemoCode('egal', undefined), 'nicht_eingerichtet', 'ohne Secret gesperrt');
 });
+
+test('Prompt je Möbel: jedes freigeschaltete Möbel hat einen Prompt', async () => {
+  const { PROMPTS } = await import('../supabase/functions/render-table/prompt.ts');
+  const { FREIGESCHALTET } = await import('../supabase/functions/_shared/moebel.ts');
+  for (const id of FREIGESCHALTET) assert.equal(typeof PROMPTS[id], 'function', id);
+  assert.equal(PROMPTS.couchtisch(tisch, 220), bauePrompt(tisch, 220));
+});

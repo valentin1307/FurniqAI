@@ -28,6 +28,7 @@
 
     <nav class="schritte" aria-label="Fortschritt">
       <ol>
+        <li><button type="button" data-schritt="0"><span class="nr"></span><span class="txt">Möbel</span></button></li>
         <li><button type="button" data-schritt="1"><span class="nr"></span><span class="txt">Raum</span></button></li>
         <li><button type="button" data-schritt="2"><span class="nr"></span><span class="txt">Baukasten</span></button></li>
         <!-- Schritte 3 und 4 folgen in späteren Meilensteinen: dann „hidden“ entfernen. -->
@@ -39,8 +40,26 @@
   </div>
 
   <main>
+    <!-- Schritt 0: Möbel wählen (Auswahl aus dem Portfolio der Tischlerei, js/portfolio.js) -->
+    <section class="schritt" id="schritt-0" aria-labelledby="titel-0">
+      <header class="schritt-kopf">
+        <p class="kicker"></p>
+        <h1 id="titel-0">Wählen Sie Ihr neues Herzstück</h1>
+        <p class="einleitung">Jedes Stück entsteht in unserer Werkstatt nach Ihren Maßen. Den Couchtisch können Sie schon heute online gestalten, die weiteren Möbel folgen bald.</p>
+      </header>
+
+      <fieldset class="moebel-wahl" id="wahl-moebel">
+        <legend class="nur-vorleser">Möbelstück</legend>
+        <div class="moebel-raster" id="moebel-raster"></div>
+      </fieldset>
+
+      <div class="aktionen">
+        <button type="button" class="knopf knopf-haupt" id="weiter-0">Weiter zum Raum <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+
     <!-- Schritt 1: Raum -->
-    <section class="schritt" id="schritt-1" aria-labelledby="titel-1">
+    <section class="schritt" id="schritt-1" aria-labelledby="titel-1" hidden>
       <header class="schritt-kopf">
         <p class="kicker"></p>
         <h1 id="titel-1">Zeigen Sie uns Ihren Raum</h1>
@@ -159,7 +178,8 @@
 
       <p class="fehler" id="fehler-1" role="alert" hidden></p>
 
-      <div class="aktionen">
+      <div class="aktionen aktionen-zwischen">
+        <button type="button" class="link-zurueck" id="zurueck-1"><span aria-hidden="true">←</span> Anderes Möbelstück</button>
         <button type="button" class="knopf knopf-haupt" id="weiter-1">Weiter zum Baukasten <span aria-hidden="true">→</span></button>
       </div>
     </section>
@@ -357,7 +377,7 @@
           <header class="kv-briefkopf">
             <div>
               <span class="kv-betrieb" id="kv-betrieb"></span>
-              <span class="kv-titel">Kostenvoranschlag · Couchtisch</span>
+              <span class="kv-titel" id="kv-titel">Kostenvoranschlag · Couchtisch</span>
             </div>
             <span class="kv-datum" id="kv-datum"></span>
           </header>

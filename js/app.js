@@ -18,6 +18,7 @@ import {
 } from './bildki.js';
 import { demoCodeLesen, demoCodeSpeichern, rufeFunction } from './supabase.js';
 import { wendeAenderungenAn, promptZusatz, betriebFuerChat } from './feinschliff.js';
+import { DEMO_MOEBEL, istFreigeschaltet, moebelSymbol, portfolioLaden } from './portfolio.js';
 import {
   normiere,
   markierungsPhase,
@@ -74,7 +75,8 @@ const MATERIAL_BILD_ORDNER = 'assets/materialien';
 const FOTO_MAX_KANTE = 1600; // px, verkleinert vor dem Speichern
 
 const zustand = {
-  schritt: 1,
+  schritt: 0,
+  moebel: DEMO_MOEBEL, // Schritt 0: gewähltes Möbel (ID aus js/portfolio.js); nur freigeschaltete sind wählbar
   foto: null, // Data-URL (JPEG, verkleinert)
   // Markierung auf dem Foto, normiert 0–1 relativ zu Bildbreite/-höhe
   referenz: { p1: null, p2: null, laengeCm: null }, // p1/p2: { x, y }
@@ -142,11 +144,41 @@ function stepperAktualisieren() {
   document.querySelectorAll('.schritte button').forEach((btn) => {
     const nr = Number(btn.dataset.schritt);
     if (nr === 3) return; // Feinschliff folgt später
-    btn.disabled = nr !== 1 && !fertig1;
+    btn.disabled = nr > 1 && !fertig1;
     btn.classList.toggle('erledigt', nr < zustand.schritt);
     if (nr === zustand.schritt) btn.setAttribute('aria-current', 'step');
     else btn.removeAttribute('aria-current');
   });
+}
+
+// ---------- Schritt 0: Möbel wählen ----------
+
+const moebelPortfolio = portfolioLaden();
+
+/** Anzeigename des gewählten Möbels (Portfolio der Tischlerei, sonst betrieb.js). */
+function moebelName() {
+  return moebelPortfolio.moebel.find((m) => m.id === zustand.moebel)?.name || BETRIEB.moebelart;
+}
+
+function schritt0Einrichten() {
+  $('#moebel-raster').innerHTML = moebelPortfolio.moebel
+    .map((m) => {
+      const frei = istFreigeschaltet(m.id);
+      return `<label class="moebel-karte${frei ? '' : ' bald'}">
+        <input type="radio" name="moebel" value="${escape(m.id)}"${m.id === zustand.moebel ? ' checked' : ''}${frei ? '' : ' disabled'}>
+        <span class="moebel-symbol">${moebelSymbol(m.id, 44)}</span>
+        <span class="moebel-name">${escape(m.name)}</span>
+        <span class="moebel-status">${frei ? 'Jetzt gestalten' : 'Bald verfügbar'}</span>
+      </label>`;
+    })
+    .join('');
+  $('#wahl-moebel').addEventListener('change', (e) => {
+    if (e.target.name !== 'moebel' || !istFreigeschaltet(e.target.value)) return;
+    zustand.moebel = e.target.value;
+    $('#kv-titel').textContent = `Kostenvoranschlag · ${moebelName()}`;
+  });
+  $('#weiter-0').addEventListener('click', () => zeigeSchritt(1));
+  $('#kv-titel').textContent = `Kostenvoranschlag · ${moebelName()}`;
 }
 
 // ---------- Schritt 1: Raum ----------
@@ -434,6 +466,7 @@ function schritt1Einrichten() {
 
   markierungEinrichten();
   $('#weiter-1').addEventListener('click', schritt1Weiter);
+  $('#zurueck-1').addEventListener('click', () => zeigeSchritt(0));
 }
 
 // ---------- Schritt 2: Baukasten ----------
@@ -861,7 +894,7 @@ async function chatSenden(text) {
   try {
     const antwort = await rufeFunction(
       'feinschliff',
-      { nachricht: text, verlauf, konfiguration: konfiguration(), betrieb: betriebFuerChat(BETRIEB) },
+      { moebel: zustand.moebel, nachricht: text, verlauf, konfiguration: konfiguration(), betrieb: betriebFuerChat(BETRIEB) },
       { wer: 'Der Assistent' },
     );
     const hinweise = chatAenderungenUebernehmen(antwort.aenderungen || []);
@@ -994,6 +1027,7 @@ async function bildErzeugen() {
     const markiert = await markiertesFoto(zustand.foto, zustand.referenz, zustand.tischPosition);
     const antwort = await bildAnfordern(
       {
+        moebel: zustand.moebel,
         foto: zustand.foto,
         fotoMarkiert: markiert.daten,
         fotoBreite: markiert.breite,
@@ -1089,7 +1123,7 @@ function kostenvoranschlagAnzeigen() {
   $('#kv-betrieb').textContent = BETRIEB.name;
   $('#kv-datum').textContent = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
   const daten = [
-    ['Möbel', BETRIEB.moebelart],
+    ['Möbel', moebelName()],
     ['Form', n.form],
     ['Maße', masseText()],
     ['Material', n.material],
@@ -1163,6 +1197,8 @@ function schritt5Einrichten() {
 
     const preis = berechnePreis(konfiguration(), BETRIEB);
     const anfrage = {
+      moebel: zustand.moebel,
+      moebelName: moebelName(),
       kunde: Object.fromEntries(Object.entries(daten).map(([k, v]) => [k, v.trim()])),
       raum:
         zustand.raumLaenge === null || zustand.raumBreite === null
@@ -1232,6 +1268,7 @@ function markeSetzen() {
 
 function start() {
   markeSetzen();
+  schritt0Einrichten();
   document.querySelectorAll('.schritte button').forEach((btn) => {
     btn.addEventListener('click', () => zeigeSchritt(Number(btn.dataset.schritt)));
   });
@@ -1241,7 +1278,7 @@ function start() {
   schritt4Einrichten();
   schritt5Einrichten();
   stepperAktualisieren();
-  kickerSetzen(1);
+  kickerSetzen(0);
 }
 
 start();

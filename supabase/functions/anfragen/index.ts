@@ -1,7 +1,8 @@
 // Edge Function anfragen: Anfragen speichern (Kundenseite), lesen und bearbeiten (Tischlerseite).
 //
 // Alle Aufrufe POST mit Header x-demo-code (Secret DEMO_CODE).
-//   { aktion: "anlegen", anfrage: {...}, foto: dataURL, kiBild?: dataURL } → { id }
+//   { aktion: "anlegen", anfrage: { moebel?, moebelName?, ... }, foto: dataURL, kiBild?: dataURL } → { id }
+//     (moebel fehlt → 'couchtisch'; nur freigeschaltete Möbel, siehe _shared/moebel.ts)
 //   { aktion: "liste" }                                                  → { anfragen: [...] } (neueste zuerst)
 //   { aktion: "detail", id }                                             → { anfrage }
 //   { aktion: "status", id, status: "neu"|"angenommen"|"abgelehnt", grund? } → { anfrage }
@@ -75,7 +76,7 @@ async function anlegen(e: Roh) {
 async function liste() {
   const { data, error } = await db
     .from('anfragen')
-    .select('id, erstellt, status, ablehnungsgrund, bearbeitet, kunde, konfiguration, preis, foto_pfad, ki_bild_pfad, passt_in_freien_platz')
+    .select('id, erstellt, status, moebel, moebel_name, ablehnungsgrund, bearbeitet, kunde, konfiguration, preis, foto_pfad, ki_bild_pfad, passt_in_freien_platz')
     .order('erstellt', { ascending: false })
     .limit(200);
   if (error) throw error;

@@ -1,6 +1,7 @@
 // Edge Function feinschliff: ordnet Kundenwünsche aus dem Chat ein (Option, Sonderwunsch, Einstellung).
 //
-// POST (Header x-demo-code) { nachricht, verlauf:[{rolle:'kunde'|'assistent', text}], konfiguration, betrieb }
+// POST (Header x-demo-code) { moebel?, nachricht, verlauf:[{rolle:'kunde'|'assistent', text}], konfiguration, betrieb }
+//   moebel fehlt → 'couchtisch'; nur freigeschaltete Möbel (_shared/moebel.ts)
 //   → 200 { antwort, aenderungen:[{ typ, aktion, option_id?, feld?, wert?, beschreibung, prompt_zusatz? }], modell }
 // POST { aktion: "modelle" } → verfügbare Text-Modelle (Flash)
 //
@@ -8,6 +9,7 @@
 
 import { json, vorpruefung } from '../_shared/http.ts';
 import { pruefeDemoCode } from '../_shared/zugang.ts';
+import { istFreigeschaltet, moebelAus } from '../_shared/moebel.ts';
 import { ordneHttpFehlerEin } from '../render-table/anbieter/gemini.ts';
 import { AnbieterFehler, fehler } from '../render-table/anbieter/typ.ts';
 import { ANTWORT_SCHEMA, baueAnweisung, bereinigeAntwort, verlaufFuerModell, type BetriebDaten } from './regeln.ts';
@@ -90,6 +92,9 @@ Deno.serve(async (req) => {
       return json({ modell, verfuegbar: flash }, 200, origin);
     }
 
+    if (!istFreigeschaltet(moebelAus(e.moebel))) {
+      throw fehler('eingabe', `Möbel ${String(e.moebel)} nicht freigeschaltet`, 'Für dieses Möbelstück ist der Assistent noch nicht eingerichtet.');
+    }
     const nachricht = typeof e.nachricht === 'string' ? e.nachricht.trim().slice(0, 600) : '';
     if (!nachricht) throw fehler('eingabe', 'nachricht fehlt', 'Bitte schreiben Sie Ihren Wunsch.');
     const betrieb = pruefeBetrieb(e.betrieb);
