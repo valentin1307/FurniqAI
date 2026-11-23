@@ -16,6 +16,32 @@ export const GRENZE_GESAMT_STUNDE = 30;
 const text = (w: unknown, max: number) => (typeof w === 'string' ? w.trim().replace(/\s+/g, ' ').slice(0, max) : '');
 const langtext = (w: unknown, max: number) => (typeof w === 'string' ? w.trim().slice(0, max) : '');
 
+export type PilotZeile = NonNullable<ReturnType<typeof zeileAusPilot>>;
+
+/** Benachrichtigung ans Team: Betreff und Text (nur Klartext, keine HTML-Mail). */
+export function mailAusPilot(z: PilotZeile, erstellt = new Date()) {
+  const zeit = erstellt.toLocaleString('de-DE', { timeZone: 'Europe/Berlin', dateStyle: 'medium', timeStyle: 'short' });
+  const text = [
+    'Neue Pilot-Anfrage über tischlereien.html',
+    '',
+    `Name:     ${z.name}`,
+    `Betrieb:  ${z.betrieb}`,
+    `Ort:      ${z.ort}`,
+    `E-Mail:   ${z.email}`,
+    `Telefon:  ${z.telefon ?? '–'}`,
+    `Eingang:  ${zeit}`,
+    '',
+    'Nachricht:',
+    z.nachricht ?? '–',
+    '',
+    `Einwilligung: ja („${z.einwilligung_text}“)`,
+    '',
+    'Antworten geht direkt an die Tischlerei (Antwort-an-Adresse).',
+    'Alle Anfragen: Supabase-Dashboard → Table Editor → pilot_anfragen',
+  ].join('\n');
+  return { betreff: `Pilot-Anfrage: ${z.betrieb} (${z.ort})`.slice(0, 200), text };
+}
+
 /**
  * Formular → Tabellenzeile. Wirft PilotFehler mit deutschem Text.
  * Gibt null zurück, wenn das versteckte Feld „website“ ausgefüllt ist (Spam-Bot): Dann wird still nichts gespeichert.

@@ -37,3 +37,14 @@ test('Pilot-Anfrage: Pflichtfelder und Einwilligung', () => {
 test('Pilot-Anfrage: ausgefülltes Spam-Feld wird still verworfen', () => {
   assert.equal(zeileAusPilot({ ...formular, website: 'https://spam.example' }), null);
 });
+
+test('Pilot-Mail: Betreff mit Betrieb und Ort, Text mit allen Angaben', async () => {
+  const { mailAusPilot } = await import('../supabase/functions/pilot/daten.ts');
+  const m = mailAusPilot(zeileAusPilot(formular), new Date('2026-11-23T15:30:00Z'));
+  assert.equal(m.betreff, 'Pilot-Anfrage: Tischlerei Holz (Graz)');
+  assert.match(m.text, /Name: +Anna Holz/);
+  assert.match(m.text, /E-Mail: +anna@example.com/);
+  assert.match(m.text, /Telefon: +–/);
+  assert.match(m.text, /Gern Termin\nnächste Woche/);
+  assert.match(m.text, /23\.11\.2026, 16:30/);
+});
