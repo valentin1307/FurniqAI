@@ -22,8 +22,14 @@ test('Signatur ändert sich bei Form, Material, Maßen, Gestell, Oberfläche und
   }
 });
 
+test('Signatur ändert sich bei Extras aus dem Feinschliff', () => {
+  assert.notEqual(kiSignatur({ ...basis, optionIds: ['schublade'] }), kiSignatur(basis));
+  assert.notEqual(kiSignatur({ ...basis, sonderwuensche: [{ beschreibung: 'Glasplatte' }] }), kiSignatur(basis));
+  assert.equal(kiSignatur({ ...basis, optionIds: ['a', 'b'] }), kiSignatur({ ...basis, optionIds: ['b', 'a'] }), 'Reihenfolge egal');
+});
+
 test('Signatur bleibt gleich bei Dingen, die das Bild nicht betreffen', () => {
-  assert.equal(kiSignatur({ ...basis, optionIds: ['schublade'], foto: 'anders' }), kiSignatur(basis));
+  assert.equal(kiSignatur({ ...basis, foto: 'anders' }), kiSignatur(basis));
   // rund: Breite spielt keine Rolle
   const rund = { ...basis, form: 'rund', laenge: 80 };
   assert.equal(kiSignatur({ ...rund, breite: 50 }), kiSignatur({ ...rund, breite: 70 }));

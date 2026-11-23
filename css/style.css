@@ -372,6 +372,51 @@ fieldset.karte > legend ~ * { clear: both; }
 .demo-code .tipp { margin: 0; }
 .aktionen-zwischen { justify-content: space-between; align-items: center; }
 
+/* Feinschliff-Chat */
+.chat-verlauf { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.9rem 0 0.75rem; max-height: 22rem; overflow-y: auto; }
+.chat-verlauf:empty { display: none; }
+.chat-nachricht {
+  max-width: 88%; padding: 0.55rem 0.8rem; border-radius: 14px; font-size: 0.9rem; line-height: 1.45;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.chat-kunde { align-self: flex-end; background: var(--akzent); color: #fff8ee; border-bottom-right-radius: 4px; }
+.chat-assistent { align-self: flex-start; background: var(--akzent-hell); color: var(--text); border-bottom-left-radius: 4px; }
+.chat-tippt { color: var(--text-leise); font-style: italic; }
+.chat-hinweise { list-style: none; margin: 0.45rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.chat-hinweise li {
+  font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 999px;
+  background: var(--papier); border: 1px solid var(--linie-stark); color: var(--akzent-dunkel);
+}
+.chat-hinweise .art-sonderwunsch { border-style: dashed; }
+.chat-hinweise .art-entfernt { color: var(--text-leise); text-decoration: line-through; }
+.chat-vorschlaege { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.75rem 0; }
+.chat-vorschlaege button {
+  font: inherit; font-size: 0.82rem; cursor: pointer; padding: 0.35rem 0.75rem; border-radius: 999px;
+  border: 1px solid var(--linie-stark); background: var(--papier); color: var(--akzent-dunkel);
+}
+.chat-vorschlaege button:hover { border-color: var(--akzent); }
+.chat-code { margin-bottom: 0.6rem; }
+.chat-eingabe { display: flex; gap: 0.5rem; }
+.chat-eingabe input {
+  flex: 1; min-width: 0; font: inherit; padding: 0.7rem 0.9rem; border-radius: 12px;
+  border: 1px solid var(--linie-stark); background: var(--weiss); color: var(--text);
+}
+.chat-eingabe input:focus { border-color: var(--akzent); box-shadow: 0 0 0 3px rgba(123, 74, 34, 0.12); outline: none; }
+.chat-eingabe .knopf { padding: 0.7rem 1rem; font-size: 1.05rem; }
+.feinschliff .fehler { margin-top: 0.6rem; }
+.extras { margin-top: 1rem; border-top: 1px solid var(--linie); padding-top: 0.8rem; }
+.extras h3 { font-size: 0.95rem; margin: 0 0 0.5rem; }
+.extras-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+.extras-liste li { display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem; }
+.extras-liste .extra-name { flex: 1; min-width: 0; }
+.extras-liste .extra-preis { color: var(--text-leise); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.extras-liste .auf-anfrage { font-style: italic; }
+.extras-liste button {
+  flex: none; width: 1.8rem; height: 1.8rem; border-radius: 50%; cursor: pointer; font: inherit; line-height: 1;
+  border: 1px solid var(--linie-stark); background: var(--papier); color: var(--text-leise);
+}
+.extras-liste button:hover { border-color: var(--fehler); color: var(--fehler); }
+
 /* Preisleiste */
 .preisleiste {
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;

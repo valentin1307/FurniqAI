@@ -253,6 +253,37 @@
             <legend>Oberfläche</legend>
             <div class="wahl wahl-liste" id="wahl-oberflaeche"></div>
           </fieldset>
+
+          <!-- Feinschliff-Chat: Wünsche in eigenen Worten, eingeordnet als Option, Sonderwunsch oder Einstellung -->
+          <fieldset class="karte feinschliff" id="feinschliff">
+            <legend>Feinschliff</legend>
+            <p class="tipp">
+              Beschreiben Sie weitere Wünsche in eigenen Worten. Extras mit festem Preis rechnen sofort mit,
+              Sonderwünsche prüft die Tischlerei.
+            </p>
+            <div class="chat-verlauf" id="chat-verlauf" aria-live="polite"></div>
+            <div class="chat-vorschlaege" id="chat-vorschlaege">
+              <button type="button">Eine Ablage unten</button>
+              <button type="button">Kanten abgerundet</button>
+              <button type="button">5 cm niedriger</button>
+              <button type="button">Eingelassene Glasplatte</button>
+            </div>
+            <label class="feld chat-code" id="chat-code-feld" hidden>
+              <span>Demo-Code</span>
+              <input type="password" id="chat-code" autocomplete="off">
+            </label>
+            <div class="chat-eingabe">
+              <input type="text" id="chat-text" maxlength="600" placeholder="z. B. „Gern mit Schublade“" aria-label="Ihr Wunsch">
+              <button type="button" class="knopf knopf-haupt" id="chat-senden" aria-label="Wunsch senden">
+                <span aria-hidden="true">↑</span>
+              </button>
+            </div>
+            <p class="fehler" id="fehler-chat" role="alert" hidden></p>
+            <div class="extras" id="extras" hidden>
+              <h3>Ihre Extras</h3>
+              <ul class="extras-liste" id="extras-liste"></ul>
+            </div>
+          </fieldset>
         </div>
       </div>
     </section>

@@ -17,6 +17,8 @@ export function kiSignatur(z) {
     z.referenz?.p2,
     z.referenz?.laengeCm,
     z.tischPosition,
+    [...(z.optionIds || [])].sort(),
+    (z.sonderwuensche || []).map((s) => s.beschreibung),
   ]);
 }
 

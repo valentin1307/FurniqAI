@@ -51,7 +51,8 @@ export function bauePrompt(p: TischParameter, referenzCm: number): string {
   const material = mitName(MATERIAL_EN[p.materialId], p.namen.material);
   const gestell = mitName(GESTELL_EN[p.gestellId], p.namen.gestell);
   const oberflaeche = mitName(OBERFLAECHE_EN[p.oberflaecheId], p.namen.oberflaeche);
-  const zusatz = p.promptZusatz ? ` ${p.promptZusatz.trim()}` : '';
+  // Extras aus dem Feinschliff-Chat (englisch), gekürzt
+  const zusatz = typeof p.promptZusatz === 'string' && p.promptZusatz.trim() ? ` ${p.promptZusatz.trim().slice(0, 1500)}` : '';
 
   return [
     'Image 2 is a copy of image 1 with red guide markings: a red line between two red dots marks the reference object,',

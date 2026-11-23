@@ -17,6 +17,7 @@ import {
   bildAnfordern,
 } from './bildki.js';
 import { demoCodeLesen, demoCodeSpeichern, rufeFunction } from './supabase.js';
+import { wendeAenderungenAn, promptZusatz, betriebFuerChat } from './feinschliff.js';
 import {
   normiere,
   markierungsPhase,
@@ -65,8 +66,10 @@ const zustand = {
   kiBild: null, // Schritt 4: KI-Bild als JPEG-data-URL
   kiSignaturWert: null, // Angaben, aus denen kiBild entstand (siehe kiSignatur)
   kiInfo: null, // { modell, dauerMs, eingabe:{breite,hoehe}, ergebnis:{breite,hoehe} }
-  optionIds: [], // ab Schritt 3 (Feinschliff)
-  sonderwuensche: [], // ab Schritt 3 (Feinschliff)
+  optionIds: [], // Extras aus dem Feinschliff-Chat (Optionen des Betriebs, fester Aufpreis)
+  sonderwuensche: [], // [{ beschreibung, promptZusatz }] – Preis auf Anfrage
+  optionZusaetze: {}, // { optionId: englischer Satz für den Bild-Prompt }
+  chat: [], // [{ rolle: 'kunde'|'assistent', text, hinweise? }]
 };
 
 // ---------- Navigation ----------
@@ -583,6 +586,9 @@ function baukastenAnzeigen() {
   }
   buehneVerschieben(2);
   buehneAnsicht(zustand.kiBild && !kiVeraltet() ? 'ki' : 'raum');
+  $('#chat-code-feld').hidden = Boolean(demoCodeLesen());
+  extrasZeichnen();
+  chatZeichnen();
   reglerAktualisieren();
   baukastenAktualisieren();
 }
@@ -738,6 +744,148 @@ function draufsichtZeichnen() {
     <text x="${cx}" y="${y1 + rand * 0.75}" text-anchor="middle" font-size="${schrift * 0.75}" fill="#6f665c">Sofa-Seite</text>`;
 }
 
+// ---------- Schritt 2: Feinschliff-Chat ----------
+
+const chatLauf = { laeuft: false };
+
+/** Optionen und Sonderwünsche als kurzer Text, z. B. für Schritt 4. */
+function extrasText() {
+  const optionen = zustand.optionIds.map((id) => BETRIEB.optionen.find((o) => o.id === id)?.name ?? id);
+  const sonder = zustand.sonderwuensche.map((s) => `${s.beschreibung} (auf Anfrage)`);
+  return [...optionen, ...sonder].join(', ');
+}
+
+function hinweisText(h) {
+  if (h.art === 'option') return `✓ ${h.text} · +${formatEuro(h.preis)}`;
+  if (h.art === 'sonderwunsch') return `Sonderwunsch: ${h.text} · Preis auf Anfrage`;
+  if (h.art === 'einstellung') return `✓ ${h.text}`;
+  return h.text;
+}
+
+function chatZeichnen() {
+  const nachrichten = zustand.chat.map(
+    (n) => `<div class="chat-nachricht chat-${n.rolle}">${escape(n.text)}${
+      n.hinweise?.length
+        ? `<ul class="chat-hinweise">${n.hinweise.map((h) => `<li class="art-${h.art}">${escape(hinweisText(h))}</li>`).join('')}</ul>`
+        : ''
+    }</div>`,
+  );
+  if (chatLauf.laeuft) nachrichten.push('<div class="chat-nachricht chat-assistent chat-tippt">Einen Moment …</div>');
+  const verlauf = $('#chat-verlauf');
+  verlauf.innerHTML = nachrichten.join('');
+  verlauf.scrollTop = verlauf.scrollHeight;
+  $('#chat-vorschlaege').hidden = zustand.chat.length > 0;
+  $('#chat-senden').disabled = chatLauf.laeuft;
+  $('#chat-text').disabled = chatLauf.laeuft;
+}
+
+function extrasZeichnen() {
+  const optionen = zustand.optionIds.map((id) => {
+    const o = BETRIEB.optionen.find((x) => x.id === id);
+    return `<li><span class="extra-name">${escape(o?.name ?? id)}</span><span class="extra-preis">+${formatEuro(o?.preis ?? 0)}</span>
+      <button type="button" data-option="${escape(id)}" aria-label="${escape(o?.name ?? id)} entfernen">×</button></li>`;
+  });
+  const sonder = zustand.sonderwuensche.map(
+    (s, i) => `<li><span class="extra-name">${escape(s.beschreibung)}</span><span class="extra-preis auf-anfrage">Preis auf Anfrage</span>
+      <button type="button" data-sonder="${i}" aria-label="${escape(s.beschreibung)} entfernen">×</button></li>`,
+  );
+  $('#extras').hidden = optionen.length + sonder.length === 0;
+  $('#extras-liste').innerHTML = [...optionen, ...sonder].join('');
+}
+
+/** Änderungen aus dem Chat übernehmen und Baukasten aktualisieren. */
+function chatAenderungenUebernehmen(aenderungen) {
+  const { aenderung, hinweise } = wendeAenderungenAn(zustand, aenderungen, BETRIEB);
+  if (aenderung.form && aenderung.form !== zustand.form) formWechseln(aenderung.form);
+  delete aenderung.form;
+  Object.assign(zustand, aenderung);
+  if (istEinMassForm(zustand.form) && aenderung.laenge) zustand.breite = zustand.laenge;
+  for (const [name, feld] of [['form', 'form'], ['material', 'materialId'], ['gestell', 'gestellId'], ['oberflaeche', 'oberflaecheId']]) {
+    const input = wahlInput(name, zustand[feld]);
+    if (input) input.checked = true;
+  }
+  reglerAktualisieren(); // begrenzt Maße auf die Grenzen des Betriebs
+  // Hinweis mit dem tatsächlich gesetzten Maß (falls begrenzt)
+  for (const h of hinweise) {
+    if (h.feld) h.text = `${{ laenge: 'Länge', breite: 'Breite', hoehe: 'Höhe' }[h.feld]}: ${zustand[h.feld]} cm`;
+  }
+  $('#wunsch-hinweis').hidden = true;
+  extrasZeichnen();
+  baukastenAktualisieren();
+  return hinweise;
+}
+
+async function chatSenden(text) {
+  text = text.trim();
+  if (!text || chatLauf.laeuft) return;
+  zeigeFehler('fehler-chat', null);
+  if (!$('#chat-code-feld').hidden) {
+    const code = $('#chat-code').value.trim();
+    if (!code) {
+      zeigeFehler('fehler-chat', 'Bitte geben Sie zuerst den Demo-Code ein.');
+      $('#chat-code').focus();
+      return;
+    }
+    demoCodeSpeichern(code);
+    $('#chat-code-feld').hidden = true;
+  }
+
+  const verlauf = zustand.chat.slice(-8).map(({ rolle, text: t }) => ({ rolle, text: t }));
+  zustand.chat.push({ rolle: 'kunde', text });
+  $('#chat-text').value = '';
+  chatLauf.laeuft = true;
+  chatZeichnen();
+  try {
+    const antwort = await rufeFunction(
+      'feinschliff',
+      { nachricht: text, verlauf, konfiguration: konfiguration(), betrieb: betriebFuerChat(BETRIEB) },
+      { wer: 'Der Assistent' },
+    );
+    const hinweise = chatAenderungenUebernehmen(antwort.aenderungen || []);
+    zustand.chat.push({ rolle: 'assistent', text: antwort.antwort, hinweise });
+    console.info(`[Feinschliff] Modell ${antwort.modell} · ${hinweise.length} Änderung(en)`);
+  } catch (err) {
+    console.warn('[Feinschliff] Fehler:', err.code || '', err.message);
+    zustand.chat.pop(); // Nachricht zurück ins Eingabefeld
+    $('#chat-text').value = text;
+    if (err.code === 'demo_code') {
+      demoCodeSpeichern('');
+      $('#chat-code-feld').hidden = false;
+    }
+    zeigeFehler('fehler-chat', err.message);
+  } finally {
+    chatLauf.laeuft = false;
+    chatZeichnen();
+    $('#chat-text').focus();
+  }
+}
+
+function feinschliffEinrichten() {
+  $('#chat-senden').addEventListener('click', () => chatSenden($('#chat-text').value));
+  $('#chat-text').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.isComposing) {
+      e.preventDefault();
+      chatSenden($('#chat-text').value);
+    }
+  });
+  $('#chat-vorschlaege').addEventListener('click', (e) => {
+    const knopf = e.target.closest('button');
+    if (knopf) chatSenden(knopf.textContent);
+  });
+  $('#extras-liste').addEventListener('click', (e) => {
+    const knopf = e.target.closest('button');
+    if (!knopf) return;
+    if (knopf.dataset.option) {
+      zustand.optionIds = zustand.optionIds.filter((id) => id !== knopf.dataset.option);
+      delete zustand.optionZusaetze[knopf.dataset.option];
+    } else if (knopf.dataset.sonder) {
+      zustand.sonderwuensche = zustand.sonderwuensche.filter((_, i) => i !== Number(knopf.dataset.sonder));
+    }
+    extrasZeichnen();
+    baukastenAktualisieren();
+  });
+}
+
 // ---------- Schritt 4: Bild (KI-Vorschau) ----------
 
 const KI_ZEITLIMIT_MS = 130_000; // etwas mehr als das Limit der Edge Function
@@ -769,6 +917,7 @@ function bildSchrittAnzeigen() {
     ['Gestell', n.gestell],
     ['Oberfläche', n.oberflaeche],
   ];
+  if (extrasText()) daten.push(['Extras', extrasText()]);
   $('#bild-auswahl').innerHTML = daten.map(([k, v]) => `<dt>${k}</dt><dd>${escape(v)}</dd>`).join('');
   buehneAnsicht(zustand.kiBild ? 'ki' : 'raum');
   veraltetHinweisZeigen();
@@ -828,7 +977,7 @@ async function bildErzeugen() {
         fotoHoehe: markiert.hoehe,
         referenz: zustand.referenz,
         tischPosition: zustand.tischPosition,
-        tisch: { ...konfiguration(), namen: namen() },
+        tisch: { ...konfiguration(), namen: namen(), promptZusatz: promptZusatz(zustand, BETRIEB) },
       },
       abbruch.signal,
     );
@@ -938,7 +1087,7 @@ function kostenvoranschlagAnzeigen() {
     )
     .join('');
   $('#kv-summe').textContent = formatEuro(preis.summe);
-  $('#kv-prozent').textContent = `(± ${formatZahl(BETRIEB.rahmenProzent)} %, inkl. MwSt.)`;
+  $('#kv-prozent').textContent = `(± ${formatZahl(BETRIEB.rahmenProzent, Number.isInteger(BETRIEB.rahmenProzent) ? 0 : 1)} %, inkl. MwSt.)`;
   $('#kv-rahmen').textContent = `${formatEuro(preis.rahmen.von)} – ${formatEuro(preis.rahmen.bis)}`;
 
   const sonder = preis.sonderwuensche;
@@ -1065,6 +1214,7 @@ function start() {
   });
   schritt1Einrichten();
   schritt2Einrichten();
+  feinschliffEinrichten();
   schritt4Einrichten();
   schritt5Einrichten();
   stepperAktualisieren();
