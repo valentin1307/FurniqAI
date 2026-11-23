@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>FurniqAI – Möbel-Konfigurator für Tischlereien</title>
+  <title>FurniqAI – KI-Möbel-Konfigurator für Tischlereien</title>
   <meta name="description" content="Ein Konfigurator unter Ihrem Namen: Raumfoto, Baukasten mit Ihren Materialien und Preisen, KI-Vorschau im Raum des Kunden. Pilotbetriebe in Deutschland und Österreich gesucht.">
   <meta name="theme-color" content="#fbf8f3">
   <link rel="preload" href="fonts/fraunces-latin-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -36,9 +36,9 @@
     <section class="held" aria-labelledby="titel-held">
       <div class="innen held-raster">
         <div class="held-text">
-          <p class="kicker">Möbel-Konfigurator für Tischlereien</p>
-          <h1 id="titel-held">Ihre Kunden gestalten ihr Möbel selbst.</h1>
-          <p class="einleitung">Sie bekommen Anfragen, die zu Ihrem Sortiment passen. Mit Raumfoto, Ihren Materialien und Preisen und einer KI-Vorschau im Raum des Kunden.</p>
+          <p class="ki-abzeichen"><span class="ki-punkt" aria-hidden="true"></span>KI-Konfigurator für Tischlereien</p>
+          <h1 id="titel-held">Ihre Kunden gestalten ihr Möbel <em>selbst.</em></h1>
+          <p class="einleitung">Die KI zeigt das Möbel direkt im Raumfoto des Kunden. Sie bekommen Anfragen, die zu Ihrem Sortiment und Ihren Preisen passen.</p>
           <div class="knopfzeile">
             <a class="knopf knopf-haupt" href="index.html">Demo ausprobieren <span aria-hidden="true">→</span></a>
             <a class="knopf knopf-rand" href="#pilot">Pilot anfragen</a>
@@ -47,30 +47,44 @@
         </div>
         <figure class="bild held-bild">
           <img src="assets/landing/schritt-baukasten.jpg" width="1600" height="1000" fetchpriority="high" alt="Baukasten des Konfigurators: Raumfoto, Form, Material und geschätzter Preis">
+          <div class="ki-karte" aria-hidden="true">
+            <span class="ki-symbol"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9z"/><path d="M19 14l.9 2.6 2.6.9-2.6.9L19 21l-.9-2.6-2.6-.9 2.6-.9z" opacity=".75"/></svg></span>
+            <strong>KI-Vorschau</strong>
+            <small>Couchtisch in Nuss wird ins Raumfoto gesetzt</small>
+            <span class="ki-balken"><i></i></span>
+          </div>
         </figure>
       </div>
     </section>
+
+    <!-- Laufband: wandert beim Scrollen mit -->
+    <div class="laufband" aria-hidden="true">
+      <div class="laufband-zeile">
+        <span>Raumfoto</span><b>✦</b><span>Baukasten</span><b>✦</b><span>KI-Vorschau</span><b>✦</b><span>Kostenvoranschlag</span><b>✦</b><span>Ihre Materialien</span><b>✦</b><span>Ihre Preise</span><b>✦</b><span>Ihre Marke</span><b>✦</b>
+        <span>Raumfoto</span><b>✦</b><span>Baukasten</span><b>✦</b><span>KI-Vorschau</span><b>✦</b><span>Kostenvoranschlag</span><b>✦</b><span>Ihre Materialien</span><b>✦</b><span>Ihre Preise</span><b>✦</b><span>Ihre Marke</span><b>✦</b>
+      </div>
+    </div>
 
     <!-- Ausgangslage -->
     <section class="abschnitt" aria-labelledby="titel-ausgangslage">
       <div class="innen">
         <header class="abschnitt-kopf">
-          <p class="kicker">Ausgangslage</p>
-          <h2 id="titel-ausgangslage">Drei Dinge, die viele Tischlereien kennen.</h2>
+          <p class="kicker" data-tippen>Ausgangslage</p>
+          <h2 id="titel-ausgangslage">Drei Dinge, die viele Tischlereien <em>kennen</em>.</h2>
         </header>
         <ul class="drei">
-          <li data-zeigen>
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          <li data-bewegung="hoch">
+            <span class="symbol"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>
             <h3>Das Möbel ist schwer vorstellbar</h3>
             <p>Eine Maßskizze reicht oft nicht. Was der Kunde sich vorstellt, weicht vom fertigen Stück ab.</p>
           </li>
-          <li data-zeigen>
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <li data-bewegung="hoch">
+            <span class="symbol"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
             <h3>Beratung kostet Stunden</h3>
             <p>Auch bei Kunden, die am Ende nicht kaufen.</p>
           </li>
-          <li data-zeigen>
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M6 7l-3 7a4 4 0 0 0 6 0L6 7zM18 7l-3 7a4 4 0 0 0 6 0l-3-7zM12 3v18M8 21h8"/></svg>
+          <li data-bewegung="hoch">
+            <span class="symbol"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M6 7l-3 7a4 4 0 0 0 6 0L6 7zM18 7l-3 7a4 4 0 0 0 6 0l-3-7zM12 3v18M8 21h8"/></svg></span>
             <h3>Wunsch und Budget passen nicht</h3>
             <p>Das zeigt sich oft erst im Gespräch und kostet beide Seiten Zeit.</p>
           </li>
@@ -82,45 +96,45 @@
     <section id="so-funktionierts" class="abschnitt abschnitt-hell" aria-labelledby="titel-ablauf">
       <div class="innen">
         <header class="abschnitt-kopf">
-          <p class="kicker">So funktioniert’s</p>
-          <h2 id="titel-ablauf">In fünf Schritten von der Idee zur Anfrage.</h2>
+          <p class="kicker" data-tippen>So funktioniert’s</p>
+          <h2 id="titel-ablauf">In fünf Schritten von der Idee zur <em>Anfrage</em>.</h2>
         </header>
         <ol class="schritte">
-          <li class="schritt" data-zeigen>
-            <figure class="bild"><img src="assets/landing/schritt-moebel.jpg" width="1600" height="1000" loading="lazy" alt="Schritt „Wählen Sie Ihr neues Herzstück“ mit Möbelkarten"></figure>
-            <div class="schritt-text">
+          <li class="schritt">
+            <figure class="bild" data-bewegung="links"><img src="assets/landing/schritt-moebel.jpg" width="1600" height="1000" loading="lazy" alt="Schritt „Wählen Sie Ihr neues Herzstück“ mit Möbelkarten"></figure>
+            <div class="schritt-text" data-bewegung="rechts">
               <p class="schritt-nr">Schritt 1</p>
               <h3>Möbel wählen</h3>
               <p>Der Kunde wählt ein Möbel aus dem Sortiment, das Sie hinterlegt haben.</p>
             </div>
           </li>
-          <li class="schritt" data-zeigen>
-            <figure class="bild"><img src="assets/landing/schritt-raum.jpg" width="1600" height="1000" loading="lazy" alt="Raumfoto mit markiertem Sofa als Maßstab und markiertem Standort"></figure>
-            <div class="schritt-text">
+          <li class="schritt">
+            <figure class="bild" data-bewegung="rechts"><img src="assets/landing/schritt-raum.jpg" width="1600" height="1000" loading="lazy" alt="Raumfoto mit markiertem Sofa als Maßstab und markiertem Standort"></figure>
+            <div class="schritt-text" data-bewegung="links">
               <p class="schritt-nr">Schritt 2</p>
               <h3>Raum fotografieren</h3>
               <p>Ein Foto mit dem Smartphone genügt. Ein Gegenstand mit bekannter Länge, etwa das Sofa, gibt den Maßstab.</p>
             </div>
           </li>
-          <li class="schritt" data-zeigen>
-            <figure class="bild"><img src="assets/landing/schritt-baukasten-draufsicht.jpg" width="1600" height="1000" loading="lazy" alt="Baukasten mit maßstäblicher Draufsicht, Form- und Materialauswahl und Preis"></figure>
-            <div class="schritt-text">
+          <li class="schritt">
+            <figure class="bild" data-bewegung="links"><img src="assets/landing/schritt-baukasten-draufsicht.jpg" width="1600" height="1000" loading="lazy" alt="Baukasten mit maßstäblicher Draufsicht, Form- und Materialauswahl und Preis"></figure>
+            <div class="schritt-text" data-bewegung="rechts">
               <p class="schritt-nr">Schritt 3</p>
               <h3>Im Baukasten gestalten</h3>
               <p>Materialien, Maße und Preise kommen aus Ihrem Sortiment. Der Preis rechnet sofort mit.</p>
             </div>
           </li>
-          <li class="schritt" data-zeigen>
-            <figure class="bild"><img src="assets/landing/schritt-bild.jpg" width="1600" height="1000" loading="lazy" alt="Bild-Schritt mit Raumfoto und Zusammenfassung der Auswahl"></figure>
-            <div class="schritt-text">
+          <li class="schritt">
+            <figure class="bild" data-bewegung="rechts"><img src="assets/landing/schritt-bild.jpg" width="1600" height="1000" loading="lazy" alt="Bild-Schritt mit Raumfoto und Zusammenfassung der Auswahl"></figure>
+            <div class="schritt-text" data-bewegung="links">
               <p class="schritt-nr">Schritt 4</p>
-              <h3>Vorschau im eigenen Raum</h3>
+              <h3>Vorschau im eigenen Raum <span class="ki-marke">KI</span></h3>
               <p>Eine KI-Vorschau zeigt das Möbel im fotografierten Raum des Kunden.</p>
             </div>
           </li>
-          <li class="schritt" data-zeigen>
-            <figure class="bild"><img src="assets/landing/schritt-kostenvoranschlag.jpg" width="1600" height="1000" loading="lazy" alt="Unverbindlicher Kostenvoranschlag mit Positionen und Preisrahmen"></figure>
-            <div class="schritt-text">
+          <li class="schritt">
+            <figure class="bild" data-bewegung="links"><img src="assets/landing/schritt-kostenvoranschlag.jpg" width="1600" height="1000" loading="lazy" alt="Unverbindlicher Kostenvoranschlag mit Positionen und Preisrahmen"></figure>
+            <div class="schritt-text" data-bewegung="rechts">
               <p class="schritt-nr">Schritt 5</p>
               <h3>Preisrahmen und Anfrage</h3>
               <p>Der Kunde sieht einen unverbindlichen Preisrahmen und schickt die Anfrage an Sie.</p>
@@ -136,29 +150,29 @@
       <div class="innen betrieb-raster">
         <div>
           <header class="abschnitt-kopf abschnitt-kopf-links">
-            <p class="kicker">Für Ihren Betrieb</p>
-            <h2 id="titel-betrieb">Sie behalten die Kontrolle.</h2>
+            <p class="kicker" data-tippen>Für Ihren Betrieb</p>
+            <h2 id="titel-betrieb">Sie behalten die <em>Kontrolle</em>.</h2>
           </header>
           <ul class="vorteile">
-            <li>
+            <li data-bewegung="hoch">
               <h3>Posteingang mit allen Angaben</h3>
               <p>Jede Anfrage komplett. Sie nehmen sie an oder lehnen sie mit Begründung ab.</p>
             </li>
-            <li>
+            <li data-bewegung="hoch">
               <h3>Ihr Sortiment, Ihre Preise</h3>
               <p>Möbel, Materialien, Preise und Maßgrenzen legen Sie selbst fest.</p>
             </li>
-            <li>
+            <li data-bewegung="hoch">
               <h3>Unter Ihrem Namen</h3>
               <p>Auf Ihrer Website verlinkt oder eingebunden, mit Ihrer Marke.</p>
             </li>
-            <li>
+            <li data-bewegung="hoch">
               <h3>Das Angebot bleibt bei Ihnen</h3>
               <p>Den verbindlichen Preis machen Sie nach dem Vor-Ort-Termin.</p>
             </li>
           </ul>
         </div>
-        <figure class="bild" data-zeigen>
+        <figure class="bild" data-bewegung="rechts">
           <img src="assets/landing/tischler-einstellungen.jpg" width="1600" height="1000" loading="lazy" alt="Tischlerseite: Einstellungen für Preise, Maßgrenzen und Materialarten">
           <figcaption>Tischlerseite: Preise, Maßgrenzen und Materialien einstellen</figcaption>
         </figure>
@@ -169,7 +183,7 @@
     <section id="fragen" class="abschnitt abschnitt-hell" aria-labelledby="titel-fragen">
       <div class="innen fragen-raster">
         <header class="abschnitt-kopf abschnitt-kopf-links">
-          <p class="kicker">Fragen</p>
+          <p class="kicker" data-tippen>Fragen</p>
           <h2 id="titel-fragen">Häufige Fragen</h2>
           <p>Ihre Frage fehlt? Schreiben Sie sie einfach in die <a href="#pilot">Pilot-Anfrage</a>.</p>
         </header>
@@ -202,8 +216,8 @@
     <section id="pilot" class="abschnitt abschnitt-dunkel" aria-labelledby="titel-pilot">
       <div class="innen pilot-raster">
         <div class="pilot-text">
-          <p class="kicker">Pilotphase</p>
-          <h2 id="titel-pilot">Werden Sie Pilotbetrieb.</h2>
+          <p class="kicker" data-tippen>Pilotphase</p>
+          <h2 id="titel-pilot">Werden Sie <em>Pilotbetrieb</em>.</h2>
           <p>Wir suchen Tischlereien in Deutschland und Österreich, die FurniqAI mit ihrem Sortiment testen.</p>
           <ul class="haken">
             <li>Einrichtung übernehmen wir</li>
@@ -212,7 +226,7 @@
           </ul>
         </div>
 
-        <div class="formular-karte">
+        <div class="formular-karte" data-bewegung="hoch">
           <form class="formular" id="pilot-form" novalidate>
             <div class="feld">
               <label for="p-name">Name <span class="pflicht" aria-hidden="true">*</span></label>

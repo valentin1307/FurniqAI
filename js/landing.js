@@ -1,26 +1,90 @@
-// Landingpage für Tischlereien: sanftes Einblenden, Menü auf schmalen Bildschirmen, Pilot-Formular.
+// Landingpage für Tischlereien: Bewegung beim Scrollen (flach gehalten), Menü, Pilot-Formular.
 // Das Formular schickt an die Edge Function `pilot` (öffentlich, ohne Demo-Code).
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s, w = document) => [...w.querySelectorAll(s)];
 
-// ---------- Sanftes Einblenden ----------
-// Elemente mit data-zeigen blenden einmal ein, sobald sie sichtbar werden.
-// Ohne JS oder bei „Bewegung reduzieren“ (regelt das CSS) ist alles sofort da.
-if ('IntersectionObserver' in window) {
-  document.documentElement.classList.add('js-bereit');
-  const zeiger = new IntersectionObserver(
-    (eintraege) => {
-      for (const e of eintraege) {
-        if (!e.isIntersecting) continue;
-        e.target.classList.add('gezeigt');
-        zeiger.unobserve(e.target);
-      }
-    },
-    { rootMargin: '0px 0px -8% 0px' },
-  );
-  $$('[data-zeigen]').forEach((el) => zeiger.observe(el));
+// ---------- Bewegung ----------
+// Ein rAF-gedrosselter Takt setzt --fortschritt (Lesefortschritt), --aus am Einstieg (Parallaxe),
+// --verschiebung am Laufband und --ein (0 … 1) an Elementen mit data-bewegung. Das CSS macht daraus
+// kurzes Hereingleiten. Bei „Bewegung reduzieren“ nur der Lesefortschritt, html.bewegt fehlt dann.
+
+const wurzel = document.documentElement;
+const ruhig = matchMedia('(prefers-reduced-motion: reduce)');
+const begrenze = (v, min = 0, max = 1) => Math.min(max, Math.max(min, v));
+const weich = (t) => 1 - (1 - t) ** 3;
+
+const held = $('.held');
+const kopf = $('.kopf');
+const laufband = $('.laufband');
+const laufZeile = $('.laufband-zeile');
+const bewegte = $$('[data-bewegung]');
+const zuletzt = new WeakMap(); // nur schreiben, wenn sich etwas ändert
+let geplant = false;
+
+function setze(el, name, wert) {
+  let alt = zuletzt.get(el);
+  if (!alt) zuletzt.set(el, (alt = {}));
+  const gerundet = Math.round(wert * 1000) / 1000;
+  if (alt[name] === gerundet) return;
+  alt[name] = gerundet;
+  el.style.setProperty(name, String(gerundet));
 }
+
+function takt() {
+  geplant = false;
+  const vh = innerHeight;
+  const gesamt = wurzel.scrollHeight - vh;
+  setze(kopf, '--fortschritt', gesamt > 0 ? scrollY / gesamt : 0);
+  if (ruhig.matches) return;
+
+  if (held) {
+    const r = held.getBoundingClientRect();
+    setze(held, '--aus', begrenze(-r.top / (r.height * 0.9)));
+  }
+  if (laufband) {
+    const r = laufband.getBoundingClientRect();
+    if (r.bottom > -100 && r.top < vh + 100) laufZeile.style.setProperty('--verschiebung', `${Math.round((vh - r.top) * 0.3)}px`);
+  }
+  for (const el of bewegte) {
+    const r = el.getBoundingClientRect();
+    if (r.top > vh * 1.3) { setze(el, '--ein', 0); continue; }
+    if (r.bottom < 0) { setze(el, '--ein', 1); continue; }
+    setze(el, '--ein', weich(begrenze((vh - r.top) / (vh * 0.4))));
+  }
+}
+
+function planen() {
+  if (geplant) return;
+  geplant = true;
+  requestAnimationFrame(takt);
+}
+
+function bewegungStarten() {
+  wurzel.classList.toggle('bewegt', !ruhig.matches);
+  if (ruhig.matches) bewegte.forEach((el) => { el.style.removeProperty('--ein'); zuletzt.delete(el); });
+  takt();
+}
+addEventListener('scroll', planen, { passive: true });
+addEventListener('resize', planen);
+ruhig.addEventListener('change', bewegungStarten);
+bewegungStarten();
+
+// Kicker tippen sich ein, sobald sie sichtbar werden
+const tipper = new IntersectionObserver(
+  (eintraege) => {
+    for (const e of eintraege) {
+      if (!e.isIntersecting) continue;
+      e.target.classList.add('getippt');
+      tipper.unobserve(e.target);
+    }
+  },
+  { rootMargin: '0px 0px -10% 0px' },
+);
+$$('[data-tippen]').forEach((k) => {
+  k.style.setProperty('--n', String(k.textContent.trim().length + 4));
+  tipper.observe(k);
+});
 
 // ---------- Menü ----------
 const menueKnopf = $('#menue-knopf');
