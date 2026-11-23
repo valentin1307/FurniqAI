@@ -1,146 +1,26 @@
-// Landingpage für Tischlereien: Bewegung beim Scrollen, Menü auf schmalen Bildschirmen, Pilot-Formular.
+// Landingpage für Tischlereien: sanftes Einblenden, Menü auf schmalen Bildschirmen, Pilot-Formular.
 // Das Formular schickt an die Edge Function `pilot` (öffentlich, ohne Demo-Code).
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s, w = document) => [...w.querySelectorAll(s)];
 
-// ---------- Bewegung beim Scrollen ----------
-// Ein rAF-gedrosselter Takt berechnet je Element, wie weit es herein- (--ein) bzw. hinausgescrollt (--aus) ist.
-// Das CSS macht daraus Gleiten, Kippen und Schweben. Bei „Bewegung reduzieren“ nur der Lesefortschritt.
-
-const wurzel = document.documentElement;
-const ruhig = matchMedia('(prefers-reduced-motion: reduce)');
-const begrenze = (v, min = 0, max = 1) => Math.min(max, Math.max(min, v));
-const weich = (t) => 1 - (1 - t) ** 3;
-
-const szene = $('[data-szene]');
-const laufband = $('.laufband');
-const huelle = $('.ablauf-huelle');
-const buehne = $('.ablauf-buehne');
-const schiene = $('.ablauf .schritte');
-const tafeln = schiene ? $$('.schritt', schiene) : [];
-const anzeigeNr = $('#anzeige-nr');
-const bewegte = $$('[data-bewegung]');
-
-let quer = false;
-let strecke = 0; // Scrollweg für den Querlauf in px
-let tafelMasse = [];
-let geplant = false;
-const zuletzt = new WeakMap(); // nur schreiben, wenn sich etwas ändert
-
-function setze(el, name, wert) {
-  let alt = zuletzt.get(el);
-  if (!alt) zuletzt.set(el, (alt = {}));
-  const gerundet = Math.round(wert * 1000) / 1000;
-  if (alt[name] === gerundet) return;
-  alt[name] = gerundet;
-  el.style.setProperty(name, String(gerundet));
+// ---------- Sanftes Einblenden ----------
+// Elemente mit data-zeigen blenden einmal ein, sobald sie sichtbar werden.
+// Ohne JS oder bei „Bewegung reduzieren“ (regelt das CSS) ist alles sofort da.
+if ('IntersectionObserver' in window) {
+  document.documentElement.classList.add('js-bereit');
+  const zeiger = new IntersectionObserver(
+    (eintraege) => {
+      for (const e of eintraege) {
+        if (!e.isIntersecting) continue;
+        e.target.classList.add('gezeigt');
+        zeiger.unobserve(e.target);
+      }
+    },
+    { rootMargin: '0px 0px -8% 0px' },
+  );
+  $$('[data-zeigen]').forEach((el) => zeiger.observe(el));
 }
-
-function anordnen() {
-  quer = !ruhig.matches && Boolean(schiene) && innerWidth >= 1000 && innerHeight >= 640;
-  wurzel.classList.toggle('quer', quer);
-  if (!schiene) return;
-  if (quer) {
-    schiene.style.setProperty('--x', '0px');
-    strecke = Math.max(0, schiene.scrollWidth - innerWidth);
-    huelle.style.setProperty('--huelle', `${buehne.offsetHeight + strecke}px`);
-    tafelMasse = tafeln.map((t) => ({ mitte: t.offsetLeft + t.offsetWidth / 2, breite: t.offsetWidth }));
-    // Bilder außerhalb des Bildschirms sofort laden, sonst ploppen sie beim Querlauf auf
-    $$('img', schiene).forEach((b) => (b.loading = 'eager'));
-  } else {
-    huelle.style.removeProperty('--huelle');
-    schiene.style.removeProperty('--x');
-    tafeln.forEach((t) => {
-      t.style.removeProperty('--d');
-      t.style.removeProperty('--da');
-      zuletzt.delete(t);
-    });
-  }
-}
-
-function takt() {
-  geplant = false;
-  const vh = innerHeight;
-  const gesamt = wurzel.scrollHeight - vh;
-  setze(wurzel, '--fortschritt', gesamt > 0 ? scrollY / gesamt : 0);
-  if (ruhig.matches) return;
-
-  if (szene) {
-    const r = szene.getBoundingClientRect();
-    setze(szene, '--aus', begrenze(-r.top / (r.height * 0.85)));
-  }
-  if (laufband) {
-    const r = laufband.getBoundingClientRect();
-    if (r.bottom > -200 && r.top < vh + 200) laufband.style.setProperty('--verschiebung', `${Math.round((vh - r.top) * 0.35)}px`);
-  }
-
-  for (const el of bewegte) {
-    if (quer && el.classList.contains('schritt')) continue;
-    const r = el.getBoundingClientRect();
-    if (r.top > vh * 1.4) { setze(el, '--ein', 0); setze(el, '--aus', 0); continue; }
-    if (r.bottom < -vh * 0.4) { setze(el, '--ein', 1); setze(el, '--aus', 1); continue; }
-    setze(el, '--ein', weich(begrenze((vh - r.top) / (vh * 0.55))));
-    setze(el, '--aus', weich(begrenze((vh * 0.22 - r.bottom) / (vh * 0.5))));
-  }
-
-  if (quer && strecke > 0) {
-    const r = huelle.getBoundingClientRect();
-    const kopf = parseFloat(getComputedStyle(wurzel).getPropertyValue('--kopf')) || 72;
-    const p = begrenze((kopf - r.top) / strecke);
-    const x = -p * strecke;
-    schiene.style.setProperty('--x', `${Math.round(x)}px`);
-    buehne.style.setProperty('--x', `${Math.round(x)}px`);
-    setze(huelle, '--p', p);
-    tafeln.forEach((t, i) => {
-      const { mitte, breite } = tafelMasse[i];
-      const d = begrenze((mitte + x - innerWidth / 2) / breite, -1.5, 1.5);
-      setze(t, '--d', d);
-      setze(t, '--da', Math.min(1, Math.abs(d)));
-    });
-    const nr = String(Math.min(tafeln.length, Math.round(p * (tafeln.length - 1)) + 1)).padStart(2, '0');
-    if (anzeigeNr && anzeigeNr.textContent !== nr) anzeigeNr.textContent = nr;
-  }
-}
-
-function planen() {
-  if (geplant) return;
-  geplant = true;
-  requestAnimationFrame(takt);
-}
-
-function bewegungStarten() {
-  anordnen();
-  takt();
-  wurzel.classList.toggle('bewegt', !ruhig.matches);
-}
-addEventListener('scroll', planen, { passive: true });
-addEventListener('resize', () => {
-  anordnen();
-  planen();
-});
-addEventListener('load', () => {
-  anordnen();
-  planen();
-});
-ruhig.addEventListener('change', bewegungStarten);
-bewegungStarten();
-
-// Kicker tippen sich ein, sobald sie sichtbar werden
-const tipper = new IntersectionObserver(
-  (eintraege) => {
-    for (const e of eintraege) {
-      if (!e.isIntersecting) continue;
-      e.target.classList.add('getippt');
-      tipper.unobserve(e.target);
-    }
-  },
-  { rootMargin: '0px 0px -10% 0px' },
-);
-$$('[data-tippen]').forEach((k) => {
-  k.style.setProperty('--n', String(k.textContent.trim().length + 3));
-  tipper.observe(k);
-});
 
 // ---------- Menü ----------
 const menueKnopf = $('#menue-knopf');
