@@ -7,6 +7,9 @@ export const BETRIEB_STANDARD = {
   claim: 'Möbel nach Maß',
   // Optional: Pfad zum Logo, z. B. 'assets/logo.svg'. Ohne Logo erscheint ein Monogramm.
   logo: null,
+  // Optional: Akzentfarbe des Betriebs (CSS-Farbe, z. B. '#3d5a40'). Ohne Angabe gilt das Holzbraun.
+  // Weiße Schrift muss darauf mindestens 4.5:1 Kontrast haben, also eher dunkle Töne wählen.
+  akzent: null,
   moebelart: 'Couchtisch',
 
   // Arbeit inkl. Standard-Gestell Holz

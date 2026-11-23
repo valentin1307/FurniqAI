@@ -7,25 +7,29 @@
   <link rel="preload" href="fonts/fraunces-latin-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/tischler.css">
+  <script type="module" src="js/kopf.js"></script>
   <script type="module" src="js/tischler.js"></script>
 </head>
 <body class="tischler">
-  <header class="kopf">
-    <div class="kopf-innen">
-      <div class="marke">
-        <img class="marke-logo" id="betrieb-logo" alt="" hidden>
-        <span class="marke-monogramm" id="betrieb-monogramm" aria-hidden="true"></span>
-        <span class="marke-text">
-          <span class="marke-name" id="betrieb-name"></span>
-          <span class="marke-claim">Tischlerseite</span>
-        </span>
+  <div class="kopf-sentinel" aria-hidden="true"></div>
+  <div class="kopfbereich">
+    <header class="kopf">
+      <div class="kopf-innen">
+        <div class="marke">
+          <img class="marke-logo" id="betrieb-logo" alt="" hidden>
+          <span class="marke-monogramm" id="betrieb-monogramm" aria-hidden="true"></span>
+          <span class="marke-text">
+            <span class="marke-name" id="betrieb-name"></span>
+            <span class="marke-claim">Tischlerseite</span>
+          </span>
+        </div>
+        <nav class="t-reiter" aria-label="Bereiche">
+          <button type="button" data-bereich="posteingang" aria-pressed="true">Posteingang <span class="t-zaehler" id="zaehler-neu" hidden></span></button>
+          <button type="button" data-bereich="einstellungen" aria-pressed="false">Einstellungen</button>
+        </nav>
       </div>
-      <nav class="t-reiter" aria-label="Bereiche">
-        <button type="button" data-bereich="posteingang" aria-pressed="true">Posteingang <span class="t-zaehler" id="zaehler-neu" hidden></span></button>
-        <button type="button" data-bereich="einstellungen" aria-pressed="false">Einstellungen</button>
-      </nav>
-    </div>
-  </header>
+    </header>
+  </div>
 
   <main class="seite">
     <!-- Demo-Code (Anfragen liegen geschützt in Supabase) -->

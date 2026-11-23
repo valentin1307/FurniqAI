@@ -6,33 +6,37 @@
   <title>Möbel nach Maß</title>
   <link rel="preload" href="fonts/fraunces-latin-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/kopf.js"></script>
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
-  <header class="kopf">
-    <div class="kopf-innen">
-      <div class="marke">
-        <img class="marke-logo" id="betrieb-logo" alt="" hidden>
-        <span class="marke-monogramm" id="betrieb-monogramm" aria-hidden="true"></span>
-        <span class="marke-text">
-          <span class="marke-name" id="betrieb-name"></span>
-          <span class="marke-claim" id="betrieb-claim"></span>
-        </span>
+  <div class="kopf-sentinel" aria-hidden="true"></div>
+  <div class="kopfbereich">
+    <header class="kopf">
+      <div class="kopf-innen">
+        <div class="marke">
+          <img class="marke-logo" id="betrieb-logo" alt="" hidden>
+          <span class="marke-monogramm" id="betrieb-monogramm" aria-hidden="true"></span>
+          <span class="marke-text">
+            <span class="marke-name" id="betrieb-name"></span>
+            <span class="marke-claim" id="betrieb-claim"></span>
+          </span>
+        </div>
+        <span class="kopf-produkt">Bauen Sie Ihre neuen Möbel</span>
       </div>
-      <span class="kopf-produkt">Bauen Sie Ihre neuen Möbel</span>
-    </div>
-  </header>
+    </header>
 
-  <nav class="schritte" aria-label="Fortschritt">
-    <ol>
-      <li><button type="button" data-schritt="1"><span class="nr"></span><span class="txt">Raum</span></button></li>
-      <li><button type="button" data-schritt="2"><span class="nr"></span><span class="txt">Baukasten</span></button></li>
-      <!-- Schritte 3 und 4 folgen in späteren Meilensteinen: dann „hidden“ entfernen. -->
-      <li hidden><button type="button" data-schritt="3" disabled><span class="nr"></span><span class="txt">Feinschliff</span></button></li>
-      <li><button type="button" data-schritt="4" disabled><span class="nr"></span><span class="txt">Bild</span></button></li>
-      <li><button type="button" data-schritt="5"><span class="nr"></span><span class="txt">Kostenvoranschlag</span></button></li>
-    </ol>
-  </nav>
+    <nav class="schritte" aria-label="Fortschritt">
+      <ol>
+        <li><button type="button" data-schritt="1"><span class="nr"></span><span class="txt">Raum</span></button></li>
+        <li><button type="button" data-schritt="2"><span class="nr"></span><span class="txt">Baukasten</span></button></li>
+        <!-- Schritte 3 und 4 folgen in späteren Meilensteinen: dann „hidden“ entfernen. -->
+        <li hidden><button type="button" data-schritt="3" disabled><span class="nr"></span><span class="txt">Feinschliff</span></button></li>
+        <li><button type="button" data-schritt="4" disabled><span class="nr"></span><span class="txt">Bild</span></button></li>
+        <li><button type="button" data-schritt="5"><span class="nr"></span><span class="txt">Kostenvoranschlag</span></button></li>
+      </ol>
+    </nav>
+  </div>
 
   <main>
     <!-- Schritt 1: Raum -->
@@ -94,8 +98,8 @@
         </div>
 
         <div class="raum-masse">
-          <div class="karte">
-            <h2>Freier Platz</h2>
+          <div class="karte karte-pflicht">
+            <h2>Freier Platz <span class="pflicht">Pflichtangabe</span></h2>
             <p class="tipp">Die Fläche, die das Möbelstück höchstens einnehmen darf.</p>
             <div class="feldreihe">
               <label class="feld">
@@ -110,40 +114,46 @@
             </div>
           </div>
 
-          <div class="karte">
-            <h2>Raummaße <span class="optional">optional</span></h2>
-            <p class="tipp">Wie groß ist der Raum, in dem das Möbelstück stehen soll?</p>
-            <div class="feldreihe">
-              <label class="feld">
-                <span>Länge</span>
-                <span class="einheit-feld"><input type="text" id="raum-laenge" inputmode="decimal" placeholder="4,50"><span>m</span></span>
-              </label>
-              <span class="mal" aria-hidden="true">×</span>
-              <label class="feld">
-                <span>Breite</span>
-                <span class="einheit-feld"><input type="text" id="raum-breite" inputmode="decimal" placeholder="3,80"><span>m</span></span>
-              </label>
+          <details class="weitere-angaben">
+            <summary>
+              <span class="weitere-titel">Weitere Angaben <span class="optional">optional</span></span>
+              <span class="weitere-text">Raummaße und ungefähre Maße des Möbelstücks</span>
+            </summary>
+            <div class="karte karte-leise">
+              <h2>Raummaße <span class="optional">optional</span></h2>
+              <p class="tipp">Wie groß ist der Raum, in dem das Möbelstück stehen soll?</p>
+              <div class="feldreihe">
+                <label class="feld">
+                  <span>Länge</span>
+                  <span class="einheit-feld"><input type="text" id="raum-laenge" inputmode="decimal" placeholder="4,50"><span>m</span></span>
+                </label>
+                <span class="mal" aria-hidden="true">×</span>
+                <label class="feld">
+                  <span>Breite</span>
+                  <span class="einheit-feld"><input type="text" id="raum-breite" inputmode="decimal" placeholder="3,80"><span>m</span></span>
+                </label>
+              </div>
             </div>
-          </div>
 
-          <div class="karte">
-            <h2>Ungefähre Maße des Möbelstücks <span class="optional">optional</span></h2>
-            <p class="tipp">Haben Sie schon eine Größe im Kopf? Dann starten wir damit.</p>
-            <div class="feldreihe feldreihe-drei">
-              <label class="feld">
-                <span>Länge</span>
-                <span class="einheit-feld"><input type="number" id="wunsch-laenge" inputmode="numeric" min="1" max="1000" placeholder="120"><span>cm</span></span>
-              </label>
-              <label class="feld">
-                <span>Breite</span>
-                <span class="einheit-feld"><input type="number" id="wunsch-breite" inputmode="numeric" min="1" max="1000" placeholder="60"><span>cm</span></span>
-              </label>
-              <label class="feld">
-                <span>Höhe</span>
-                <span class="einheit-feld"><input type="number" id="wunsch-hoehe" inputmode="numeric" min="1" max="1000" placeholder="40"><span>cm</span></span>
-              </label>
+            <div class="karte karte-leise">
+              <h2>Ungefähre Maße des Möbelstücks <span class="optional">optional</span></h2>
+              <p class="tipp">Haben Sie schon eine Größe im Kopf? Dann starten wir damit.</p>
+              <div class="feldreihe feldreihe-drei">
+                <label class="feld">
+                  <span>Länge</span>
+                  <span class="einheit-feld"><input type="number" id="wunsch-laenge" inputmode="numeric" min="1" max="1000" placeholder="120"><span>cm</span></span>
+                </label>
+                <label class="feld">
+                  <span>Breite</span>
+                  <span class="einheit-feld"><input type="number" id="wunsch-breite" inputmode="numeric" min="1" max="1000" placeholder="60"><span>cm</span></span>
+                </label>
+                <label class="feld">
+                  <span>Höhe</span>
+                  <span class="einheit-feld"><input type="number" id="wunsch-hoehe" inputmode="numeric" min="1" max="1000" placeholder="40"><span>cm</span></span>
+                </label>
+              </div>
             </div>
-          </div>
+          </details>
         </div>
       </div>
 
@@ -211,7 +221,7 @@
         <div class="baukasten-optionen">
           <fieldset class="karte">
             <legend>Form</legend>
-            <div class="wahl wahl-formen" id="wahl-form"></div>
+            <div class="wahl wahl-segmente wahl-formen" id="wahl-form"></div>
             <p class="tipp" id="form-hinweis" hidden></p>
           </fieldset>
 
@@ -251,7 +261,7 @@
 
           <fieldset class="karte">
             <legend>Oberfläche</legend>
-            <div class="wahl wahl-liste" id="wahl-oberflaeche"></div>
+            <div class="wahl wahl-segmente" id="wahl-oberflaeche"></div>
           </fieldset>
 
           <!-- Feinschliff-Chat: Wünsche in eigenen Worten, eingeordnet als Option, Sonderwunsch oder Einstellung -->
@@ -274,7 +284,7 @@
             </label>
             <div class="chat-eingabe">
               <input type="text" id="chat-text" maxlength="600" placeholder="z. B. „Gern mit Schublade“" aria-label="Ihr Wunsch">
-              <button type="button" class="knopf knopf-haupt" id="chat-senden" aria-label="Wunsch senden">
+              <button type="button" class="knopf knopf-senden" id="chat-senden" aria-label="Wunsch senden">
                 <span aria-hidden="true">↑</span>
               </button>
             </div>

@@ -3,7 +3,7 @@
 
 const MASSE = ['laenge', 'breite', 'hoehe'];
 const AUSWAHL = { form: 'formen', materialId: 'materialien', gestellId: 'gestelle', oberflaecheId: 'oberflaechen' };
-const FELD_NAME = { form: 'Form', materialId: 'Holz', gestellId: 'Gestell', oberflaecheId: 'Oberfläche', laenge: 'Länge', breite: 'Breite', hoehe: 'Höhe' };
+const FELD_NAME = { form: 'Form', materialId: 'Material', gestellId: 'Gestell', oberflaecheId: 'Oberfläche', laenge: 'Länge', breite: 'Breite', hoehe: 'Höhe' };
 
 const gleicherText = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
