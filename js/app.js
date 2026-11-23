@@ -9,6 +9,7 @@ import {
   formatEuro,
   formatZahl,
 } from './preis.js';
+import { kiSignatur, seitenverhaeltnisPasst, markiertesFoto, alsJpeg, bildAnfordern } from './bildki.js';
 import {
   normiere,
   markierungsPhase,
@@ -55,7 +56,9 @@ const zustand = {
   hoehe: 40,
   gestellId: 'holz',
   oberflaecheId: 'geoelt',
-  kiBild: null, // ab Schritt 4: URL des KI-Bildes, ersetzt dann das Raumfoto auf der Bühne
+  kiBild: null, // Schritt 4: KI-Bild als JPEG-data-URL
+  kiSignaturWert: null, // Angaben, aus denen kiBild entstand (siehe kiSignatur)
+  kiInfo: null, // { modell, dauerMs, eingabe:{breite,hoehe}, ergebnis:{breite,hoehe} }
   optionIds: [], // ab Schritt 3 (Feinschliff)
   sonderwuensche: [], // ab Schritt 3 (Feinschliff)
 };
@@ -77,13 +80,14 @@ function zeigeSchritt(nr) {
   document.querySelectorAll('.schritt').forEach((s) => {
     s.hidden = s.id !== `schritt-${nr}`;
   });
-  // Vor Baukasten und Kostenvoranschlag immer Wunschmaße übernehmen und an den Platz anpassen,
-  // auch wenn Schritt 5 direkt über die Schrittleiste geöffnet wird.
-  if (nr === 2 || nr === 5) konfigurationEinpassen();
-  if (nr === 2) baukastenAnzeigen();
-  if (nr === 5) kostenvoranschlagAnzeigen();
+  // Vor Baukasten, Bild und Kostenvoranschlag immer Wunschmaße übernehmen und einpassen,
+  // auch wenn ein Schritt direkt über die Schrittleiste geöffnet wird.
+  if (nr === 2 || nr === 4 || nr === 5) konfigurationEinpassen();
   stepperAktualisieren();
   kickerSetzen(nr);
+  if (nr === 2) baukastenAnzeigen();
+  if (nr === 4) bildSchrittAnzeigen();
+  if (nr === 5) kostenvoranschlagAnzeigen();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -99,7 +103,7 @@ function stepperAktualisieren() {
   const fertig1 = schritt1Fertig();
   document.querySelectorAll('.schritte button').forEach((btn) => {
     const nr = Number(btn.dataset.schritt);
-    if (nr === 3 || nr === 4) return; // folgen später
+    if (nr === 3) return; // Feinschliff folgt später
     btn.disabled = nr !== 1 && !fertig1;
     btn.classList.toggle('erledigt', nr < zustand.schritt);
     if (nr === zustand.schritt) btn.setAttribute('aria-current', 'step');
@@ -125,6 +129,7 @@ function fotoLaden(datei) {
     canvas.getContext('2d').drawImage(bild, 0, 0, canvas.width, canvas.height);
     URL.revokeObjectURL(url);
     zustand.foto = canvas.toDataURL('image/jpeg', 0.85);
+    zustand.kiBild = zustand.kiSignaturWert = zustand.kiInfo = null; // anderer Raum
     markierungZuruecksetzen();
     fotoAnzeigen();
     zeigeFehler('fehler-1', null);
@@ -156,6 +161,7 @@ function markierungZuruecksetzen() {
 
 /** Punkt setzen, je nachdem, was als Nächstes dran ist. */
 function punktSetzen(p) {
+  if (!p) return; // Bild noch nicht bereit
   const phase = markierungsPhase(zustand.referenz, zustand.tischPosition);
   if (phase === 'ref1') zustand.referenz.p1 = p;
   else if (phase === 'ref2') {
@@ -168,6 +174,7 @@ function punktSetzen(p) {
 }
 
 function punktVerschieben(name, p) {
+  if (!p) return;
   if (name === 'tisch') zustand.tischPosition = p;
   else zustand.referenz[name] = p;
   markierungAktualisieren();
@@ -452,7 +459,7 @@ function schritt2Einrichten() {
     b.addEventListener('click', () => buehneAnsicht(b.dataset.ansicht));
   });
 
-  $('#weiter-2').addEventListener('click', () => zeigeSchritt(5));
+  $('#weiter-2').addEventListener('click', () => zeigeSchritt(4));
   $('#zurueck-2').addEventListener('click', () => zeigeSchritt(1));
 }
 
@@ -474,30 +481,48 @@ function musterBilderLaden() {
 
 // ---------- Bühne ----------
 
-/**
- * Bild auf der Bühne setzen. Heute das Raumfoto, ab Schritt 4 das KI-Bild:
- *   buehneBildSetzen(kiUrl, 'Vorschau Ihres Tisches')
- */
+/** Bild auf der Bühne setzen (Raumfoto oder KI-Bild). */
 export function buehneBildSetzen(url, etikett) {
   const bild = $('#buehne-bild');
-  if (bild.getAttribute('src') !== url) bild.src = url;
+  if (url && bild.getAttribute('src') !== url) bild.src = url;
   bild.alt = etikett;
-  $('#buehne-flaeche').style.setProperty('--buehne-bild', `url("${url}")`);
+  $('#buehne-flaeche').style.setProperty('--buehne-bild', url ? `url("${url}")` : 'none');
   $('#buehne-flaeche').dataset.etikett = etikett;
-  if (zustandBuehne.ansicht === 'foto') $('#buehne-etikett').textContent = etikett;
 }
 
-const zustandBuehne = { ansicht: 'foto' };
+// Ansicht der Bühne: 'raum' (Originalfoto), 'ki' (KI-Bild) oder 'draufsicht'
+const zustandBuehne = { ansicht: 'raum' };
 
 function buehneAnsicht(ansicht) {
+  if (ansicht === 'ki' && !zustand.kiBild) ansicht = 'raum';
   zustandBuehne.ansicht = ansicht;
+  const imBildSchritt = zustand.schritt === 4;
   const draufsicht = ansicht === 'draufsicht';
+
+  if (ansicht === 'ki') {
+    buehneBildSetzen(zustand.kiBild, kiVeraltet() ? 'KI-Vorschau · veraltet' : imBildSchritt ? 'Nachher' : 'KI-Vorschau');
+  } else {
+    buehneBildSetzen(zustand.foto, imBildSchritt ? 'Vorher' : 'Ihr Raum');
+  }
   $('#buehne-draufsicht').hidden = !draufsicht;
   $('#buehne-flaeche').classList.toggle('zeigt-draufsicht', draufsicht);
-  $('#buehne-etikett').textContent = draufsicht ? 'Draufsicht · maßstäblich' : $('#buehne-flaeche').dataset.etikett || 'Ihr Raum';
+  $('#buehne-etikett').textContent = draufsicht ? 'Draufsicht · maßstäblich' : $('#buehne-flaeche').dataset.etikett;
+
+  // Knöpfe: Schritt 2 „Foto · KI-Bild · Draufsicht“, Schritt 4 „Vorher · Nachher“
+  const knopf = (a) => document.querySelector(`.umschalter button[data-ansicht="${a}"]`);
+  knopf('raum').textContent = imBildSchritt ? 'Vorher' : 'Foto';
+  knopf('ki').textContent = imBildSchritt ? 'Nachher' : 'KI-Bild';
+  knopf('ki').hidden = !zustand.kiBild;
+  knopf('draufsicht').hidden = imBildSchritt;
   document.querySelectorAll('.umschalter button').forEach((b) => {
     b.setAttribute('aria-pressed', String(b.dataset.ansicht === ansicht));
   });
+}
+
+/** Bühne in den Baukasten (Schritt 2) oder in den Bild-Schritt (4) hängen. */
+function buehneVerschieben(schritt) {
+  const ziel = schritt === 4 ? $('#bild-buehne-platz') : $('.baukasten-buehne');
+  if ($('#buehne').parentElement !== ziel) ziel.prepend($('#buehne'));
 }
 
 // Länge/Breite der letzten zweimaßigen Form, damit sie nach „rund“ → „rechteckig“ zurückkommen
@@ -550,8 +575,8 @@ function baukastenAnzeigen() {
     const input = wahlInput(name, zustand[feld]);
     if (input) input.checked = true;
   }
-  if (zustand.kiBild) buehneBildSetzen(zustand.kiBild, 'Vorschau Ihres Tisches');
-  else buehneBildSetzen(zustand.foto, 'Ihr Raum');
+  buehneVerschieben(2);
+  buehneAnsicht(zustand.kiBild && !kiVeraltet() ? 'ki' : 'raum');
   reglerAktualisieren();
   baukastenAktualisieren();
 }
@@ -621,6 +646,7 @@ function baukastenAktualisieren() {
   $('#preis-rahmen').textContent = `Preisrahmen ${formatEuro(preis.rahmen.von)} – ${formatEuro(preis.rahmen.bis)}`;
   platzHinweisZeigen();
   draufsichtZeichnen();
+  veraltetHinweisZeigen();
 }
 
 /** Hinweis (keine Sperre), wenn der Tisch größer ist als der freie Platz. */
@@ -706,6 +732,123 @@ function draufsichtZeichnen() {
     <text x="${cx}" y="${y1 + rand * 0.75}" text-anchor="middle" font-size="${schrift * 0.75}" fill="#6f665c">Sofa-Seite</text>`;
 }
 
+// ---------- Schritt 4: Bild (KI-Vorschau) ----------
+
+const KI_ZEITLIMIT_MS = 130_000; // etwas mehr als das Limit der Edge Function
+const kiLauf = { abbruch: null, uhr: 0 };
+
+function kiVeraltet() {
+  return Boolean(zustand.kiBild) && zustand.kiSignaturWert !== kiSignatur(zustand);
+}
+
+/** KI-Bild nur, wenn es zur aktuellen Auswahl passt (für Kostenvoranschlag und Anfrage). */
+function aktuellesKiBild() {
+  return zustand.kiBild && !kiVeraltet() ? zustand.kiBild : null;
+}
+
+function veraltetHinweisZeigen() {
+  const veraltet = kiVeraltet();
+  $('#veraltet-2').hidden = !veraltet;
+  $('#veraltet-4').hidden = !veraltet || Boolean(kiLauf.abbruch);
+  if (zustandBuehne.ansicht === 'ki') buehneAnsicht('ki'); // Etikett „veraltet“ nachziehen
+}
+
+function bildSchrittAnzeigen() {
+  buehneVerschieben(4);
+  const n = namen();
+  const daten = [
+    ['Form', n.form],
+    ['Maße', masseText()],
+    ['Holz', n.material],
+    ['Gestell', n.gestell],
+    ['Oberfläche', n.oberflaeche],
+  ];
+  $('#bild-auswahl').innerHTML = daten.map(([k, v]) => `<dt>${k}</dt><dd>${escape(v)}</dd>`).join('');
+  buehneAnsicht(zustand.kiBild ? 'ki' : 'raum');
+  veraltetHinweisZeigen();
+  bildKnopfAktualisieren();
+  // Beim ersten Besuch automatisch erzeugen; danach nur auf Knopfdruck (jeder Aufruf kostet).
+  if (!zustand.kiBild && !kiLauf.abbruch) bildErzeugen();
+}
+
+function bildKnopfAktualisieren() {
+  const laeuft = Boolean(kiLauf.abbruch);
+  $('#bild-erzeugen').disabled = laeuft;
+  $('#bild-erzeugen').classList.toggle('knopf-haupt', kiVeraltet());
+  $('#bild-erzeugen').classList.toggle('knopf-leise', !kiVeraltet());
+  $('#bild-erzeugen-text').textContent = laeuft ? 'Wird erzeugt …' : zustand.kiBild ? 'Neu erzeugen' : 'Bild erzeugen';
+}
+
+function ladenAnzeigen(an) {
+  $('#buehne-laden').hidden = !an;
+  $('#buehne-flaeche').classList.toggle('laedt', an);
+  clearInterval(kiLauf.uhr);
+  if (an) {
+    const start = Date.now();
+    $('#laden-sekunden').textContent = '0';
+    kiLauf.uhr = setInterval(() => {
+      $('#laden-sekunden').textContent = String(Math.round((Date.now() - start) / 1000));
+    }, 500);
+  }
+}
+
+async function bildErzeugen() {
+  if (kiLauf.abbruch) return;
+  zeigeFehler('fehler-4', null);
+  const abbruch = new AbortController();
+  kiLauf.abbruch = abbruch;
+  const zeitlimit = setTimeout(() => abbruch.abort(), KI_ZEITLIMIT_MS);
+  const signatur = kiSignatur(zustand);
+  ladenAnzeigen(true);
+  bildKnopfAktualisieren();
+  veraltetHinweisZeigen();
+  buehneAnsicht('raum');
+
+  try {
+    const markiert = await markiertesFoto(zustand.foto, zustand.referenz, zustand.tischPosition);
+    const antwort = await bildAnfordern(
+      {
+        foto: zustand.foto,
+        fotoMarkiert: markiert.daten,
+        fotoBreite: markiert.breite,
+        fotoHoehe: markiert.hoehe,
+        referenz: zustand.referenz,
+        tischPosition: zustand.tischPosition,
+        tisch: { ...konfiguration(), namen: namen() },
+      },
+      abbruch.signal,
+    );
+    const ergebnis = await alsJpeg(`data:${antwort.mimeType};base64,${antwort.bild}`);
+    const eingabe = { breite: markiert.breite, hoehe: markiert.hoehe };
+    const groesse = { breite: ergebnis.breite, hoehe: ergebnis.hoehe };
+    const passt = seitenverhaeltnisPasst(eingabe, groesse);
+    zustand.kiBild = ergebnis.daten;
+    zustand.kiSignaturWert = signatur;
+    zustand.kiInfo = { modell: antwort.modell, dauerMs: antwort.dauerMs, eingabe, ergebnis: groesse, passt };
+    console.info(
+      `[Bild-KI] Modell ${antwort.modell} · Dauer ${(antwort.dauerMs / 1000).toFixed(1)} s · ` +
+        `Eingabe ${eingabe.breite} × ${eingabe.hoehe} · Ergebnis ${groesse.breite} × ${groesse.hoehe} · ` +
+        `Seitenverhältnis ${antwort.seitenverhaeltnis} · passt zusammen: ${passt ? 'ja' : 'NEIN'}`,
+    );
+  } catch (err) {
+    console.warn('[Bild-KI] Fehler:', err.code || '', err.message);
+    zeigeFehler('fehler-4', err.message || 'Das Bild konnte nicht erzeugt werden. Bitte versuchen Sie es erneut.');
+  } finally {
+    clearTimeout(zeitlimit);
+    kiLauf.abbruch = null;
+    ladenAnzeigen(false);
+    if (zustand.schritt === 4 || zustand.schritt === 2) buehneAnsicht(zustand.kiBild ? 'ki' : 'raum');
+    bildKnopfAktualisieren();
+    veraltetHinweisZeigen();
+  }
+}
+
+function schritt4Einrichten() {
+  $('#bild-erzeugen').addEventListener('click', bildErzeugen);
+  $('#zurueck-4').addEventListener('click', () => zeigeSchritt(2));
+  $('#weiter-4').addEventListener('click', () => zeigeSchritt(5));
+}
+
 // ---------- Schritt 5: Kostenvoranschlag ----------
 
 function namen() {
@@ -742,7 +885,8 @@ function kostenvoranschlagAnzeigen() {
   const n = namen();
   const preis = berechnePreis(konfiguration(), BETRIEB);
 
-  $('#kv-foto').src = zustand.kiBild || zustand.foto;
+  $('#kv-foto').src = aktuellesKiBild() || zustand.foto;
+  $('#kv-foto').alt = aktuellesKiBild() ? 'KI-Vorschau Ihres Tisches in Ihrem Raum' : 'Ihr Raumfoto';
   $('#kv-betrieb').textContent = BETRIEB.name;
   $('#kv-datum').textContent = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: 'long', year: 'numeric' });
   const daten = [
@@ -804,7 +948,7 @@ function anfrageSpeichern(anfrage) {
 }
 
 function schritt5Einrichten() {
-  $('#zurueck-5').addEventListener('click', () => zeigeSchritt(2));
+  $('#zurueck-5').addEventListener('click', () => zeigeSchritt(4));
 
   const form = $('#kunden-form');
   form.addEventListener('submit', (e) => {
@@ -840,6 +984,8 @@ function schritt5Einrichten() {
       konfiguration: { ...konfiguration(), namen: namen() },
       preis,
       foto: zustand.foto,
+      kiBild: aktuellesKiBild(),
+      kiInfo: aktuellesKiBild() ? zustand.kiInfo : null,
     });
     if (!gespeichert) {
       zeigeFehler(
@@ -890,6 +1036,7 @@ function start() {
   });
   schritt1Einrichten();
   schritt2Einrichten();
+  schritt4Einrichten();
   schritt5Einrichten();
   stepperAktualisieren();
   kickerSetzen(1);

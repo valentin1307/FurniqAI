@@ -6,8 +6,12 @@ export const REFERENZ_GRENZEN = { min: 20, max: 1000 };
 // Mindestabstand der beiden Referenzpunkte (normiert), damit der Maßstab brauchbar ist
 export const MIN_ABSTAND = 0.03;
 
-/** Bildschirmposition → normierte Bildkoordinate, auf 0–1 begrenzt, 4 Nachkommastellen. */
+/**
+ * Bildschirmposition → normierte Bildkoordinate, auf 0–1 begrenzt, 4 Nachkommastellen.
+ * null, solange das Bild noch keine Größe hat (z. B. noch nicht geladen).
+ */
 export function normiere(clientX, clientY, rect) {
+  if (!(rect?.width > 0) || !(rect?.height > 0)) return null;
   const runde = (w) => Math.round(Math.min(1, Math.max(0, w)) * 10000) / 10000;
   return {
     x: runde((clientX - rect.left) / rect.width),

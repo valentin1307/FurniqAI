@@ -337,6 +337,39 @@ fieldset.karte > legend ~ * { clear: both; }
 }
 .umschalter button[aria-pressed="true"] { background: var(--akzent); color: #fff8ee; }
 
+/* Ladezustand der Bild-KI auf der Bühne */
+.buehne-laden {
+  position: absolute; inset: 0; z-index: 2; display: grid; place-content: center; justify-items: center; gap: 0.5rem;
+  padding: 1.5rem; text-align: center; color: #fff8ee;
+  background: rgba(43, 35, 28, 0.45); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+}
+.buehne-flaeche.laedt .buehne-bild { filter: saturate(0.7); }
+.laden-kreis {
+  width: 2.6rem; height: 2.6rem; border-radius: 50%;
+  border: 3px solid rgba(255, 248, 238, 0.3); border-top-color: var(--messing);
+  animation: drehen 0.9s linear infinite;
+}
+@keyframes drehen { to { transform: rotate(360deg); } }
+.laden-text { margin: 0.4rem 0 0; font-family: var(--serif); font-size: 1.25rem; }
+.laden-zeit { margin: 0; font-size: 0.82rem; opacity: 0.85; font-variant-numeric: tabular-nums; }
+
+/* Hinweis: KI-Bild passt nicht mehr zur Auswahl */
+.hinweis-veraltet {
+  font-size: 0.875rem; margin: 0 0 1rem; padding: 0.65rem 0.85rem; border-radius: var(--radius-klein);
+  background: #fbeee4; color: #8a3c1c; border-left: 3px solid #b4532a;
+}
+.baukasten-buehne .hinweis-veraltet { margin: 0.75rem 0 0; }
+
+/* Schritt 4: Bild */
+.bild-raster {
+  display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr);
+  gap: clamp(1rem, 2.5vw, 2rem); align-items: start;
+}
+.bild-buehne .buehne-flaeche { max-height: calc(100vh - 16rem); }
+.bild-seite h2 { margin-top: 0; }
+.bild-knopf { width: 100%; }
+.aktionen-zwischen { justify-content: space-between; align-items: center; }
+
 /* Preisleiste */
 .preisleiste {
   display: flex; align-items: center; justify-content: space-between; gap: 1rem;
@@ -516,6 +549,8 @@ fieldset.karte > legend ~ * { clear: both; }
 
 /* ---------- Tablet & Handy ---------- */
 @media (max-width: 900px) {
+  .bild-raster { grid-template-columns: 1fr; }
+  .bild-buehne .buehne-flaeche { max-height: none; }
   .raum-raster, .baukasten, .kv { grid-template-columns: minmax(0, 1fr); }
   .baukasten-buehne { position: static; }
   .buehne-flaeche { max-height: none; }

@@ -29,7 +29,7 @@
       <li><button type="button" data-schritt="2"><span class="nr"></span><span class="txt">Baukasten</span></button></li>
       <!-- Schritte 3 und 4 folgen in späteren Meilensteinen: dann „hidden“ entfernen. -->
       <li hidden><button type="button" data-schritt="3" disabled><span class="nr"></span><span class="txt">Feinschliff</span></button></li>
-      <li hidden><button type="button" data-schritt="4" disabled><span class="nr"></span><span class="txt">Bild</span></button></li>
+      <li><button type="button" data-schritt="4" disabled><span class="nr"></span><span class="txt">Bild</span></button></li>
       <li><button type="button" data-schritt="5"><span class="nr"></span><span class="txt">Kostenvoranschlag</span></button></li>
     </ol>
   </nav>
@@ -165,8 +165,8 @@
       <div class="baukasten">
         <div class="baukasten-buehne">
           <!--
-            Bühne: zeigt das Raumfoto, später das KI-Bild.
-            Bild wechseln über buehneBildSetzen(url, etikett) in js/app.js.
+            Bühne: zeigt Raumfoto, KI-Bild oder Draufsicht. Wird in Schritt 4 (Bild) dorthin verschoben.
+            Ansicht wechseln über buehneAnsicht('raum' | 'ki' | 'draufsicht') in js/app.js.
           -->
           <figure class="buehne" id="buehne">
             <div class="buehne-flaeche" id="buehne-flaeche">
@@ -175,8 +175,14 @@
                 <svg id="draufsicht" class="draufsicht" role="img" aria-label="Draufsicht: Tisch im freien Platz"></svg>
               </div>
               <figcaption class="buehne-etikett" id="buehne-etikett">Ihr Raum</figcaption>
+              <div class="buehne-laden" id="buehne-laden" hidden>
+                <span class="laden-kreis" aria-hidden="true"></span>
+                <p class="laden-text">Ihr Tisch wird in Ihren Raum gesetzt …</p>
+                <p class="laden-zeit"><span id="laden-sekunden">0</span> s · dauert etwa 10–30 Sekunden</p>
+              </div>
               <div class="umschalter" role="group" aria-label="Ansicht">
-                <button type="button" data-ansicht="foto" aria-pressed="true">Foto</button>
+                <button type="button" data-ansicht="raum" aria-pressed="true">Foto</button>
+                <button type="button" data-ansicht="ki" aria-pressed="false" hidden>KI-Bild</button>
                 <button type="button" data-ansicht="draufsicht" aria-pressed="false">Draufsicht</button>
               </div>
             </div>
@@ -192,10 +198,13 @@
               <span class="preis-rahmen" id="preis-rahmen"></span>
             </div>
             <button type="button" class="knopf knopf-haupt" id="weiter-2">
-              <span class="nur-gross">Zum Kostenvoranschlag</span><span class="nur-klein">Weiter</span>
+              <span class="nur-gross">Weiter zum Bild</span><span class="nur-klein">Weiter</span>
               <span aria-hidden="true">→</span>
             </button>
           </div>
+          <p class="hinweis-veraltet" id="veraltet-2" hidden>
+            Bild veraltet, neu erzeugen: Ihre Auswahl hat sich seit der KI-Vorschau geändert.
+          </p>
           <button type="button" class="link-zurueck" id="zurueck-2"><span aria-hidden="true">←</span> Raum und Maße ändern</button>
         </div>
 
@@ -248,6 +257,37 @@
       </div>
     </section>
 
+    <!-- Schritt 4: Bild (KI-Vorschau) -->
+    <section class="schritt" id="schritt-4" aria-labelledby="titel-4" hidden>
+      <header class="schritt-kopf">
+        <p class="kicker"></p>
+        <h1 id="titel-4">Ihr Tisch in Ihrem Raum</h1>
+        <p class="einleitung">Eine KI-Vorschau zeigt Ihren Tisch an der markierten Stelle in Ihrem Foto.</p>
+      </header>
+
+      <div class="bild-raster">
+        <div class="bild-buehne" id="bild-buehne-platz"></div>
+
+        <div class="karte bild-seite">
+          <h2>Ihre Auswahl</h2>
+          <dl class="kv-daten bild-auswahl" id="bild-auswahl"></dl>
+          <p class="hinweis-veraltet" id="veraltet-4" hidden>
+            Bild veraltet, neu erzeugen: Sie haben Ihre Auswahl seit der Vorschau geändert.
+          </p>
+          <p class="fehler" id="fehler-4" role="alert" hidden></p>
+          <button type="button" class="knopf knopf-leise bild-knopf" id="bild-erzeugen">
+            <span aria-hidden="true">↻</span> <span id="bild-erzeugen-text">Neu erzeugen</span>
+          </button>
+          <p class="tipp">Die Vorschau ist eine KI-Visualisierung zur Orientierung, keine maßgenaue Zeichnung.</p>
+        </div>
+      </div>
+
+      <div class="aktionen aktionen-zwischen">
+        <button type="button" class="link-zurueck" id="zurueck-4"><span aria-hidden="true">←</span> Tisch ändern</button>
+        <button type="button" class="knopf knopf-haupt" id="weiter-4">Zum Kostenvoranschlag <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+
     <!-- Schritt 5: Kostenvoranschlag -->
     <section class="schritt" id="schritt-5" aria-labelledby="titel-5" hidden>
       <header class="schritt-kopf">
@@ -261,7 +301,7 @@
           <img id="kv-foto" class="kv-foto" alt="Ihr Raumfoto">
           <h2>Ihre Auswahl</h2>
           <dl class="kv-daten" id="kv-daten"></dl>
-          <button type="button" class="knopf knopf-leise" id="zurueck-5">Auswahl ändern</button>
+          <button type="button" class="knopf knopf-leise" id="zurueck-5">Zurück zum Bild</button>
         </div>
 
         <article class="karte kv-dokument">

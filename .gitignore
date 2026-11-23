@@ -20,3 +20,6 @@ Thumbs.db
 
 # Bauplan bleibt privat (nur lokal)
 FurniqAI.md
+
+# Supabase-Zugangsdaten für den Browser (lokal)
+js/config.js

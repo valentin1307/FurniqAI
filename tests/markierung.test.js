@@ -10,6 +10,7 @@ test('Normierung relativ zum Bild, begrenzt auf 0–1', () => {
   assert.deepEqual(normiere(100, 50, rect), { x: 0, y: 0 });
   assert.deepEqual(normiere(2000, -10, rect), { x: 1, y: 0 });
   assert.deepEqual(normiere(366.66, 50, rect), { x: 0.3333, y: 0 });
+  assert.equal(normiere(10, 10, { left: 0, top: 0, width: 0, height: 0 }), null, 'Bild ohne Größe');
 });
 
 test('Phasen der Markierung', () => {
