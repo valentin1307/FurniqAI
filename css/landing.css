@@ -22,15 +22,15 @@
 
 :root {
   color-scheme: dark;
-  --grund: #18130f;
-  --grund-2: #1f1813;
-  --flaeche: #251d17;
+  --grund: #3d2920;        /* Räuchereiche: heller, brauner Holzgrund */
+  --grund-2: #33221b;      /* dunklere Bretter: Laufband, Kacheln */
+  --flaeche: #4a3328;
   --flaeche-2: #2b241e;
-  --linie: rgba(243, 236, 226, 0.12);
-  --linie-stark: rgba(243, 236, 226, 0.22);
+  --linie: rgba(243, 236, 226, 0.16);
+  --linie-stark: rgba(243, 236, 226, 0.3);
   --text: #f3ece2;
   --text-2: #b9ad9f;
-  --text-3: #8f8376;
+  --text-3: #b5a696;
   --akzent: #c4501c;        /* Flächen mit weißer Schrift (4.6:1) */
   --akzent-stark: #a94417;
   --akzent-text: #f08a57;   /* Schrift und Linien auf dunklem Grund */
@@ -58,7 +58,17 @@
 [hidden]:not(#hauptnavigation) { display: none !important; }
 html { scroll-behavior: smooth; scroll-padding-top: calc(var(--kopf) + 16px); -webkit-text-size-adjust: 100%; }
 body {
-  margin: 0; background: var(--grund); color: var(--text);
+  margin: 0; color: var(--text);
+  /* Holzmaserung aus Rauschen (SVG-Filter, kein Foto): feine Fasern und breitere Zeichnung, senkrecht wie ein Brett */
+  background-color: var(--grund);
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.32 0.01' numOctaves='4' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.045 0 0 0 0 0.03 5 0 0 0 -2.45'/%3E%3C/filter%3E%3ClinearGradient id='v' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23000'/%3E%3Cstop offset='.5' stop-color='%23fff'/%3E%3Cstop offset='1' stop-color='%23000'/%3E%3C/linearGradient%3E%3Cmask id='m'%3E%3Crect width='600' height='600' fill='url%28%23v%29'/%3E%3C/mask%3E%3Crect width='600' height='600' filter='url%28%23f%29' mask='url%28%23m%29'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.32 0.01' numOctaves='4' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.045 0 0 0 0 0.03 5 0 0 0 -2.45'/%3E%3C/filter%3E%3ClinearGradient id='v' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23000'/%3E%3Cstop offset='.5' stop-color='%23fff'/%3E%3Cstop offset='1' stop-color='%23000'/%3E%3C/linearGradient%3E%3Cmask id='m'%3E%3Crect width='600' height='600' fill='url%28%23v%29'/%3E%3C/mask%3E%3Crect width='600' height='600' filter='url%28%23f%29' mask='url%28%23m%29'/%3E%3C/svg%3E"),
+    linear-gradient(90deg, transparent 0 6%, rgba(20, 11, 7, 0.16) 9%, transparent 13% 21%, rgba(255, 196, 150, 0.035) 25%, transparent 30% 38%,
+      rgba(20, 11, 7, 0.2) 43%, rgba(20, 11, 7, 0.08) 47%, transparent 52% 61%, rgba(255, 196, 150, 0.04) 66%, transparent 71% 78%,
+      rgba(20, 11, 7, 0.14) 83%, transparent 88%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.12), transparent 18%, transparent 82%, rgba(0, 0, 0, 0.12));
+  background-position: 0 0, 0 300px, 0 0, 0 0;
   font: 400 1.0625rem/1.6 var(--sans); -webkit-font-smoothing: antialiased;
   overflow-x: clip;
 }
@@ -104,7 +114,7 @@ p { margin: 0; }
 /* ---------- Kopf ---------- */
 .kopf {
   position: sticky; top: 0; z-index: 30; height: var(--kopf);
-  background: rgba(23, 19, 15, 0.82); backdrop-filter: saturate(160%) blur(16px); -webkit-backdrop-filter: saturate(160%) blur(16px);
+  background: rgba(48, 32, 25, 0.86); backdrop-filter: saturate(160%) blur(16px); -webkit-backdrop-filter: saturate(160%) blur(16px);
   border-bottom: 1px solid var(--linie);
 }
 .kopf .innen { height: 100%; display: flex; align-items: center; gap: 1.5rem; }
@@ -182,13 +192,17 @@ section { padding-block: clamp(72px, 10vw, 136px); position: relative; overflow-
   background: linear-gradient(90deg, transparent, var(--akzent-text) 30%, var(--akzent-text) 70%, transparent);
   box-shadow: 0 0 24px 2px var(--leuchten); opacity: 0.7;
 }
-.sonne {
-  position: absolute; left: 50%; top: 0; width: min(560px, 70vw); aspect-ratio: 2 / 1; translate: -50% -100%;
-  border-radius: 999px 999px 0 0;
-  background: linear-gradient(to bottom, #f3a57f, #c4501c 70%, #7a2f10);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0 46%, transparent 46% 52%, #000 52% 64%, transparent 64% 70%, #000 70% 79%, transparent 79% 85%, #000 85% 91%, transparent 91% 95%, #000 95%);
-          mask-image: linear-gradient(to bottom, #000 0 46%, transparent 46% 52%, #000 52% 64%, transparent 64% 70%, #000 70% 79%, transparent 79% 85%, #000 85% 91%, transparent 91% 95%, #000 95%);
-  opacity: 0.16; filter: blur(0.5px);
+/* Jahresringe steigen am Horizont auf wie eine Sonne; beim Scrollen dreht sich der Stamm ein Stück */
+.jahresringe {
+  position: absolute; left: 50%; top: 0; width: min(620px, 74vw); aspect-ratio: 2 / 1; translate: -50% -100%;
+  overflow: hidden; opacity: 0.5;
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+          mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+.jahresringe img {
+  width: 100%; height: auto; aspect-ratio: 1; max-width: none;
+  transform: rotate(calc(var(--aus, 0) * 50deg)); transform-origin: 50% 50%;
+  filter: drop-shadow(0 0 18px rgba(240, 138, 87, 0.35));
 }
 .raster-boden {
   position: absolute; left: -50%; right: -50%; top: 0; height: 140%;
@@ -221,16 +235,6 @@ section { padding-block: clamp(72px, 10vw, 136px); position: relative; overflow-
   transform: translate3d(0, calc(var(--aus, 0) * -220px), 0) rotate(calc(5deg - var(--aus, 0) * 12deg));
   box-shadow: 0 40px 70px -20px rgba(0, 0, 0, 0.8), 0 0 40px -10px var(--leuchten);
 }
-.schild {
-  position: absolute; left: -4%; bottom: 14%; z-index: 3;
-  font: 600 0.9375rem/1 var(--sans); color: var(--text);
-  padding: 0.75rem 1rem; border-radius: 999px; border: 1px solid var(--linie-stark);
-  background: rgba(29, 24, 20, 0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 0 30px -6px var(--leuchten);
-  transform: translate3d(calc(var(--aus, 0) * -120px), calc(var(--aus, 0) * -120px), 0);
-}
-.schild span { font: 500 0.6875rem/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--akzent-text); margin-right: 0.5rem; }
-
 .scroll-hinweis {
   position: absolute; left: 50%; bottom: 28px; translate: -50% 0; z-index: 1;
   display: grid; justify-items: center; gap: 10px;
@@ -243,7 +247,7 @@ section { padding-block: clamp(72px, 10vw, 136px); position: relative; overflow-
 /* ---------- Laufband ---------- */
 .laufband {
   border-block: 1px solid var(--linie); padding-block: clamp(20px, 3vw, 36px); overflow: hidden;
-  display: grid; gap: 0.25rem; background: var(--grund-2);
+  display: grid; gap: 0.25rem; background: rgba(28, 17, 12, 0.45);
 }
 .laufband-zeile {
   display: flex; align-items: center; gap: clamp(20px, 3vw, 40px); width: max-content; white-space: nowrap;
@@ -430,7 +434,7 @@ section { padding-block: clamp(72px, 10vw, 136px); position: relative; overflow-
 
 /* Holz: Karten und Band mit warmer, unregelmäßiger Maserung */
 .maserung {
-  background-color: #261c15;
+  background-color: #2e1f18;
   background-image:
     repeating-linear-gradient(92deg, rgba(243, 236, 226, 0.035) 0 1px, transparent 1px 6px, rgba(243, 236, 226, 0.02) 6px 7px, transparent 7px 15px),
     radial-gradient(ellipse 60% 30% at 30% 40%, rgba(196, 120, 60, 0.1), transparent 70%),
@@ -594,12 +598,11 @@ html.quer .schritt-text { transform: translate3d(calc(var(--d, 0) * 60px), 0, 0)
   .schritt:nth-child(even) .geraet { order: 0; }
   .schaufenster { margin-top: 1rem; }
   .horizont { height: 26%; }
-  .sonne { opacity: 0.1; width: min(420px, 80vw); }
+  .jahresringe { opacity: 0.28; width: min(460px, 86vw); }
 }
 @media (max-width: 760px) {
   .formular { grid-template-columns: minmax(0, 1fr); }
   .schaufenster .geraet-handy { width: 34%; right: 0; }
-  .schild { left: 0; bottom: 6%; }
   .knopfzeile .knopf { flex: 1 1 auto; }
   .stapel .karte:nth-child(n) { margin-left: 0; margin-right: 0; }
   .stapel .karte:nth-child(2) { margin-left: 6%; }
