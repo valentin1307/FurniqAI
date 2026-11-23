@@ -20,3 +20,9 @@ Empfehlung:
 - Nur Bilder mit Nutzungsrecht (eigene Fotos der Tischlerei oder lizenzfreie Quellen).
 
 Kommt später ein neues Material in `betrieb.js` dazu, einfach `<neue-id>.jpg` hier ablegen.
+Das gilt auch für Materialien anderer Materialarten (Stein, Stahl, Glas) und für eigene Materialien,
+die die Tischlerei in den Einstellungen anlegt (`eigen-<name>`, die genaue ID steht im Browser-Speicher
+unter `furniqai.betrieb`). Ohne Bild zeigen sie eine einfarbige Fläche passend zur Materialart.
+
+Hinweis: Solange die Bilder fehlen, meldet die Browser-Konsole für jedes Material einen 404-Fehler.
+Das ist erwartet und stört die Seite nicht.

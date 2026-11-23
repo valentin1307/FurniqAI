@@ -1,4 +1,5 @@
-// Ablauf der Kundenseite. Meilenstein 1: Schritte 1, 2 und 5 (noch ohne KI und Supabase).
+// Ablauf der Kundenseite: 0 Möbel wählen, 1 Raum, 2 Baukasten mit Feinschliff-Chat, 4 Bild (Bild-KI), 5 Kostenvoranschlag.
+// Schritt 3 gibt es nicht mehr als eigene Seite (der Chat sitzt im Baukasten), die Nummern bleiben für die Selektoren.
 import { BETRIEB, materialArt } from './betrieb.js';
 import {
   berechnePreis,
@@ -143,7 +144,7 @@ function stepperAktualisieren() {
   const fertig1 = schritt1Fertig();
   document.querySelectorAll('.schritte button').forEach((btn) => {
     const nr = Number(btn.dataset.schritt);
-    if (nr === 3) return; // Feinschliff folgt später
+    if (nr === 3) return; // Feinschliff ist Teil des Baukastens, eigener Schritt bleibt ausgeblendet
     btn.disabled = nr > 1 && !fertig1;
     btn.classList.toggle('erledigt', nr < zustand.schritt);
     if (nr === zustand.schritt) btn.setAttribute('aria-current', 'step');

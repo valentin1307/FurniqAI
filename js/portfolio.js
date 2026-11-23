@@ -1,6 +1,7 @@
 // Portfolio der Tischlerei: welche Möbel sie im Konfigurator anbietet.
 // Für die Demo ist nur der Couchtisch eingerichtet; alle anderen Möbel lassen sich anlegen
-// und öffnen, ihre Einstellungen folgen später. Gespeichert wird nur im Browser.
+// und öffnen, ihre Einstellungen folgen später. Die Kundenseite zeigt das Portfolio in Schritt 0,
+// wählbar sind nur freigeschaltete Möbel (FREIGESCHALTET). Gespeichert wird nur im Browser.
 
 export const PORTFOLIO_SCHLUESSEL = 'furniqai.portfolio';
 

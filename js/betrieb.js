@@ -55,7 +55,7 @@ export const BETRIEB_STANDARD = {
     { id: 'gebeizt', name: 'gebeizt', preis: 120 },
   ],
 
-  // Kommen ab dem Feinschliff-Chat (Schritt 3) dazu.
+  // Fügt der Feinschliff-Chat im Baukasten hinzu, wenn die Kundin oder der Kunde sie wünscht.
   optionen: [
     { id: 'ecken-abgerundet', name: 'Abgerundete Ecken', preis: 60 },
     { id: 'kante-gefast', name: 'Kantenprofil gefast', preis: 90 },

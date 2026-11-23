@@ -1,4 +1,4 @@
-# Selektor-Inventar (Stand Design-Runde, Branch design-neu)
+# Selektor-Inventar (Stand 23.11.2026, Branch design-neu)
 
 Diese Selektoren benutzen `js/app.js`, `js/tischler.js` und `js/kopf.js`. Sie bleiben beim Umbau von Markup und CSS unverändert.
 Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf das DOM zu.
@@ -8,7 +8,7 @@ Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf
 **Struktur und Navigation**
 - `.schritt` (alle Schritt-Sections), `#schritt-0`, `#schritt-1`, `#schritt-2`, `#schritt-4`, `#schritt-5`, `#schritt-N .kicker`
 - `.schritte button`, `.schritte li:not([hidden]) button`, `data-schritt`, `aria-current="step"`, Klasse `erledigt`, `disabled`
-- Schritt 3 bleibt `li hidden`
+- Schritt 3 bleibt `li hidden` (Feinschliff-Chat sitzt im Baukasten)
 
 **Kopf (White-Label)**
 - `#betrieb-logo`, `#betrieb-monogramm`, `#betrieb-name`, `#betrieb-claim` (alle `hidden`-gesteuert)
