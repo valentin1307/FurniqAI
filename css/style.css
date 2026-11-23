@@ -1,7 +1,10 @@
 /* FurniqAI – gemeinsame Gestaltung für Kunden- und Tischlerseite.
-   Grundlage: Apple Human Interface Guidelines (Klarheit, Inhalt vor Oberfläche, gleiche Muster).
-   Charakter: ruhiger Showroom einer Tischlerei – warme Papier- und Holztöne, Fraunces nur für Überschriften,
-   Preise und den Kostenvoranschlag, sonst Systemschrift. Raster 8 px. */
+   „Werkstatt trifft Labor“: dunkler Werkstatt-Rahmen wie auf der Landingpage (Kupfer-Leuchten, Rasterboden,
+   Terminal-Kicker), darauf helle Werkbank-Karten aus Papier und Holz, auf denen gearbeitet wird.
+   Technik: :root trägt die hellen Werkbank-Tokens, body überschreibt sie dunkel; .karte & Co. setzen die
+   hellen Werte wieder. Komponenten nutzen nur Tokens und passen so in beide Umgebungen.
+   Bewegung kommt aus js/bewegung.js (html.bewegt), bei „Bewegung reduzieren“ bleibt alles still.
+   Fraunces für Überschriften und Preise, Monospace für Kicker und Messwerte, sonst Systemschrift. Raster 8 px. */
 
 /* ---------- Schriften (lokal, SIL OFL – siehe fonts/Fraunces-OFL.txt) ---------- */
 @font-face {
@@ -29,7 +32,7 @@
   --text-primaer: #231c16;          /* 14.8:1 auf --hintergrund */
   --text-sekundaer: #675a4d;        /* 5.9:1 auf --hintergrund, 6.6:1 auf --flaeche */
   --text-platzhalter: #8f8274;
-  --akzent: #7a4a22;                /* 7.3:1 auf --flaeche */
+  --akzent: #a14a1c;                /* Kupfer-Nuss: 5.8:1 auf --flaeche, weiße Schrift 5.9:1 */
   --akzent-auf: #fffaf3;            /* Text auf --akzent */
   --akzent-stark: color-mix(in srgb, var(--akzent) 78%, #000);
   --akzent-flaeche: color-mix(in srgb, var(--akzent) 11%, var(--flaeche));
@@ -45,10 +48,13 @@
   --warnung-flaeche: #fbefe5;
   --messing: #8a6430;               /* 4.7:1 auf --hintergrund */
   --holz-dunkel: #2b231c;           /* Bühne, Fotoflächen */
+  --kupfer-hell: #f08a57;           /* Leuchten auf dunklem Grund */
+  --leuchten: rgba(240, 138, 87, 0.42);
 
   /* Schrift */
   --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   --s-titel: 2.125rem;   /* h1 */
   --s-gross: 1.75rem;    /* Preis, Erfolg */
   --s-kopf: 1.375rem;    /* h2, Legenden */
@@ -74,6 +80,7 @@
   --schatten-weich: 0 1px 2px rgba(43, 35, 28, 0.04), 0 8px 24px -16px rgba(43, 35, 28, 0.16);
   --dauer: 200ms;
   --kurve: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --federnd: cubic-bezier(0.2, 0.9, 0.25, 1.15);
 
   /* von js/kopf.js gesetzt */
   --kopf-hoehe: 0px;
@@ -873,6 +880,207 @@ fieldset.karte > legend ~ * { clear: both; }
 }
 .fuss-demo a { color: inherit; }
 .fuss-powered strong { font-family: var(--serif); font-weight: 600; color: var(--text-primaer); }
+
+/* =====================================================================
+   Werkstatt trifft Labor: dunkler Rahmen, helle Werkbank
+   ===================================================================== */
+
+/* Dunkle Umgebung: alles, was direkt auf der Seite steht (Kopf, Überschriften, Fuß, Preisleiste) */
+body {
+  color-scheme: dark;
+  --hintergrund: #17130f;
+  --flaeche: #221c17;
+  --flaeche-tief: #2c241d;
+  --feld: #1c1713;
+  --text-primaer: #f3ece2;
+  --text-sekundaer: #b9ad9f;
+  --text-platzhalter: #8f8376;
+  --akzent-flaeche: color-mix(in srgb, var(--akzent) 24%, #1c1713);
+  --akzent-text: color-mix(in srgb, var(--akzent) 30%, #ffc6a3);
+  --trenner: rgba(243, 236, 226, 0.12);
+  --trenner-stark: rgba(243, 236, 226, 0.24);
+  --fehler: #ff9b8c;
+  --fehler-flaeche: rgba(255, 138, 122, 0.12);
+  --erfolg: #8fd19e;
+  --erfolg-flaeche: rgba(143, 209, 158, 0.12);
+  --warnung: #f2b07a;
+  --warnung-flaeche: rgba(242, 176, 122, 0.12);
+  --messing: #d2ab72;
+  --schatten-weich: 0 1px 2px rgba(0, 0, 0, 0.3), 0 18px 40px -22px rgba(0, 0, 0, 0.8);
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(196, 80, 28, 0.2), transparent 70%),
+    var(--hintergrund);
+  background-attachment: fixed;
+}
+/* Rasterboden am unteren Rand, sehr leise */
+body::before {
+  content: ""; position: fixed; left: -50%; right: -50%; bottom: -18vh; height: 52vh; z-index: -1; pointer-events: none;
+  background-image:
+    linear-gradient(to bottom, rgba(240, 138, 87, 0.32) 1px, transparent 1px),
+    linear-gradient(to right, rgba(240, 138, 87, 0.26) 1px, transparent 1px);
+  background-size: 72px 72px;
+  background-position: 0 calc(var(--rollen, 0) * 1px);
+  transform: perspective(420px) rotateX(62deg); transform-origin: top center;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 35%, transparent 92%);
+          mask-image: linear-gradient(to bottom, transparent, #000 35%, transparent 92%);
+  opacity: 0.35;
+}
+/* Scanlines wie auf der Landingpage, sehr zurückhaltend */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 60; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 4px);
+  opacity: 0.35;
+}
+
+/* Helle Werkbank: Karten, auf denen gearbeitet wird */
+.karte:not(.karte-leise), .moebel-karte:not(.bald) {
+  color-scheme: light;
+  --hintergrund: #f5f0e8;
+  --flaeche: #fffdf9;
+  --flaeche-tief: #efe8de;
+  --feld: #ffffff;
+  --text-primaer: #231c16;
+  --text-sekundaer: #675a4d;
+  --text-platzhalter: #8f8274;
+  --akzent-flaeche: color-mix(in srgb, var(--akzent) 11%, #fffdf9);
+  --akzent-text: color-mix(in srgb, var(--akzent) 80%, #000);
+  --trenner: #e5dccf;
+  --trenner-stark: #d3c5b2;
+  --fehler: #a8241c;
+  --fehler-flaeche: #fbebe8;
+  --erfolg: #2b6a43;
+  --erfolg-flaeche: #e5f1e8;
+  --warnung: #8f3f14;
+  --warnung-flaeche: #fbefe5;
+  --messing: #8a6430;
+  --schatten-weich: 0 1px 2px rgba(43, 35, 28, 0.04), 0 8px 24px -16px rgba(43, 35, 28, 0.16);
+  color: var(--text-primaer);
+}
+.karte:not(.karte-leise) {
+  /* Papier mit feiner Holzmaserung, Schatten wie ein Brett auf der Werkbank */
+  background-image: repeating-linear-gradient(90deg, rgba(122, 74, 34, 0.022) 0 1px, transparent 1px 9px);
+  border-color: rgba(255, 253, 249, 0.6);
+  box-shadow: 0 30px 60px -34px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.karte-leise { border-style: dashed; border-color: var(--trenner-stark); }
+
+/* Kicker: Terminal-Stil wie auf der Landingpage */
+.kicker {
+  font: 500 0.75rem/1.4 var(--mono); letter-spacing: 0.14em; color: var(--akzent-text);
+}
+.kicker::before { content: "// "; opacity: 0.7; }
+.karte .kicker { color: var(--messing); }
+
+/* Überschriften auf dunklem Grund */
+.schritt-kopf { position: relative; padding-bottom: var(--a3); }
+.schritt-kopf h1 { font-size: clamp(2rem, 3.6vw, 2.875rem); letter-spacing: -0.02em; }
+/* Maßband unter jeder Überschrift: Millimeter, halbe und ganze Zentimeter */
+.schritt-kopf::after {
+  content: ""; position: absolute; left: 0; bottom: 0; width: min(100%, 26rem); height: 12px;
+  background:
+    repeating-linear-gradient(90deg, var(--messing) 0 1px, transparent 1px 50px) bottom left / 100% 12px no-repeat,
+    repeating-linear-gradient(90deg, var(--messing) 0 1px, transparent 1px 25px) bottom left / 100% 8px no-repeat,
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--messing) 60%, transparent) 0 1px, transparent 1px 5px) bottom left / 100% 4px no-repeat,
+    linear-gradient(var(--messing), var(--messing)) bottom left / 100% 1px no-repeat;
+  -webkit-mask-image: linear-gradient(90deg, #000 60%, transparent);
+          mask-image: linear-gradient(90deg, #000 60%, transparent);
+  opacity: 0.75;
+}
+
+/* Kopf: dunkles Glas, Marke leuchtet, Schrittleiste wie ein Messgerät */
+.kopfbereich { border-bottom-color: var(--trenner); background: rgba(23, 19, 15, 0.9); }
+.kopfbereich::after { /* Fortschritt als leuchtende Linie (js/bewegung.js setzt --fortschritt) */
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; transform-origin: left;
+  transform: scaleX(var(--fortschritt, 0));
+  background: linear-gradient(90deg, var(--akzent), var(--kupfer-hell));
+  box-shadow: 0 0 12px var(--leuchten);
+  transition: transform 700ms var(--federnd);
+}
+.marke-monogramm { box-shadow: inset 0 0 0 3px var(--akzent), inset 0 0 0 4px color-mix(in srgb, var(--akzent-auf) 40%, transparent), 0 0 22px -4px var(--leuchten); }
+.kopf-produkt { font: 500 0.75rem/1.4 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; }
+.kopf-produkt::before { content: "// "; color: var(--akzent-text); opacity: 0.8; }
+.schritte .nr { font-family: var(--mono); font-weight: 500; background: transparent; }
+.schritte li:not([hidden]) + li:not([hidden])::before {
+  height: 1px; background: repeating-linear-gradient(90deg, var(--trenner-stark) 0 1px, transparent 1px 5px);
+}
+.schritte li:has(.erledigt) + li:not([hidden])::before, .schritte li:has(.erledigt) + li[hidden] + li::before {
+  background: linear-gradient(90deg, var(--akzent-text), var(--akzent)); box-shadow: 0 0 8px var(--leuchten);
+}
+.schritte button[aria-current="step"] .nr { box-shadow: 0 0 16px -2px var(--leuchten); }
+.schritte button[aria-current="step"]::after { box-shadow: 0 0 10px var(--leuchten); }
+
+/* Knöpfe: rund wie auf der Landingpage, Hauptknopf leuchtet */
+.knopf { border-radius: 999px; padding-inline: 1.375rem; }
+.knopf-haupt:hover:not(:disabled) { box-shadow: 0 0 28px -6px var(--leuchten); }
+
+/* Möbelauswahl */
+.moebel-karte:not(.bald) { background-color: #fffdf9; }
+.moebel-karte:not(.bald):hover { box-shadow: 0 0 36px -14px var(--leuchten), 0 24px 48px -30px rgba(0, 0, 0, 0.9); }
+.moebel-karte:has(input:checked) { box-shadow: inset 0 0 0 1px var(--akzent), 0 0 40px -12px var(--leuchten); }
+.moebel-karte.bald { border-color: var(--trenner-stark); }
+
+/* Bühne und Preis wie ein Bildschirm in der Werkstatt */
+.buehne-flaeche { box-shadow: 0 40px 80px -40px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--trenner), 0 0 60px -34px var(--leuchten); }
+.preisleiste { background: color-mix(in srgb, var(--flaeche) 88%, transparent); border-color: var(--trenner-stark); }
+.preis-label { font: 500 0.6875rem/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; }
+.preis-summe.aendert { color: var(--akzent-text); text-shadow: 0 0 22px var(--leuchten); }
+.karte.kv-dokument {
+  background-image: linear-gradient(var(--akzent), var(--akzent)), repeating-linear-gradient(90deg, rgba(122, 74, 34, 0.022) 0 1px, transparent 1px 9px);
+  background-size: 100% 4px, auto; background-position: top, 0 0; background-repeat: no-repeat, repeat;
+  box-shadow: 0 40px 80px -40px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+/* Umschalter Foto/Draufsicht: dunkles Glas auf der Bühne, gewählte Ansicht in Kupfer */
+.umschalter { background: rgba(23, 19, 15, 0.72); box-shadow: 0 0 0 1px rgba(243, 236, 226, 0.14), 0 6px 18px -8px rgba(0, 0, 0, 0.6); }
+.umschalter button { color: #e9dfd2; }
+.umschalter button:hover { color: #fff; }
+.umschalter button[aria-pressed="true"] { background: var(--akzent); color: var(--akzent-auf); box-shadow: 0 0 16px -4px var(--leuchten); }
+
+.weitere-angaben > summary:hover { box-shadow: 0 0 30px -14px var(--leuchten); }
+.fuss { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.04em; }
+
+/* ---------- Bewegung (html.bewegt aus js/bewegung.js) ---------- */
+/* Schrittwechsel: Kopf taucht auf, Inhalte gleiten nach. „translate“ statt „transform“, damit sich das
+   mit dem Hereingleiten beim Scrollen verträgt; fill-mode backwards hinterlässt keine Verschiebung. */
+html.bewegt .schritt-kopf > * { animation: auftauchen 700ms var(--kurve) backwards; }
+html.bewegt .schritt-kopf > :nth-child(2) { animation-delay: 90ms; }
+html.bewegt .schritt-kopf > :nth-child(3) { animation-delay: 180ms; }
+html.bewegt .schritt-kopf::after { animation: massband 900ms var(--kurve) 150ms backwards; }
+html.bewegt .schritt > :not(.schritt-kopf) { animation: einfahren 800ms var(--federnd) 160ms backwards; }
+html.bewegt .schritt > :not(.schritt-kopf) ~ :not(.schritt-kopf) { animation-delay: 260ms; }
+html.bewegt .moebel-raster > * { animation: aufploppen 650ms var(--federnd) backwards; animation-delay: calc(200ms + var(--i, 0) * 70ms); }
+.moebel-raster > :nth-child(2) { --i: 1; } .moebel-raster > :nth-child(3) { --i: 2; } .moebel-raster > :nth-child(4) { --i: 3; }
+.moebel-raster > :nth-child(5) { --i: 4; } .moebel-raster > :nth-child(6) { --i: 5; } .moebel-raster > :nth-child(7) { --i: 6; }
+.moebel-raster > :nth-child(8) { --i: 7; } .moebel-raster > :nth-child(n+9) { --i: 8; }
+@media (min-width: 901px) {
+  html.bewegt .baukasten-buehne { animation: kippen 1000ms var(--federnd) 120ms backwards; }
+  html.bewegt .baukasten-optionen > * { animation: einfahren-rechts 800ms var(--federnd) backwards; }
+  html.bewegt .baukasten-optionen > :nth-child(2) { animation-delay: 120ms; }
+  html.bewegt .baukasten-optionen > :nth-child(3) { animation-delay: 200ms; }
+  html.bewegt .baukasten-optionen > :nth-child(n+4) { animation-delay: 280ms; }
+}
+@keyframes auftauchen { from { opacity: 0; translate: 0 22px; filter: blur(6px); } }
+@keyframes einfahren { from { opacity: 0; translate: 0 64px; scale: 0.97; } }
+@keyframes einfahren-rechts { from { opacity: 0; translate: 14vw 30px; rotate: 4deg; } }
+@keyframes aufploppen { from { opacity: 0; translate: 0 40px; scale: 0.9; rotate: -3deg; } }
+@keyframes kippen { from { opacity: 0; transform: perspective(1400px) translate3d(-10vw, 40px, 0) rotateY(22deg) rotateX(8deg); } }
+@keyframes massband { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+/* Karten gleiten beim Scrollen herein (js/bewegung.js setzt --ein und .gleitet, nur solange sie unterwegs sind) */
+html.bewegt .gleitet {
+  opacity: calc(0.15 + var(--ein, 1) * 0.85);
+  transform: translate3d(calc((1 - var(--ein, 1)) * var(--seite, 1) * 9vw), calc((1 - var(--ein, 1)) * 90px), 0)
+    rotate(calc((1 - var(--ein, 1)) * var(--seite, 1) * 2.5deg));
+}
+
+/* Kicker tippen sich beim Schrittwechsel ein */
+html.bewegt .kicker.tippt { display: inline-block; animation: tippen calc(var(--n, 20) * 28ms) steps(var(--n, 20)) both; }
+html.bewegt .kicker.tippt::after {
+  content: "▌"; margin-left: 0.15em; color: var(--akzent-text);
+  animation: blinken 0.9s steps(2, jump-none) 5 forwards;
+}
+@keyframes tippen { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes blinken { 0% { opacity: 1; } 100% { opacity: 0; } }
+.schritt-kopf .kicker { display: inline-block; }
 
 /* ---------- Bewegung reduzieren ---------- */
 @media (prefers-reduced-motion: reduce) {

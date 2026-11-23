@@ -1,6 +1,6 @@
 # Selektor-Inventar (Stand 23.11.2026, Branch design-neu)
 
-Diese Selektoren benutzen `js/app.js`, `js/tischler.js` und `js/kopf.js`. Sie bleiben beim Umbau von Markup und CSS unverändert.
+Diese Selektoren benutzen `js/app.js`, `js/tischler.js`, `js/kopf.js` und `js/bewegung.js` (liest `.schritt`, `.t-bereich`, `.schritt-kopf .kicker`, `main .karte`, `.schritte [aria-current]`; setzt `html.bewegt`, `--fortschritt`, `.gleitet`/`--ein`, `.tippt`). Sie bleiben beim Umbau von Markup und CSS unverändert.
 Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf das DOM zu.
 
 ## Kundenseite (index.html, js/app.js)
