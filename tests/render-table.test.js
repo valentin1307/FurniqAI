@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { bauePrompt, naechstesSeitenverhaeltnis } from '../supabase/functions/render-table/prompt.ts';
 import { ordneHttpFehlerEin, werteAntwortAus } from '../supabase/functions/render-table/anbieter/gemini.ts';
+import { pruefeDemoCode } from '../supabase/functions/render-table/zugang.ts';
 
 const tisch = {
   form: 'rechteckig',
@@ -68,4 +69,14 @@ test('HTTP-Fehler: Abrechnung, Kontingent, Schlüssel, Modell', () => {
   const modell = ordneHttpFehlerEin(404, 'models/x is not found', 'x');
   assert.equal(modell.code, 'modell');
   assert.match(modell.message, /„x“/);
+});
+
+test('Demo-Code: richtig, falsch, fehlt, nicht eingerichtet', () => {
+  assert.equal(pruefeDemoCode('tisch2026', 'tisch2026'), 'ok');
+  assert.equal(pruefeDemoCode(' tisch2026 ', 'tisch2026'), 'ok', 'Leerzeichen egal');
+  assert.equal(pruefeDemoCode('tisch2025', 'tisch2026'), 'falsch');
+  assert.equal(pruefeDemoCode('tisch', 'tisch2026'), 'falsch');
+  assert.equal(pruefeDemoCode(null, 'tisch2026'), 'fehlt');
+  assert.equal(pruefeDemoCode('', 'tisch2026'), 'fehlt');
+  assert.equal(pruefeDemoCode('egal', undefined), 'nicht_eingerichtet', 'ohne Secret gesperrt');
 });

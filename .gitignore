@@ -21,5 +21,5 @@ Thumbs.db
 # Bauplan bleibt privat (nur lokal)
 FurniqAI.md
 
-# Supabase-Zugangsdaten für den Browser (lokal)
-js/config.js
+# js/config.js ist bewusst im Git: Supabase-URL und anon key sind für den Browser gedacht
+# und werden für GitHub Pages gebraucht. Die Bild-KI schützt der Demo-Code (Supabase-Secret DEMO_CODE).

@@ -368,6 +368,8 @@ fieldset.karte > legend ~ * { clear: both; }
 .bild-buehne .buehne-flaeche { max-height: calc(100vh - 16rem); }
 .bild-seite h2 { margin-top: 0; }
 .bild-knopf { width: 100%; }
+.demo-code { margin: 0 0 1rem; display: grid; gap: 0.6rem; }
+.demo-code .tipp { margin: 0; }
 .aktionen-zwischen { justify-content: space-between; align-items: center; }
 
 /* Preisleiste */

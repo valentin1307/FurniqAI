@@ -9,7 +9,15 @@ import {
   formatEuro,
   formatZahl,
 } from './preis.js';
-import { kiSignatur, seitenverhaeltnisPasst, markiertesFoto, alsJpeg, bildAnfordern } from './bildki.js';
+import {
+  kiSignatur,
+  seitenverhaeltnisPasst,
+  markiertesFoto,
+  alsJpeg,
+  bildAnfordern,
+  demoCodeLesen,
+  demoCodeSpeichern,
+} from './bildki.js';
 import {
   normiere,
   markierungsPhase,
@@ -768,7 +776,15 @@ function bildSchrittAnzeigen() {
   veraltetHinweisZeigen();
   bildKnopfAktualisieren();
   // Beim ersten Besuch automatisch erzeugen; danach nur auf Knopfdruck (jeder Aufruf kostet).
-  if (!zustand.kiBild && !kiLauf.abbruch) bildErzeugen();
+  // Ohne Demo-Code erst nach dem Code fragen.
+  if (!demoCodeLesen()) demoCodeAbfragen(true);
+  else if (!zustand.kiBild && !kiLauf.abbruch) bildErzeugen();
+}
+
+function demoCodeAbfragen(an) {
+  $('#demo-code-form').hidden = !an;
+  $('#bild-erzeugen').hidden = an;
+  if (an) $('#demo-code').value = '';
 }
 
 function bildKnopfAktualisieren() {
@@ -833,6 +849,10 @@ async function bildErzeugen() {
   } catch (err) {
     console.warn('[Bild-KI] Fehler:', err.code || '', err.message);
     zeigeFehler('fehler-4', err.message || 'Das Bild konnte nicht erzeugt werden. Bitte versuchen Sie es erneut.');
+    if (err.code === 'demo_code') {
+      demoCodeSpeichern(''); // falscher oder fehlender Code: neu abfragen
+      demoCodeAbfragen(true);
+    }
   } finally {
     clearTimeout(zeitlimit);
     kiLauf.abbruch = null;
@@ -845,6 +865,14 @@ async function bildErzeugen() {
 
 function schritt4Einrichten() {
   $('#bild-erzeugen').addEventListener('click', bildErzeugen);
+  $('#demo-code-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const code = $('#demo-code').value.trim();
+    if (!code) return;
+    demoCodeSpeichern(code);
+    demoCodeAbfragen(false);
+    bildErzeugen();
+  });
   $('#zurueck-4').addEventListener('click', () => zeigeSchritt(2));
   $('#weiter-4').addEventListener('click', () => zeigeSchritt(5));
 }

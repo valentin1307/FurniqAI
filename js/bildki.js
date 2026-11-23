@@ -99,6 +99,29 @@ export async function alsJpeg(dataUrl, qualitaet = 0.88) {
   return { daten: canvas.toDataURL('image/jpeg', qualitaet), breite: canvas.width, hoehe: canvas.height };
 }
 
+// Demo-Code: nur auf diesem Gerät gemerkt (Browser-Speicher), nie im Code
+const DEMO_CODE_SCHLUESSEL = 'furniqai.demoCode';
+
+export function demoCodeLesen() {
+  try {
+    return localStorage.getItem(DEMO_CODE_SCHLUESSEL) || sitzungsCode;
+  } catch {
+    return sitzungsCode;
+  }
+}
+
+export function demoCodeSpeichern(code) {
+  try {
+    if (code) localStorage.setItem(DEMO_CODE_SCHLUESSEL, code);
+    else localStorage.removeItem(DEMO_CODE_SCHLUESSEL);
+  } catch {
+    // privates Fenster o. Ä.: dann gilt der Code nur bis zum Neuladen
+  }
+  sitzungsCode = code;
+}
+
+let sitzungsCode = '';
+
 /** Supabase-Zugang aus js/config.js (nicht im Git). null, wenn die Datei fehlt. */
 async function ladeKonfig() {
   try {
@@ -136,6 +159,7 @@ export async function bildAnfordern(eingabe, signal) {
         'content-type': 'application/json',
         authorization: `Bearer ${konfig.schluessel}`,
         apikey: konfig.schluessel,
+        'x-demo-code': demoCodeLesen(),
       },
       body: JSON.stringify(eingabe),
       signal,

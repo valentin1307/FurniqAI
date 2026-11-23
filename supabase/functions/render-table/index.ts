@@ -6,11 +6,13 @@
 //   → 4xx/5xx { fehler: { code, meldung } }   (meldung auf Deutsch für die Kundenseite)
 // POST { aktion: "modelle" } → { modell, verfuegbar: [...] }   (Prüfung, welche Bildmodelle der Schlüssel kann)
 //
-// Secrets: GEMINI_API_KEY (Pflicht), GEMINI_MODEL (optional), ERLAUBTE_URSPRUENGE (optional, kommagetrennt)
+// Header x-demo-code: muss dem Secret DEMO_CODE entsprechen (Schutz vor fremden Aufrufen auf unsere Kosten).
+// Secrets: GEMINI_API_KEY und DEMO_CODE (Pflicht), GEMINI_MODEL, ERLAUBTE_URSPRUENGE (optional, kommagetrennt)
 
 import { type BildAnbieter, AnbieterFehler, fehler } from './anbieter/typ.ts';
 import { GeminiAnbieter } from './anbieter/gemini.ts';
 import { bauePrompt, naechstesSeitenverhaeltnis, type TischParameter } from './prompt.ts';
+import { pruefeDemoCode } from './zugang.ts';
 
 const STANDARD_MODELL = 'gemini-3.1-flash-image';
 const ZEITLIMIT_MS = 120_000;
@@ -30,7 +32,7 @@ const URSPRUENGE = erlaubteUrspruenge.length ? erlaubteUrspruenge : STANDARD_URS
 function corsKoepfe(origin: string | null): Record<string, string> {
   const k: Record<string, string> = {
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-demo-code',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin',
   };
@@ -91,6 +93,13 @@ Deno.serve(async (req) => {
 
   const start = Date.now();
   try {
+    const zugang = pruefeDemoCode(req.headers.get('x-demo-code'), Deno.env.get('DEMO_CODE'));
+    if (zugang === 'nicht_eingerichtet') {
+      throw fehler('demo_code', 'Secret DEMO_CODE fehlt', 'Die Bild-KI ist noch nicht freigeschaltet (Demo-Code fehlt in Supabase).');
+    }
+    if (zugang === 'falsch') throw fehler('demo_code', 'falscher Code', 'Der Demo-Code stimmt nicht. Bitte prüfen Sie ihn.');
+    if (zugang === 'fehlt') throw fehler('demo_code', 'kein Code');
+
     const eingabe: Roh = await req.json().catch(() => {
       throw fehler('eingabe', 'kein JSON');
     });
