@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tischlerseite</title>
+  <link rel="preload" href="fonts/fraunces-latin-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/tischler.css">
+  <script type="module" src="js/tischler.js"></script>
+</head>
+<body class="tischler">
+  <header class="kopf">
+    <div class="kopf-innen">
+      <div class="marke">
+        <img class="marke-logo" id="betrieb-logo" alt="" hidden>
+        <span class="marke-monogramm" id="betrieb-monogramm" aria-hidden="true"></span>
+        <span class="marke-text">
+          <span class="marke-name" id="betrieb-name"></span>
+          <span class="marke-claim">Tischlerseite</span>
+        </span>
+      </div>
+      <nav class="t-reiter" aria-label="Bereiche">
+        <button type="button" data-bereich="posteingang" aria-pressed="true">Posteingang <span class="t-zaehler" id="zaehler-neu" hidden></span></button>
+        <button type="button" data-bereich="einstellungen" aria-pressed="false">Einstellungen</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="seite">
+    <!-- Demo-Code (Anfragen liegen geschützt in Supabase) -->
+    <section class="karte t-zugang" id="zugang" hidden>
+      <h1>Anmeldung zur Demo</h1>
+      <p class="tipp">Die Anfragen sind geschützt. Geben Sie den Demo-Code ein. Er wird nur auf diesem Gerät gespeichert.</p>
+      <form id="zugang-form" class="t-zugang-form">
+        <label class="feld">
+          <span>Demo-Code</span>
+          <input type="password" id="zugang-code" autocomplete="off" required>
+        </label>
+        <p class="fehler" id="zugang-fehler" role="alert" hidden></p>
+        <button type="submit" class="knopf knopf-haupt">Posteingang öffnen</button>
+      </form>
+    </section>
+
+    <!-- Posteingang -->
+    <section id="posteingang" class="t-bereich" hidden>
+      <header class="schritt-kopf t-kopf">
+        <div>
+          <h1>Posteingang</h1>
+          <p class="einleitung">Anfragen Ihrer Kundinnen und Kunden aus dem Konfigurator.</p>
+        </div>
+        <button type="button" class="knopf knopf-leise" id="aktualisieren"><span aria-hidden="true">↻</span> Aktualisieren</button>
+      </header>
+
+      <div class="t-filter" role="group" aria-label="Nach Status filtern">
+        <button type="button" data-filter="alle" aria-pressed="true">Alle</button>
+        <button type="button" data-filter="neu" aria-pressed="false">Neu</button>
+        <button type="button" data-filter="angenommen" aria-pressed="false">Angenommen</button>
+        <button type="button" data-filter="abgelehnt" aria-pressed="false">Abgelehnt</button>
+      </div>
+
+      <p class="fehler" id="liste-fehler" role="alert" hidden></p>
+
+      <div class="t-raster">
+        <ul class="t-liste" id="liste" aria-label="Anfragen"></ul>
+        <article class="karte t-detail" id="detail" aria-live="polite">
+          <p class="t-leer">Wählen Sie links eine Anfrage aus.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Einstellungen -->
+    <section id="einstellungen" class="t-bereich" hidden>
+      <header class="schritt-kopf">
+        <h1>Einstellungen</h1>
+        <p class="einleitung">
+          Materialien, Preise, Maßgrenzen und Optionen Ihres Betriebs. Gilt sofort für den Konfigurator in diesem Browser.
+        </p>
+      </header>
+      <form id="einstellungen-form" class="t-einstellungen" novalidate>
+        <div id="einstellungen-felder"></div>
+        <p class="fehler" id="einstellungen-fehler" role="alert" hidden></p>
+        <p class="t-gespeichert" id="einstellungen-ok" role="status" hidden>Gespeichert.</p>
+        <div class="aktionen aktionen-zwischen">
+          <button type="button" class="knopf knopf-leise" id="einstellungen-standard">Auf Standard zurücksetzen</button>
+          <button type="submit" class="knopf knopf-haupt">Speichern</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="fuss">
+    <span class="fuss-demo">Demo · Alle Preise sind Beispielwerte und keine Preise eines echten Betriebs. · <a href="./">Zur Kundenseite</a></span>
+    <span class="fuss-powered">powered by <strong>FurniqAI</strong></span>
+  </footer>
+</body>
+</html>

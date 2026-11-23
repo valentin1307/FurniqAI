@@ -12,40 +12,12 @@
 import { type BildAnbieter, AnbieterFehler, fehler } from './anbieter/typ.ts';
 import { GeminiAnbieter } from './anbieter/gemini.ts';
 import { bauePrompt, naechstesSeitenverhaeltnis, type TischParameter } from './prompt.ts';
-import { pruefeDemoCode } from './zugang.ts';
+import { pruefeDemoCode } from '../_shared/zugang.ts';
+import { json, vorpruefung } from '../_shared/http.ts';
 
 const STANDARD_MODELL = 'gemini-3.1-flash-image';
 const ZEITLIMIT_MS = 120_000;
 const MAX_BILD_ZEICHEN = 12_000_000; // base64, ca. 9 MB
-
-const STANDARD_URSPRUENGE = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'https://valentin1307.github.io',
-];
-const erlaubteUrspruenge = (Deno.env.get('ERLAUBTE_URSPRUENGE') ?? '')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
-const URSPRUENGE = erlaubteUrspruenge.length ? erlaubteUrspruenge : STANDARD_URSPRUENGE;
-
-function corsKoepfe(origin: string | null): Record<string, string> {
-  const k: Record<string, string> = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-demo-code',
-    'Access-Control-Max-Age': '86400',
-    Vary: 'Origin',
-  };
-  if (origin && URSPRUENGE.includes(origin)) k['Access-Control-Allow-Origin'] = origin;
-  return k;
-}
-
-function json(daten: unknown, status: number, origin: string | null): Response {
-  return new Response(JSON.stringify(daten), {
-    status,
-    headers: { ...corsKoepfe(origin), 'content-type': 'application/json; charset=utf-8' },
-  });
-}
 
 function anbieterWaehlen(): BildAnbieter {
   const schluessel = Deno.env.get('GEMINI_API_KEY');
@@ -84,12 +56,9 @@ function pruefeEingabe(e: Roh) {
 }
 
 Deno.serve(async (req) => {
+  const vorab = vorpruefung(req);
+  if (vorab) return vorab;
   const origin = req.headers.get('origin');
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsKoepfe(origin) });
-  if (req.method !== 'POST') return json({ fehler: { code: 'methode', meldung: 'Nur POST.' } }, 405, origin);
-  if (origin && !URSPRUENGE.includes(origin)) {
-    return json({ fehler: { code: 'herkunft', meldung: `Herkunft ${origin} ist nicht erlaubt.` } }, 403, origin);
-  }
 
   const start = Date.now();
   try {

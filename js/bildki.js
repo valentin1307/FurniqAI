@@ -1,5 +1,6 @@
 // Bild-KI (Schritt 4): Aufruf der Edge Function render-table.
 // Oben reine Funktionen (testbar mit Node), unten Funktionen mit Canvas/Fetch für den Browser.
+import { rufeFunction, ApiFehler } from './supabase.js';
 
 /** Kennung der Angaben, aus denen ein KI-Bild entstanden ist. Ändert sie sich, ist das Bild veraltet. */
 export function kiSignatur(z) {
@@ -99,81 +100,13 @@ export async function alsJpeg(dataUrl, qualitaet = 0.88) {
   return { daten: canvas.toDataURL('image/jpeg', qualitaet), breite: canvas.width, hoehe: canvas.height };
 }
 
-// Demo-Code: nur auf diesem Gerät gemerkt (Browser-Speicher), nie im Code
-const DEMO_CODE_SCHLUESSEL = 'furniqai.demoCode';
-
-export function demoCodeLesen() {
-  try {
-    return localStorage.getItem(DEMO_CODE_SCHLUESSEL) || sitzungsCode;
-  } catch {
-    return sitzungsCode;
-  }
-}
-
-export function demoCodeSpeichern(code) {
-  try {
-    if (code) localStorage.setItem(DEMO_CODE_SCHLUESSEL, code);
-    else localStorage.removeItem(DEMO_CODE_SCHLUESSEL);
-  } catch {
-    // privates Fenster o. Ä.: dann gilt der Code nur bis zum Neuladen
-  }
-  sitzungsCode = code;
-}
-
-let sitzungsCode = '';
-
-/** Supabase-Zugang aus js/config.js (nicht im Git). null, wenn die Datei fehlt. */
-async function ladeKonfig() {
-  try {
-    const k = await import('./config.js');
-    if (!k.SUPABASE_URL || !k.SUPABASE_ANON_KEY || k.SUPABASE_URL.includes('DEINE-')) return null;
-    return { url: k.SUPABASE_URL.replace(/\/$/, ''), schluessel: k.SUPABASE_ANON_KEY };
-  } catch {
-    return null;
-  }
-}
-
-/** Fehler mit deutschem Text für die Kundenseite. */
-export class BildFehler extends Error {
-  constructor(meldung, code) {
-    super(meldung);
-    this.code = code;
-  }
-}
-
 /**
  * Bild bei der Edge Function anfordern.
  * eingabe: { foto, fotoMarkiert, fotoBreite, fotoHoehe, referenz, tischPosition, tisch }
  * Rückgabe: Antwort der Function { bild, mimeType, modell, dauerMs, seitenverhaeltnis }
  */
 export async function bildAnfordern(eingabe, signal) {
-  const konfig = await ladeKonfig();
-  if (!konfig) {
-    throw new BildFehler('Die Bild-KI ist auf diesem Gerät nicht eingerichtet (js/config.js fehlt).', 'konfig');
-  }
-  let antwort;
-  try {
-    antwort = await fetch(`${konfig.url}/functions/v1/render-table`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${konfig.schluessel}`,
-        apikey: konfig.schluessel,
-        'x-demo-code': demoCodeLesen(),
-      },
-      body: JSON.stringify(eingabe),
-      signal,
-    });
-  } catch (err) {
-    if (signal?.aborted) {
-      throw new BildFehler('Die Bild-KI hat zu lange gebraucht (Zeitüberschreitung). Bitte versuchen Sie es noch einmal.', 'zeit');
-    }
-    throw new BildFehler('Die Bild-KI ist nicht erreichbar. Bitte prüfen Sie Ihre Internetverbindung.', 'netz');
-  }
-  const daten = await antwort.json().catch(() => null);
-  if (!antwort.ok || !daten?.bild) {
-    const meldung = daten?.fehler?.meldung || `Die Bild-KI hat einen Fehler gemeldet (HTTP ${antwort.status}).`;
-    throw new BildFehler(meldung, daten?.fehler?.code || `http-${antwort.status}`);
-  }
+  const daten = await rufeFunction('render-table', eingabe, { signal, wer: 'Die Bild-KI' });
+  if (!daten.bild) throw new ApiFehler('Die Bild-KI hat kein Bild zurückgegeben. Bitte erzeugen Sie das Bild neu.', 'kein_bild');
   return daten;
 }

@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { bauePrompt, naechstesSeitenverhaeltnis } from '../supabase/functions/render-table/prompt.ts';
 import { ordneHttpFehlerEin, werteAntwortAus } from '../supabase/functions/render-table/anbieter/gemini.ts';
-import { pruefeDemoCode } from '../supabase/functions/render-table/zugang.ts';
+import { pruefeDemoCode } from '../supabase/functions/_shared/zugang.ts';
 
 const tisch = {
   form: 'rechteckig',

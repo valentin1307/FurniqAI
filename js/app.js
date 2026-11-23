@@ -15,9 +15,8 @@ import {
   markiertesFoto,
   alsJpeg,
   bildAnfordern,
-  demoCodeLesen,
-  demoCodeSpeichern,
 } from './bildki.js';
+import { demoCodeLesen, demoCodeSpeichern, rufeFunction } from './supabase.js';
 import {
   normiere,
   markierungsPhase,
@@ -43,7 +42,6 @@ const OHNE_MASERUNG = ['mdf-lackiert'];
 const MATERIAL_BILD_ORDNER = 'assets/materialien';
 
 const FOTO_MAX_KANTE = 1600; // px, verkleinert vor dem Speichern
-const SPEICHER_SCHLUESSEL = 'furniqai.anfragen';
 
 const zustand = {
   schritt: 1,
@@ -913,6 +911,7 @@ function kostenvoranschlagAnzeigen() {
   const n = namen();
   const preis = berechnePreis(konfiguration(), BETRIEB);
 
+  $('#kunden-code-feld').hidden = Boolean(demoCodeLesen()); // evtl. schon in Schritt 4 eingegeben
   $('#kv-foto').src = aktuellesKiBild() || zustand.foto;
   $('#kv-foto').alt = aktuellesKiBild() ? 'KI-Vorschau Ihres Tisches in Ihrem Raum' : 'Ihr Raumfoto';
   $('#kv-betrieb').textContent = BETRIEB.name;
@@ -953,35 +952,22 @@ function kostenvoranschlagAnzeigen() {
  * Platzhalter für Supabase: speichert die Anfrage vorerst im Browser (localStorage).
  * Gibt true zurück, wenn gespeichert wurde (notfalls ohne Foto), sonst false.
  */
-function anfrageSpeichern(anfrage) {
-  let liste = [];
-  try {
-    liste = JSON.parse(localStorage.getItem(SPEICHER_SCHLUESSEL)) || [];
-  } catch {
-    liste = [];
-  }
-  try {
-    localStorage.setItem(SPEICHER_SCHLUESSEL, JSON.stringify([...liste, anfrage]));
-    return true;
-  } catch {
-    // Speicher voll (Foto zu groß) – ohne Foto versuchen
-  }
-  try {
-    localStorage.setItem(SPEICHER_SCHLUESSEL, JSON.stringify([...liste, { ...anfrage, foto: null }]));
-    return true;
-  } catch {
-    // Speicher voll oder gesperrt (z. B. privates Fenster)
-    return false;
-  }
+/** Anfrage über die Edge Function in Supabase speichern (Bilder landen im privaten Storage). */
+async function anfrageSenden(anfrage, foto, kiBild) {
+  return rufeFunction('anfragen', { aktion: 'anlegen', anfrage, foto, kiBild }, { wer: 'Der Versand' });
 }
 
 function schritt5Einrichten() {
   $('#zurueck-5').addEventListener('click', () => zeigeSchritt(4));
 
   const form = $('#kunden-form');
-  form.addEventListener('submit', (e) => {
+  const sendeKnopf = form.querySelector('button[type="submit"]');
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (sendeKnopf.disabled) return;
     const daten = Object.fromEntries(new FormData(form));
+    const code = (daten.demoCode || '').trim();
+    delete daten.demoCode;
     const fehlend = [];
     form.querySelectorAll('input').forEach((i) => i.classList.remove('ungueltig'));
     if (!daten.name.trim()) fehlend.push(form.elements.name);
@@ -992,13 +978,19 @@ function schritt5Einrichten() {
       zeigeFehler('fehler-5', 'Bitte geben Sie Ihren Namen und eine gültige E-Mail-Adresse an.');
       return;
     }
+    if (!$('#kunden-code-feld').hidden) {
+      if (!code) {
+        form.elements.demoCode.classList.add('ungueltig');
+        form.elements.demoCode.focus();
+        zeigeFehler('fehler-5', 'Bitte geben Sie den Demo-Code ein.');
+        return;
+      }
+      demoCodeSpeichern(code);
+    }
     zeigeFehler('fehler-5', null);
 
     const preis = berechnePreis(konfiguration(), BETRIEB);
-    const gespeichert = anfrageSpeichern({
-      id: crypto.randomUUID(),
-      erstellt: new Date().toISOString(),
-      status: 'neu',
+    const anfrage = {
       kunde: Object.fromEntries(Object.entries(daten).map(([k, v]) => [k, v.trim()])),
       raum:
         zustand.raumLaenge === null || zustand.raumBreite === null
@@ -1011,16 +1003,25 @@ function schritt5Einrichten() {
       tischPosition: structuredClone(zustand.tischPosition),
       konfiguration: { ...konfiguration(), namen: namen() },
       preis,
-      foto: zustand.foto,
-      kiBild: aktuellesKiBild(),
       kiInfo: aktuellesKiBild() ? zustand.kiInfo : null,
-    });
-    if (!gespeichert) {
-      zeigeFehler(
-        'fehler-5',
-        'Ihre Anfrage konnte leider nicht gespeichert werden. Bitte versuchen Sie es erneut oder wenden Sie sich direkt an die Tischlerei.',
-      );
+    };
+
+    const knopfText = sendeKnopf.innerHTML;
+    sendeKnopf.disabled = true;
+    sendeKnopf.textContent = 'Wird gesendet …';
+    try {
+      await anfrageSenden(anfrage, zustand.foto, aktuellesKiBild());
+    } catch (err) {
+      console.warn('[Anfrage] Fehler:', err.code || '', err.message);
+      if (err.code === 'demo_code') {
+        demoCodeSpeichern('');
+        $('#kunden-code-feld').hidden = false;
+      }
+      zeigeFehler('fehler-5', err.message || 'Ihre Anfrage konnte leider nicht gesendet werden. Bitte versuchen Sie es erneut.');
       return;
+    } finally {
+      sendeKnopf.disabled = false;
+      sendeKnopf.innerHTML = knopfText;
     }
 
     form.hidden = true;
