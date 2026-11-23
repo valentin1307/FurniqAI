@@ -1,10 +1,8 @@
 /* FurniqAI – gemeinsame Gestaltung für Kunden- und Tischlerseite.
-   „Werkstatt trifft Labor“: dunkler Werkstatt-Rahmen wie auf der Landingpage (Kupfer-Leuchten, Rasterboden,
-   Terminal-Kicker), darauf helle Werkbank-Karten aus Papier und Holz, auf denen gearbeitet wird.
-   Technik: :root trägt die hellen Werkbank-Tokens, body überschreibt sie dunkel; .karte & Co. setzen die
-   hellen Werte wieder. Komponenten nutzen nur Tokens und passen so in beide Umgebungen.
-   Bewegung kommt aus js/bewegung.js (html.bewegt), bei „Bewegung reduzieren“ bleibt alles still.
-   Fraunces für Überschriften und Preise, Monospace für Kicker und Messwerte, sonst Systemschrift. Raster 8 px. */
+   Grundlage: Apple Human Interface Guidelines (Klarheit, Inhalt vor Oberfläche, gleiche Muster).
+   Charakter: ruhiger Showroom einer Tischlerei – warme Papier- und Holztöne, Fraunces nur für Überschriften,
+   Preise und den Kostenvoranschlag, sonst Systemschrift. Raster 8 px.
+   Bewegung kommt aus js/bewegung.js (html.bewegt); bei „Bewegung reduzieren“ bleibt alles still. */
 
 /* ---------- Schriften (lokal, SIL OFL – siehe fonts/Fraunces-OFL.txt) ---------- */
 @font-face {
@@ -32,7 +30,7 @@
   --text-primaer: #231c16;          /* 14.8:1 auf --hintergrund */
   --text-sekundaer: #675a4d;        /* 5.9:1 auf --hintergrund, 6.6:1 auf --flaeche */
   --text-platzhalter: #8f8274;
-  --akzent: #a14a1c;                /* Kupfer-Nuss: 5.8:1 auf --flaeche, weiße Schrift 5.9:1 */
+  --akzent: #7a4a22;                /* 7.3:1 auf --flaeche */
   --akzent-auf: #fffaf3;            /* Text auf --akzent */
   --akzent-stark: color-mix(in srgb, var(--akzent) 78%, #000);
   --akzent-flaeche: color-mix(in srgb, var(--akzent) 11%, var(--flaeche));
@@ -48,13 +46,10 @@
   --warnung-flaeche: #fbefe5;
   --messing: #8a6430;               /* 4.7:1 auf --hintergrund */
   --holz-dunkel: #2b231c;           /* Bühne, Fotoflächen */
-  --kupfer-hell: #f08a57;           /* Leuchten auf dunklem Grund */
-  --leuchten: rgba(240, 138, 87, 0.42);
 
   /* Schrift */
   --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   --s-titel: 2.125rem;   /* h1 */
   --s-gross: 1.75rem;    /* Preis, Erfolg */
   --s-kopf: 1.375rem;    /* h2, Legenden */
@@ -882,99 +877,12 @@ fieldset.karte > legend ~ * { clear: both; }
 .fuss-powered strong { font-family: var(--serif); font-weight: 600; color: var(--text-primaer); }
 
 /* =====================================================================
-   Werkstatt trifft Labor: dunkler Rahmen, helle Werkbank
+   Bewegung und Werkstatt-Details (js/bewegung.js setzt html.bewegt, --fortschritt, --ein)
+   Aussehen hell wie auf der Landingpage, Bewegung unverändert aus der Fusion übernommen.
    ===================================================================== */
 
-/* Dunkle Umgebung: alles, was direkt auf der Seite steht (Kopf, Überschriften, Fuß, Preisleiste) */
-body {
-  color-scheme: dark;
-  --hintergrund: #17130f;
-  --flaeche: #221c17;
-  --flaeche-tief: #2c241d;
-  --feld: #1c1713;
-  --text-primaer: #f3ece2;
-  --text-sekundaer: #b9ad9f;
-  --text-platzhalter: #8f8376;
-  --akzent-flaeche: color-mix(in srgb, var(--akzent) 24%, #1c1713);
-  --akzent-text: color-mix(in srgb, var(--akzent) 30%, #ffc6a3);
-  --trenner: rgba(243, 236, 226, 0.12);
-  --trenner-stark: rgba(243, 236, 226, 0.24);
-  --fehler: #ff9b8c;
-  --fehler-flaeche: rgba(255, 138, 122, 0.12);
-  --erfolg: #8fd19e;
-  --erfolg-flaeche: rgba(143, 209, 158, 0.12);
-  --warnung: #f2b07a;
-  --warnung-flaeche: rgba(242, 176, 122, 0.12);
-  --messing: #d2ab72;
-  --schatten-weich: 0 1px 2px rgba(0, 0, 0, 0.3), 0 18px 40px -22px rgba(0, 0, 0, 0.8);
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(196, 80, 28, 0.2), transparent 70%),
-    var(--hintergrund);
-  background-attachment: fixed;
-}
-/* Rasterboden am unteren Rand, sehr leise */
-body::before {
-  content: ""; position: fixed; left: -50%; right: -50%; bottom: -18vh; height: 52vh; z-index: -1; pointer-events: none;
-  background-image:
-    linear-gradient(to bottom, rgba(240, 138, 87, 0.32) 1px, transparent 1px),
-    linear-gradient(to right, rgba(240, 138, 87, 0.26) 1px, transparent 1px);
-  background-size: 72px 72px;
-  background-position: 0 calc(var(--rollen, 0) * 1px);
-  transform: perspective(420px) rotateX(62deg); transform-origin: top center;
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 35%, transparent 92%);
-          mask-image: linear-gradient(to bottom, transparent, #000 35%, transparent 92%);
-  opacity: 0.35;
-}
-/* Scanlines wie auf der Landingpage, sehr zurückhaltend */
-body::after {
-  content: ""; position: fixed; inset: 0; z-index: 60; pointer-events: none;
-  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 4px);
-  opacity: 0.35;
-}
-
-/* Helle Werkbank: Karten, auf denen gearbeitet wird */
-.karte:not(.karte-leise), .moebel-karte:not(.bald) {
-  color-scheme: light;
-  --hintergrund: #f5f0e8;
-  --flaeche: #fffdf9;
-  --flaeche-tief: #efe8de;
-  --feld: #ffffff;
-  --text-primaer: #231c16;
-  --text-sekundaer: #675a4d;
-  --text-platzhalter: #8f8274;
-  --akzent-flaeche: color-mix(in srgb, var(--akzent) 11%, #fffdf9);
-  --akzent-text: color-mix(in srgb, var(--akzent) 80%, #000);
-  --trenner: #e5dccf;
-  --trenner-stark: #d3c5b2;
-  --fehler: #a8241c;
-  --fehler-flaeche: #fbebe8;
-  --erfolg: #2b6a43;
-  --erfolg-flaeche: #e5f1e8;
-  --warnung: #8f3f14;
-  --warnung-flaeche: #fbefe5;
-  --messing: #8a6430;
-  --schatten-weich: 0 1px 2px rgba(43, 35, 28, 0.04), 0 8px 24px -16px rgba(43, 35, 28, 0.16);
-  color: var(--text-primaer);
-}
-.karte:not(.karte-leise) {
-  /* Papier mit feiner Holzmaserung, Schatten wie ein Brett auf der Werkbank */
-  background-image: repeating-linear-gradient(90deg, rgba(122, 74, 34, 0.022) 0 1px, transparent 1px 9px);
-  border-color: rgba(255, 253, 249, 0.6);
-  box-shadow: 0 30px 60px -34px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(0, 0, 0, 0.25);
-}
-.karte-leise { border-style: dashed; border-color: var(--trenner-stark); }
-
-/* Kicker: Terminal-Stil wie auf der Landingpage */
-.kicker {
-  font: 500 0.75rem/1.4 var(--mono); letter-spacing: 0.14em; color: var(--akzent-text);
-}
-.kicker::before { content: "// "; opacity: 0.7; }
-.karte .kicker { color: var(--messing); }
-
-/* Überschriften auf dunklem Grund */
+/* Maßband unter jeder Schrittüberschrift: Millimeter, halbe und ganze Zentimeter */
 .schritt-kopf { position: relative; padding-bottom: var(--a3); }
-.schritt-kopf h1 { font-size: clamp(2rem, 3.6vw, 2.875rem); letter-spacing: -0.02em; }
-/* Maßband unter jeder Überschrift: Millimeter, halbe und ganze Zentimeter */
 .schritt-kopf::after {
   content: ""; position: absolute; left: 0; bottom: 0; width: min(100%, 26rem); height: 12px;
   background:
@@ -984,61 +892,17 @@ body::after {
     linear-gradient(var(--messing), var(--messing)) bottom left / 100% 1px no-repeat;
   -webkit-mask-image: linear-gradient(90deg, #000 60%, transparent);
           mask-image: linear-gradient(90deg, #000 60%, transparent);
-  opacity: 0.75;
+  opacity: 0.55;
 }
 
-/* Kopf: dunkles Glas, Marke leuchtet, Schrittleiste wie ein Messgerät */
-.kopfbereich { border-bottom-color: var(--trenner); background: rgba(23, 19, 15, 0.9); }
-.kopfbereich::after { /* Fortschritt als leuchtende Linie (js/bewegung.js setzt --fortschritt) */
+/* Fortschritt als Kupferlinie unter dem Kopf (js/bewegung.js setzt --fortschritt) */
+.kopfbereich::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; transform-origin: left;
   transform: scaleX(var(--fortschritt, 0));
-  background: linear-gradient(90deg, var(--akzent), var(--kupfer-hell));
-  box-shadow: 0 0 12px var(--leuchten);
+  background: linear-gradient(90deg, var(--akzent), #c06a2e);
   transition: transform 700ms var(--federnd);
 }
-.marke-monogramm { box-shadow: inset 0 0 0 3px var(--akzent), inset 0 0 0 4px color-mix(in srgb, var(--akzent-auf) 40%, transparent), 0 0 22px -4px var(--leuchten); }
-.kopf-produkt { font: 500 0.75rem/1.4 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; }
-.kopf-produkt::before { content: "// "; color: var(--akzent-text); opacity: 0.8; }
-.schritte .nr { font-family: var(--mono); font-weight: 500; background: transparent; }
-.schritte li:not([hidden]) + li:not([hidden])::before {
-  height: 1px; background: repeating-linear-gradient(90deg, var(--trenner-stark) 0 1px, transparent 1px 5px);
-}
-.schritte li:has(.erledigt) + li:not([hidden])::before, .schritte li:has(.erledigt) + li[hidden] + li::before {
-  background: linear-gradient(90deg, var(--akzent-text), var(--akzent)); box-shadow: 0 0 8px var(--leuchten);
-}
-.schritte button[aria-current="step"] .nr { box-shadow: 0 0 16px -2px var(--leuchten); }
-.schritte button[aria-current="step"]::after { box-shadow: 0 0 10px var(--leuchten); }
 
-/* Knöpfe: rund wie auf der Landingpage, Hauptknopf leuchtet */
-.knopf { border-radius: 999px; padding-inline: 1.375rem; }
-.knopf-haupt:hover:not(:disabled) { box-shadow: 0 0 28px -6px var(--leuchten); }
-
-/* Möbelauswahl */
-.moebel-karte:not(.bald) { background-color: #fffdf9; }
-.moebel-karte:not(.bald):hover { box-shadow: 0 0 36px -14px var(--leuchten), 0 24px 48px -30px rgba(0, 0, 0, 0.9); }
-.moebel-karte:has(input:checked) { box-shadow: inset 0 0 0 1px var(--akzent), 0 0 40px -12px var(--leuchten); }
-.moebel-karte.bald { border-color: var(--trenner-stark); }
-
-/* Bühne und Preis wie ein Bildschirm in der Werkstatt */
-.buehne-flaeche { box-shadow: 0 40px 80px -40px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--trenner), 0 0 60px -34px var(--leuchten); }
-.preisleiste { background: color-mix(in srgb, var(--flaeche) 88%, transparent); border-color: var(--trenner-stark); }
-.preis-label { font: 500 0.6875rem/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; }
-.preis-summe.aendert { color: var(--akzent-text); text-shadow: 0 0 22px var(--leuchten); }
-.karte.kv-dokument {
-  background-image: linear-gradient(var(--akzent), var(--akzent)), repeating-linear-gradient(90deg, rgba(122, 74, 34, 0.022) 0 1px, transparent 1px 9px);
-  background-size: 100% 4px, auto; background-position: top, 0 0; background-repeat: no-repeat, repeat;
-  box-shadow: 0 40px 80px -40px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(0, 0, 0, 0.25);
-}
-/* Umschalter Foto/Draufsicht: dunkles Glas auf der Bühne, gewählte Ansicht in Kupfer */
-.umschalter { background: rgba(23, 19, 15, 0.72); box-shadow: 0 0 0 1px rgba(243, 236, 226, 0.14), 0 6px 18px -8px rgba(0, 0, 0, 0.6); }
-.umschalter button { color: #e9dfd2; }
-.umschalter button:hover { color: #fff; }
-.umschalter button[aria-pressed="true"] { background: var(--akzent); color: var(--akzent-auf); box-shadow: 0 0 16px -4px var(--leuchten); }
-
-.weitere-angaben > summary:hover { box-shadow: 0 0 30px -14px var(--leuchten); }
-.fuss { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.04em; }
-
-/* ---------- Bewegung (html.bewegt aus js/bewegung.js) ---------- */
 /* Schrittwechsel: Kopf taucht auf, Inhalte gleiten nach. „translate“ statt „transform“, damit sich das
    mit dem Hereingleiten beim Scrollen verträgt; fill-mode backwards hinterlässt keine Verschiebung. */
 html.bewegt .schritt-kopf > * { animation: auftauchen 700ms var(--kurve) backwards; }
