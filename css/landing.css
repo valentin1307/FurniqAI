@@ -452,6 +452,20 @@ h1 em, h2 em {
 .fuss nav a:hover { color: var(--akzent-text); text-decoration: underline; }
 
 /* ---------- Rechtstexte (Impressum, Datenschutz) ---------- */
+/* Zurück zur Startseite: Haus-Symbol im Kopf */
+.zurueck {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 8px 16px 8px 12px; border-radius: 999px;
+  border: 1.5px solid rgba(247, 239, 231, 0.3); color: var(--text);
+  font-weight: 600; font-size: 0.9375rem; text-decoration: none;
+  transition: border-color 0.2s, color 0.2s;
+}
+.zurueck svg { color: var(--akzent-text); flex: none; }
+.zurueck:hover { border-color: var(--akzent-text); color: var(--akzent-text); }
+@media (max-width: 420px) {
+  .zurueck { padding: 8px 12px; }
+  .zurueck span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
 .rechtstext { padding: clamp(40px, 7vw, 80px) 0 var(--abstand); }
 .rechtstext .innen { max-width: 46rem; }
 .rechtstext h1 { margin: 10px 0 24px; }
