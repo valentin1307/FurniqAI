@@ -447,12 +447,102 @@ fieldset.karte > legend ~ * { clear: both; }
 .weitere-angaben > .karte:last-child { margin-bottom: 0; }
 
 /* ---------- Schritt 2: Baukasten ---------- */
-.baukasten {
-  display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(340px, 1fr);
-  gap: var(--a4); align-items: start;
+/* Bild oben in der Mitte, darunter die Optionen als Leiste nebeneinander */
+.baukasten { display: flex; flex-direction: column; gap: var(--a3); }
+.baukasten-buehne { width: 100%; max-width: 960px; margin-inline: auto; }
+@media (min-width: 901px) {
+  /* Bild im 16:9-Format, so groß, dass darunter die Optionen noch Platz haben */
+  .baukasten-buehne { max-width: min(960px, max(540px, calc((100dvh - var(--kopf-hoehe) - 27rem) * 16 / 9))); }
+  .baukasten-buehne .buehne-flaeche { aspect-ratio: 16 / 9; max-height: none; min-height: 0; }
+  .baukasten-buehne .buehne { margin-bottom: 0.75rem; }
 }
-.baukasten-buehne { position: sticky; top: calc(var(--kopf-hoehe) + var(--a2)); transition: top var(--dauer) var(--kurve); }
-.baukasten-optionen > .karte { margin-bottom: var(--a2); }
+
+.baukasten-leiste { min-width: 0; }
+.leiste-kopf { display: flex; align-items: center; justify-content: space-between; gap: var(--a2); margin-bottom: 0.75rem; }
+.leiste-reiter {
+  display: flex; gap: 0.375rem; min-width: 0; overflow-x: auto; scrollbar-width: none;
+  padding: 2px; margin: -2px; /* Platz für den Fokusrahmen */
+}
+.leiste-reiter::-webkit-scrollbar { display: none; }
+.leiste-reiter button {
+  flex: none; font: inherit; font-size: var(--s-klein); font-weight: 500; white-space: nowrap; cursor: pointer;
+  min-height: 40px; padding: 0.4rem 0.95rem; border-radius: 999px;
+  border: 1px solid var(--trenner-stark); background: var(--flaeche); color: var(--text-sekundaer);
+  transition: background-color var(--dauer) var(--kurve), color var(--dauer) var(--kurve), border-color var(--dauer) var(--kurve);
+}
+.leiste-reiter button:hover { color: var(--text-primaer); border-color: var(--akzent); }
+.leiste-reiter button[aria-current="true"] { background: var(--akzent); border-color: var(--akzent); color: #fff; font-weight: 600; }
+@media (min-width: 901px) {
+  /* Preis und Weiter rechts neben den Reitern, damit die Optionen höher rücken */
+  .leiste-kopf .preisleiste { flex: none; gap: var(--a2); padding: 0.375rem 0.375rem 0.375rem 1.25rem; border-radius: 999px; box-shadow: var(--schatten-weich); }
+  .leiste-kopf .preis-label { display: none; }
+  .leiste-kopf .preis-summe { font-size: var(--s-kopf); }
+  .leiste-kopf .preis-rahmen { line-height: 1.2; }
+  .leiste-kopf .preisleiste .knopf { border-radius: 999px; }
+}
+
+.leiste-spur { position: relative; }
+.baukasten-optionen {
+  display: flex; align-items: flex-start; gap: var(--a2);
+  overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-behavior: smooth; scroll-padding-inline: 0.25rem;
+  padding: 0.25rem 0.25rem var(--a2); margin: -0.25rem -0.25rem 0;
+  scrollbar-width: thin; scrollbar-color: var(--trenner-stark) transparent;
+}
+.baukasten-optionen > .karte { flex: 0 0 min(360px, 84%); margin: 0; scroll-snap-align: start; }
+.baukasten-optionen.rad { scroll-snap-type: none; scroll-behavior: auto; } /* beim Mausrad nicht Karte für Karte springen */
+.baukasten-optionen > .feinschliff { flex-basis: min(420px, 88%); }
+
+/* Pfeile zum Weiterblättern, mit weichem Verlauf am Rand */
+.leiste-pfeil {
+  position: absolute; top: 7.5rem; z-index: 3; translate: 0 -50%; /* auf Höhe der oberen Kartenhälfte, auch wenn die Karten lang sind */
+  width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--trenner-stark); background: var(--flaeche); color: var(--text-primaer);
+  box-shadow: 0 8px 22px -10px rgba(43, 35, 28, 0.45);
+  transition: opacity var(--dauer) var(--kurve), scale 150ms var(--kurve), color var(--dauer), border-color var(--dauer);
+}
+.leiste-pfeil:hover { color: var(--akzent); border-color: var(--akzent); }
+.leiste-pfeil:active { scale: 0.94; }
+.leiste-pfeil-zurueck { left: -14px; }
+.leiste-pfeil-vor { right: -14px; }
+.leiste-pfeil:disabled { opacity: 0; pointer-events: none; }
+.leiste-spur::before, .leiste-spur::after {
+  content: ""; position: absolute; top: 0; bottom: var(--a2); width: 56px; z-index: 2; pointer-events: none;
+  opacity: 0; transition: opacity var(--dauer) var(--kurve);
+}
+.leiste-spur::before { left: 0; background: linear-gradient(90deg, var(--hintergrund), transparent); }
+.leiste-spur::after { right: 0; background: linear-gradient(270deg, var(--hintergrund), transparent); }
+.leiste-spur.kann-zurueck::before, .leiste-spur.kann-vor::after { opacity: 1; }
+
+/* Eckenradius unter der Form */
+.regler-ecken { margin: var(--a2) 0 0; }
+.regler-ecken[hidden] { display: none; }
+
+/* Aufklappbare Skizze: Form an den Punkten in Länge und Breite ziehen */
+.skizze { margin-top: var(--a2); border-top: 1px solid var(--trenner); padding-top: 0.75rem; }
+.skizze > summary {
+  display: flex; align-items: center; gap: 0.5rem; min-height: 44px; cursor: pointer; list-style: none;
+  font-size: var(--s-klein); font-weight: 600; color: var(--akzent-text);
+}
+.skizze > summary::-webkit-details-marker { display: none; }
+.skizze > summary::after { content: "›"; margin-left: auto; font-size: 1.25rem; transition: rotate var(--dauer) var(--kurve); }
+.skizze[open] > summary::after { rotate: 90deg; }
+.skizze-svg {
+  display: block; width: 100%; height: auto; margin-top: 0.5rem; touch-action: none; user-select: none;
+  border-radius: var(--r-element);
+  background:
+    linear-gradient(rgba(122, 74, 34, 0.07) 1px, transparent 1px) 0 0 / 16px 16px,
+    linear-gradient(90deg, rgba(122, 74, 34, 0.07) 1px, transparent 1px) 0 0 / 16px 16px,
+    var(--hintergrund);
+}
+.skizze .tipp { margin-top: 0.5rem; }
+.skizze-griff { cursor: grab; outline: none; }
+.skizze-griff.zieht { cursor: grabbing; }
+.skizze-griff[data-griff="laenge"] { cursor: ew-resize; }
+.skizze-griff[data-griff="breite"] { cursor: ns-resize; }
+.skizze-griff[data-griff="beide"] { cursor: nwse-resize; }
+.skizze-griff .punkt { fill: #fff; stroke: var(--akzent); transition: r 150ms var(--kurve); }
+.skizze-griff:hover .punkt, .skizze-griff.zieht .punkt { fill: var(--akzent); }
+.skizze-griff:focus-visible .punkt { stroke: var(--fokus); fill: var(--akzent); }
 
 /* Bühne */
 .buehne { margin: 0 0 var(--a2); }
@@ -531,7 +621,7 @@ fieldset.karte > legend ~ * { clear: both; }
 .laden-zeit { margin: 0; font-size: var(--s-fein); opacity: 0.85; font-variant-numeric: tabular-nums; }
 
 .baukasten-buehne .hinweis-veraltet { margin: 0.75rem 0 0; }
-.baukasten-buehne .link-zurueck { margin-top: var(--a1); }
+.baukasten > .link-zurueck { align-self: flex-start; margin-top: calc(-1 * var(--a2)); }
 
 /* Preisleiste */
 .preisleiste {
@@ -1017,6 +1107,9 @@ html.bewegt .kicker.tippt::after {
   .draufsicht { width: 86%; }
 
   .wahl-material { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .leiste-pfeil { width: 44px; height: 44px; }
+  .leiste-pfeil-zurueck { left: 4px; }
+  .leiste-pfeil-vor { right: 4px; }
   .wahl-formen .form-symbol { width: 32px; height: 22px; }
   .wahl-formen label { font-size: var(--s-fein); }
   .feld-raster { grid-template-columns: minmax(0, 1fr); }

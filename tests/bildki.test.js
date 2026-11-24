@@ -17,6 +17,7 @@ test('Signatur ändert sich bei Form, Material, Maßen, Gestell, Oberfläche und
     { form: 'oval' }, { materialId: 'nuss-massiv' }, { laenge: 121 }, { breite: 61 }, { hoehe: 41 },
     { gestellId: 'kufen-stahl' }, { oberflaecheId: 'gebeizt' },
     { tischPosition: { x: 0.4, y: 0.8 } }, { referenz: { ...basis.referenz, laengeCm: 200 } },
+    { eckenRadius: 8 },
   ]) {
     assert.notEqual(kiSignatur({ ...basis, ...aenderung }), s, JSON.stringify(aenderung));
   }

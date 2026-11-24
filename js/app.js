@@ -20,6 +20,7 @@ import {
 import { demoCodeLesen, demoCodeSpeichern, rufeFunction } from './supabase.js';
 import { wendeAenderungenAn, promptZusatz, betriebFuerChat } from './feinschliff.js';
 import { DEMO_MOEBEL, istFreigeschaltet, moebelSymbol, portfolioLaden } from './portfolio.js';
+import { ECKEN_OPTION, hatEcken, maxEckenRadius, eckenSetzen, eckenAbgleichen, eckenText } from './ecken.js';
 import {
   normiere,
   markierungsPhase,
@@ -95,6 +96,7 @@ const zustand = {
   hoehe: 40,
   gestellId: 'holz',
   oberflaecheId: 'geoelt',
+  eckenRadius: 0, // cm, 0 = eckig (nur rechteckig/quadratisch, siehe js/ecken.js)
   kiBild: null, // Schritt 4: KI-Bild als JPEG-data-URL
   kiSignaturWert: null, // Angaben, aus denen kiBild entstand (siehe kiSignatur)
   kiInfo: null, // { modell, dauerMs, eingabe:{breite,hoehe}, ergebnis:{breite,hoehe} }
@@ -544,6 +546,15 @@ function schritt2Einrichten() {
     });
   }
 
+  $('#regler-ecken').addEventListener('input', (e) => {
+    Object.assign(zustand, eckenSetzen(zustand, BETRIEB, e.target.value));
+    extrasZeichnen();
+    baukastenAktualisieren();
+  });
+
+  skizzeEinrichten();
+  leisteEinrichten();
+
   document.querySelectorAll('.umschalter button').forEach((b) => {
     b.addEventListener('click', () => buehneAnsicht(b.dataset.ansicht));
   });
@@ -626,8 +637,32 @@ function formWechseln(neu) {
   } else if (vorher && !nachher && letzteZweiMasse) {
     Object.assign(zustand, letzteZweiMasse);
   }
+  // Eckenradius merken, wenn es rund/oval wird, und beim Zurückwechseln wiederherstellen
+  const eckigVorher = hatEcken(zustand.form);
+  if (eckigVorher && !hatEcken(neu)) letzterEckenRadius = zustand.eckenRadius;
   zustand.form = neu;
   reglerAktualisieren();
+  if (!eckigVorher && hatEcken(neu) && letzterEckenRadius) {
+    Object.assign(zustand, eckenSetzen(zustand, BETRIEB, letzterEckenRadius));
+  }
+  extrasZeichnen();
+}
+
+let letzterEckenRadius = 0;
+
+/** Eckenradius mit Form, Maßen und Extras abgleichen und den Regler setzen. */
+function eckenAktualisieren() {
+  Object.assign(zustand, eckenAbgleichen(zustand, BETRIEB));
+  const max = maxEckenRadius(zustand.form, zustand.laenge, zustand.breite);
+  const block = $('#ecken-block');
+  block.hidden = !hatEcken(zustand.form);
+  const regler = $('#regler-ecken');
+  regler.max = String(max);
+  regler.value = String(zustand.eckenRadius);
+  reglerFuellung(regler);
+  $('#wert-ecken').textContent = zustand.eckenRadius > 0 ? `${zustand.eckenRadius} cm` : 'eckig';
+  const option = BETRIEB.optionen.find((o) => o.id === ECKEN_OPTION);
+  $('#grenze-ecken').textContent = `0–${max} cm Radius${option ? ` · abgerundet ${aufpreisText(option.preis)}` : ''}`;
 }
 
 // Maße sind nur durch die Grenzen der Tischlerei begrenzt. Der freie Platz
@@ -671,6 +706,7 @@ function baukastenAnzeigen() {
   chatZeichnen();
   reglerAktualisieren();
   baukastenAktualisieren();
+  requestAnimationFrame(leisteAktualisieren); // erst jetzt sichtbar und messbar
 }
 
 /** Ungefähre Tischmaße aus Schritt 1 als Startwerte setzen. */
@@ -725,11 +761,15 @@ function reglerFuellung(regler) {
 }
 
 function konfiguration() {
-  const { form, laenge, breite, hoehe, materialId, gestellId, oberflaecheId, optionIds, sonderwuensche } = zustand;
-  return { form, laenge, breite, hoehe, materialId, gestellId, oberflaecheId, optionIds, sonderwuensche };
+  const { form, laenge, breite, hoehe, materialId, gestellId, oberflaecheId, optionIds, sonderwuensche, eckenRadius } = zustand;
+  return { form, laenge, breite, hoehe, materialId, gestellId, oberflaecheId, optionIds, sonderwuensche, eckenRadius };
 }
 
 function baukastenAktualisieren() {
+  const extrasVorher = zustand.optionIds.join();
+  eckenAktualisieren();
+  if (zustand.optionIds.join() !== extrasVorher) extrasZeichnen();
+  skizzeZeichnen();
   for (const mass of ['laenge', 'breite', 'hoehe']) {
     $(`#wert-${mass}`).textContent = `${zustand[mass]} cm`;
   }
@@ -809,7 +849,7 @@ function draufsichtZeichnen() {
   let tisch;
   if (form === 'rund') tisch = `<circle cx="${cx}" cy="${cy}" r="${L / 2}" fill="${farbe}" ${kontur}/>`;
   else if (form === 'oval') tisch = `<ellipse cx="${cx}" cy="${cy}" rx="${L / 2}" ry="${B / 2}" fill="${farbe}" ${kontur}/>`;
-  else tisch = `<rect x="${cx - L / 2}" y="${cy - B / 2}" width="${L}" height="${B}" rx="${Math.min(L, B) * 0.03}" fill="${farbe}" ${kontur}/>`;
+  else tisch = `<rect x="${cx - L / 2}" y="${cy - B / 2}" width="${L}" height="${B}" rx="${zustand.eckenRadius || Math.min(L, B) * 0.03}" fill="${farbe}" ${kontur}/>`;
 
   const masstext = istEinMassForm(form) ? (form === 'rund' ? `⌀ ${L} cm` : `${L} × ${L} cm`) : `${L} × ${B} cm`;
   const textFarbe = zustand.materialId === 'nuss-massiv' ? '#fff' : '#2a2520';
@@ -824,13 +864,223 @@ function draufsichtZeichnen() {
     <text x="${cx}" y="${y1 + rand * 0.75}" text-anchor="middle" font-size="${schrift * 0.75}" fill="#6f665c">Sofa-Seite</text>`;
 }
 
+// ---------- Schritt 2: Skizze zum Ziehen (unter „Form“) ----------
+
+const MASS_NAMEN = { laenge: 'Länge', breite: 'Breite', beide: 'Länge und Breite' };
+
+/** Tischplatte maßstäblich (in cm), links oben verankert, mit Griffen rechts, unten und an der Ecke. */
+function skizzeZeichnen() {
+  const svg = $('#skizze-svg');
+  const g = aktuelleGrenzen();
+  const einMass = istEinMassForm(zustand.form);
+  const L = zustand.laenge;
+  const B = einMass ? L : zustand.breite;
+  const maxL = g.laenge.max;
+  const maxB = einMass ? g.laenge.max : g.breite.max;
+  const breiteVB = maxL + 34;
+  const fs = breiteVB * 0.042; // Schriftgröße in cm-Einheiten
+  svg.setAttribute('viewBox', `-20 -16 ${breiteVB} ${maxB + 30}`);
+
+  const farbe = materialFarbe(zustand.materialId);
+  const kontur = `fill="${farbe}" fill-opacity="0.9" stroke="#6e4620" stroke-width="${fs * 0.12}"`;
+  let platte;
+  if (zustand.form === 'rund') platte = `<circle cx="${L / 2}" cy="${L / 2}" r="${L / 2}" ${kontur}/>`;
+  else if (zustand.form === 'oval') platte = `<ellipse cx="${L / 2}" cy="${B / 2}" rx="${L / 2}" ry="${B / 2}" ${kontur}/>`;
+  else platte = `<rect width="${L}" height="${B}" rx="${zustand.eckenRadius}" ${kontur}/>`;
+
+  const griff = (name, x, y) => {
+    const wert = name === 'beide' && !einMass ? `${L} × ${B} cm` : `${name === 'breite' ? B : L} cm`;
+    const grenze = name === 'breite' && !einMass ? g.breite : g.laenge;
+    return `<g class="skizze-griff" data-griff="${name}" tabindex="0" role="slider"
+      aria-label="${einMass ? (zustand.form === 'rund' ? 'Durchmesser' : 'Seitenlänge') : MASS_NAMEN[name]} ziehen"
+      aria-valuemin="${grenze.min}" aria-valuemax="${grenze.max}" aria-valuenow="${name === 'breite' ? B : L}" aria-valuetext="${wert}">
+      <circle cx="${x}" cy="${y}" r="${fs * 1.5}" fill="transparent"/>
+      <circle class="punkt" cx="${x}" cy="${y}" r="${fs * 0.55}" stroke-width="${fs * 0.22}"/>
+    </g>`;
+  };
+  const textOben = zustand.form === 'rund' ? `⌀ ${L} cm` : `${L} cm`;
+  const textLinks = zustand.form === 'rund' ? '' : `<text x="${-fs * 0.7}" y="${B / 2}" font-size="${fs}" fill="#6f665c" text-anchor="middle" transform="rotate(-90 ${-fs * 0.7} ${B / 2})">${B} cm</text>`;
+
+  const hatteFokus = document.activeElement?.closest?.('.skizze-griff')?.dataset.griff;
+  svg.innerHTML = `
+    <rect x="0" y="0" width="${maxL}" height="${maxB}" fill="none" stroke="#b9ad9e" stroke-width="${fs * 0.08}" stroke-dasharray="${fs * 0.5} ${fs * 0.4}"/>
+    <text x="${maxL - fs * 0.3}" y="${maxB - fs * 0.45}" font-size="${fs * 0.75}" fill="#9a8f82" text-anchor="end">max. ${maxL} × ${maxB} cm</text>
+    ${platte}
+    <text x="${L / 2}" y="${-fs * 0.55}" font-size="${fs}" font-weight="600" fill="#2a2520" text-anchor="middle">${textOben}</text>
+    ${textLinks}
+    ${griff('laenge', L, B / 2)}
+    ${griff('breite', L / 2, B)}
+    ${griff('beide', L, B)}`;
+  if (hatteFokus) svg.querySelector(`[data-griff="${hatteFokus}"]`)?.focus();
+}
+
+/** Maße aus einem Griff übernehmen (x, y in cm ab der linken oberen Ecke). */
+function skizzeSetzen(griff, x, y) {
+  const g = aktuelleGrenzen();
+  const begrenzt = (v, gr) => Math.max(gr.min, Math.min(gr.max, Math.round(v)));
+  if (istEinMassForm(zustand.form)) {
+    const v = griff === 'laenge' ? x : griff === 'breite' ? y : Math.max(x, y);
+    zustand.laenge = zustand.breite = begrenzt(v, g.laenge);
+  } else {
+    if (griff !== 'breite') zustand.laenge = begrenzt(x, g.laenge);
+    if (griff !== 'laenge') zustand.breite = begrenzt(y, g.breite);
+  }
+  $('#wunsch-hinweis').hidden = true;
+  reglerAktualisieren();
+  baukastenAktualisieren();
+}
+
+function skizzeEinrichten() {
+  const svg = $('#skizze-svg');
+  const zug = { griff: null, zeiger: null };
+  const punkt = (e) => {
+    const p = svg.createSVGPoint();
+    p.x = e.clientX;
+    p.y = e.clientY;
+    return p.matrixTransform(svg.getScreenCTM().inverse());
+  };
+  svg.addEventListener('pointerdown', (e) => {
+    const el = e.target.closest('.skizze-griff');
+    if (!el) return;
+    e.preventDefault();
+    zug.griff = el.dataset.griff;
+    zug.zeiger = e.pointerId;
+    svg.setPointerCapture(e.pointerId);
+    el.classList.add('zieht');
+  });
+  svg.addEventListener('pointermove', (e) => {
+    if (!zug.griff || e.pointerId !== zug.zeiger) return;
+    const p = punkt(e);
+    skizzeSetzen(zug.griff, p.x, p.y);
+    svg.querySelector(`[data-griff="${zug.griff}"]`)?.classList.add('zieht');
+  });
+  const ende = (e) => {
+    if (e.pointerId !== zug.zeiger) return;
+    zug.griff = zug.zeiger = null;
+    svg.querySelectorAll('.zieht').forEach((el) => el.classList.remove('zieht'));
+  };
+  svg.addEventListener('pointerup', ende);
+  svg.addEventListener('pointercancel', ende);
+
+  // Tastatur: Pfeiltasten ändern um 1 cm, mit Umschalt um 10 cm
+  svg.addEventListener('keydown', (e) => {
+    const el = e.target.closest('.skizze-griff');
+    if (!el) return;
+    const schritt = e.shiftKey ? 10 : 1;
+    const d = { ArrowRight: [schritt, 0], ArrowLeft: [-schritt, 0], ArrowDown: [0, schritt], ArrowUp: [0, -schritt] }[e.key];
+    if (!d) return;
+    e.preventDefault();
+    const griff = el.dataset.griff;
+    const einMass = istEinMassForm(zustand.form);
+    let [dx, dy] = d;
+    // Griffe, die nur in eine Richtung ziehen, nehmen beide Pfeilrichtungen an
+    if (griff === 'laenge' && dx === 0) dx = -dy;
+    if (griff === 'breite' && dy === 0) dy = dx;
+    if (einMass && griff === 'beide') dx = dy = dx || dy;
+    const B = einMass ? zustand.laenge : zustand.breite;
+    skizzeSetzen(griff, zustand.laenge + dx, B + dy);
+  });
+}
+
+// ---------- Schritt 2: Optionen als Leiste ----------
+
+let leisteAktualisieren = () => {};
+
+function leisteEinrichten() {
+  const spur = $('#baukasten-optionen');
+  const rahmen = spur.closest('.leiste-spur');
+  const karten = [...spur.querySelectorAll(':scope > .karte')];
+  const reiter = $('#leiste-reiter');
+  reiter.innerHTML = karten
+    .map((k, i) => `<button type="button" data-index="${i}">${escape(k.dataset.reiter || k.querySelector('legend')?.textContent || '')}</button>`)
+    .join('');
+
+  const links = (el) => el.getBoundingClientRect().left;
+  const aktuell = () => {
+    const l = links(spur);
+    let beste = 0;
+    karten.forEach((k, i) => {
+      if (Math.abs(links(k) - l) < Math.abs(links(karten[beste]) - l)) beste = i;
+    });
+    return beste;
+  };
+  const zuKarte = (i) => {
+    const k = karten[Math.max(0, Math.min(karten.length - 1, i))];
+    spur.scrollTo({ left: spur.scrollLeft + links(k) - links(spur) - 4 });
+  };
+  const proSeite = () => {
+    const b = karten[0].getBoundingClientRect().width;
+    return Math.max(1, Math.floor((spur.clientWidth + 16) / (b + 16)));
+  };
+
+  leisteAktualisieren = () => {
+    const max = spur.scrollWidth - spur.clientWidth;
+    const zurueck = spur.scrollLeft > 8;
+    const vor = spur.scrollLeft < max - 8;
+    $('#leiste-zurueck').disabled = !zurueck;
+    $('#leiste-vor').disabled = !vor;
+    rahmen.classList.toggle('kann-zurueck', zurueck);
+    rahmen.classList.toggle('kann-vor', vor);
+    const i = aktuell();
+    reiter.querySelectorAll('button').forEach((b, j) => b.setAttribute('aria-current', String(j === i)));
+    reiter.querySelector(`[data-index="${i}"]`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  };
+
+  reiter.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (b) zuKarte(Number(b.dataset.index));
+  });
+  $('#leiste-vor').addEventListener('click', () => zuKarte(aktuell() + proSeite()));
+  $('#leiste-zurueck').addEventListener('click', () => zuKarte(aktuell() - proSeite()));
+
+  let rahmenAnfrage = 0;
+  const spaeter = () => {
+    cancelAnimationFrame(rahmenAnfrage);
+    rahmenAnfrage = requestAnimationFrame(leisteAktualisieren);
+  };
+  spur.addEventListener('scroll', spaeter, { passive: true });
+  window.addEventListener('resize', spaeter);
+
+  let radPause = 0;
+  // Mausrad: Ist die Leiste im Blick, blättert das Rad nach rechts (bzw. links),
+  // am Ende scrollt die Seite normal weiter.
+  spur.addEventListener(
+    'wheel',
+    (e) => {
+      if (e.ctrlKey || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      for (let el = e.target; el && el !== spur; el = el.parentElement) {
+        const kannSelbst = el.scrollHeight > el.clientHeight + 1 && /(auto|scroll)/.test(getComputedStyle(el).overflowY);
+        if (kannSelbst && (e.deltaY > 0 ? el.scrollTop < el.scrollHeight - el.clientHeight - 1 : el.scrollTop > 0)) return;
+      }
+      const r = spur.getBoundingClientRect();
+      if (r.top > innerHeight * 0.55 || r.bottom > innerHeight + 80) return; // erst ganz ins Bild scrollen
+      const max = spur.scrollWidth - spur.clientWidth;
+      if (e.deltaY > 0 ? spur.scrollLeft >= max - 1 : spur.scrollLeft <= 0) return;
+      e.preventDefault();
+      const zeilen = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? spur.clientWidth : 1;
+      // Einrasten erst nach dem Drehen, sonst springt jeder Rad-Schritt eine ganze Karte weiter
+      spur.classList.add('rad');
+      clearTimeout(radPause);
+      radPause = setTimeout(() => spur.classList.remove('rad'), 180);
+      spur.scrollLeft += e.deltaY * zeilen;
+    },
+    { passive: false },
+  );
+}
+
 // ---------- Schritt 2: Feinschliff-Chat ----------
 
 const chatLauf = { laeuft: false };
 
+/** Name einer Option; bei abgerundeten Ecken mit Radius. */
+function optionName(id) {
+  const name = BETRIEB.optionen.find((o) => o.id === id)?.name ?? id;
+  return id === ECKEN_OPTION && zustand.eckenRadius > 0 ? `${name} (${eckenText(zustand.eckenRadius)})` : name;
+}
+
 /** Optionen und Sonderwünsche als kurzer Text, z. B. für Schritt 4. */
 function extrasText() {
-  const optionen = zustand.optionIds.map((id) => BETRIEB.optionen.find((o) => o.id === id)?.name ?? id);
+  const optionen = zustand.optionIds.map((id) => optionName(id));
   const sonder = zustand.sonderwuensche.map((s) => `${s.beschreibung} (auf Anfrage)`);
   return [...optionen, ...sonder].join(', ');
 }
@@ -862,7 +1112,7 @@ function chatZeichnen() {
 function extrasZeichnen() {
   const optionen = zustand.optionIds.map((id) => {
     const o = BETRIEB.optionen.find((x) => x.id === id);
-    return `<li><span class="extra-name">${escape(o?.name ?? id)}</span><span class="extra-preis">+${formatEuro(o?.preis ?? 0)}</span>
+    return `<li><span class="extra-name">${escape(optionName(id))}</span><span class="extra-preis">+${formatEuro(o?.preis ?? 0)}</span>
       <button type="button" data-option="${escape(id)}" aria-label="${escape(o?.name ?? id)} entfernen">×</button></li>`;
   });
   const sonder = zustand.sonderwuensche.map(
