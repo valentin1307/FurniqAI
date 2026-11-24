@@ -194,6 +194,8 @@
         <p class="einleitung">Form, Material, Maße und Gestell – der Preis rechnet sofort mit.</p>
       </header>
 
+      <!-- Auf großen Bildschirmen angeheftet: beim Scrollen wandert das Foto nach links, die Optionen ziehen dahinter nach links (js/app.js anheftenMessen) -->
+      <div class="baukasten-raum" id="baukasten-raum">
       <div class="baukasten">
         <div class="baukasten-buehne">
           <!--
@@ -220,29 +222,30 @@
             </div>
           </figure>
 
+          <div class="preisleiste" aria-live="polite">
+            <div class="preis-info">
+              <span class="preis-label">Geschätzter Preis</span>
+              <span class="preis-zeile">
+                <strong class="preis-summe" id="preis-summe">–</strong>
+                <span class="preis-mwst">inkl. MwSt.</span>
+              </span>
+              <span class="preis-rahmen" id="preis-rahmen"></span>
+            </div>
+            <button type="button" class="knopf knopf-haupt" id="weiter-2">
+              <span class="nur-gross">Weiter zum Bild</span><span class="nur-klein">Weiter</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
           <p class="hinweis-veraltet" id="veraltet-2" hidden>
             Bild veraltet, neu erzeugen: Ihre Auswahl hat sich seit der KI-Vorschau geändert.
           </p>
+          <button type="button" class="link-zurueck" id="zurueck-2"><span aria-hidden="true">←</span> Raum und Maße ändern</button>
         </div>
 
         <!-- Optionen als Leiste nebeneinander: Reiter oben, Pfeile zum Weiterblättern, Mausrad blättert nach rechts (js/app.js leisteEinrichten) -->
         <div class="baukasten-leiste">
           <div class="leiste-kopf">
             <nav class="leiste-reiter" id="leiste-reiter" aria-label="Bereiche des Baukastens"></nav>
-            <div class="preisleiste" aria-live="polite">
-              <div class="preis-info">
-                <span class="preis-label">Geschätzter Preis</span>
-                <span class="preis-zeile">
-                  <strong class="preis-summe" id="preis-summe">–</strong>
-                  <span class="preis-mwst">inkl. MwSt.</span>
-                </span>
-                <span class="preis-rahmen" id="preis-rahmen"></span>
-              </div>
-              <button type="button" class="knopf knopf-haupt" id="weiter-2">
-                <span class="nur-gross">Weiter zum Bild</span><span class="nur-klein">Weiter</span>
-                <span aria-hidden="true">→</span>
-              </button>
-            </div>
           </div>
           <div class="leiste-spur">
             <button type="button" class="leiste-pfeil leiste-pfeil-zurueck" id="leiste-zurueck" aria-label="Vorherige Optionen" aria-controls="baukasten-optionen">
@@ -346,7 +349,7 @@
             </button>
           </div>
         </div>
-        <button type="button" class="link-zurueck" id="zurueck-2"><span aria-hidden="true">←</span> Raum und Maße ändern</button>
+      </div>
       </div>
     </section>
 

@@ -47,7 +47,8 @@ let karten = [];
 
 function kartenSammeln() {
   karten = [...document.querySelectorAll('main .karte, main .moebel-wahl')].filter(
-    (k) => !k.parentElement.closest('.karte'),
+    // Baukasten-Karten bewegen sich in ihrer eigenen Leiste (js/app.js)
+    (k) => !k.parentElement.closest('.karte') && !k.closest('.baukasten-optionen'),
   );
   karten.forEach((k, i) => k.style.setProperty('--seite', i % 2 ? '1' : '-1'));
 }

@@ -706,7 +706,7 @@ function baukastenAnzeigen() {
   chatZeichnen();
   reglerAktualisieren();
   baukastenAktualisieren();
-  requestAnimationFrame(leisteAktualisieren); // erst jetzt sichtbar und messbar
+  requestAnimationFrame(anheftenMessen); // erst jetzt sichtbar und messbar
 }
 
 /** Ungefähre Tischmaße aus Schritt 1 als Startwerte setzen. */
@@ -985,11 +985,83 @@ function skizzeEinrichten() {
 // ---------- Schritt 2: Optionen als Leiste ----------
 
 let leisteAktualisieren = () => {};
+let zuKarte = () => {};
+
+// Angeheftete Szene (große Bildschirme): Scrollweg d1 für das Foto, d2 für die Karten
+const anheftMedien = window.matchMedia('(min-width: 901px) and (min-height: 600px) and (prefers-reduced-motion: no-preference)');
+const anheft = { an: false, d1: 1, d2: 0, schub: 0 };
+
+function kopfHoehe() {
+  return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--kopf-hoehe')) || 0;
+}
+
+function leistenKarten() {
+  return [...$('#baukasten-optionen').querySelectorAll(':scope > .karte')];
+}
+
+/** Lage der Karten in der Leiste (px ab der ersten Karte). */
+function kartenPositionen() {
+  const karten = leistenKarten();
+  return karten.map((k) => k.offsetLeft - karten[0].offsetLeft);
+}
+
+/** Maße der angehefteten Szene setzen (oder sie abschalten). */
+function anheftenMessen() {
+  const raum = $('#baukasten-raum');
+  const bk = raum.querySelector('.baukasten');
+  const an = anheftMedien.matches && zustand.schritt === 2;
+  anheft.an = an;
+  raum.classList.toggle('angeheftet', an);
+  if (!an) {
+    raum.style.removeProperty('--raum-hoehe');
+    leisteAktualisieren();
+    return;
+  }
+  const H = innerHeight - kopfHoehe();
+  const cw = bk.clientWidth;
+  const abstand = parseFloat(getComputedStyle(bk).columnGap) || 24;
+  // Endlage: Foto links (16:9), darunter Preis; Startlage: Foto groß in der Mitte
+  const wb = Math.round(Math.max(340, Math.min(cw * 0.4, 520, ((H - 200) * 16) / 9)));
+  bk.style.setProperty('--wb', `${wb}px`);
+  const startB = Math.max(wb, Math.min(cw * 0.8, 900, ((H - 320) * 16) / 9));
+  const panel = bk.querySelector('.baukasten-buehne');
+  const rest = panel.offsetHeight - $('#buehne').offsetHeight;
+  const fotoStart = (startB * 9) / 16;
+  const fotoEnde = (wb * 9) / 16;
+  const setze = (name, wert) => bk.style.setProperty(name, `${Math.round(wert * 1000) / 1000}${name === '--fs' ? '' : 'px'}`);
+  setze('--fs', startB / wb);
+  setze('--fx', (cw - startB) / 2);
+  setze('--px', (cw - wb) / 2);
+  setze('--py', fotoStart - fotoEnde);
+  setze('--ly', fotoStart + rest + abstand);
+
+  const karten = leistenKarten();
+  const letzte = karten[karten.length - 1];
+  const breite = letzte.offsetLeft + letzte.offsetWidth - karten[0].offsetLeft;
+  anheft.d1 = Math.round(H * 0.5);
+  anheft.d2 = Math.max(0, Math.round(breite - bk.querySelector('.leiste-spur').clientWidth + 8));
+  raum.style.setProperty('--raum-hoehe', `${Math.round(H + anheft.d1 + anheft.d2)}px`);
+  anheftenRollen();
+}
+
+/** Scrollstand in Bewegung umrechnen. */
+function anheftenRollen() {
+  if (!anheft.an || zustand.schritt !== 2) return;
+  const raum = $('#baukasten-raum');
+  const bk = raum.querySelector('.baukasten');
+  const t = Math.max(0, kopfHoehe() - raum.getBoundingClientRect().top);
+  const p1 = Math.min(1, t / anheft.d1);
+  anheft.schub = Math.max(0, Math.min(anheft.d2, t - anheft.d1));
+  bk.style.setProperty('--p1', p1.toFixed(4));
+  bk.style.setProperty('--schub', `${Math.round(anheft.schub)}px`);
+  bk.style.setProperty('--rand', String(Math.min(1, anheft.schub / 40))); // weicher Rand erst, wenn Karten darunter laufen
+  leisteAktualisieren();
+}
 
 function leisteEinrichten() {
   const spur = $('#baukasten-optionen');
   const rahmen = spur.closest('.leiste-spur');
-  const karten = [...spur.querySelectorAll(':scope > .karte')];
+  const karten = leistenKarten();
   const reiter = $('#leiste-reiter');
   reiter.innerHTML = karten
     .map((k, i) => `<button type="button" data-index="${i}">${escape(k.dataset.reiter || k.querySelector('legend')?.textContent || '')}</button>`)
@@ -997,6 +1069,15 @@ function leisteEinrichten() {
 
   const links = (el) => el.getBoundingClientRect().left;
   const aktuell = () => {
+    if ($('#leiste-vor').disabled && !$('#leiste-zurueck').disabled) return karten.length - 1; // ganz rechts
+    if (anheft.an) {
+      const pos = kartenPositionen();
+      let i = 0;
+      pos.forEach((p, j) => {
+        if (p <= anheft.schub + 24) i = j;
+      });
+      return i;
+    }
     const l = links(spur);
     let beste = 0;
     karten.forEach((k, i) => {
@@ -1004,50 +1085,86 @@ function leisteEinrichten() {
     });
     return beste;
   };
-  const zuKarte = (i) => {
-    const k = karten[Math.max(0, Math.min(karten.length - 1, i))];
-    spur.scrollTo({ left: spur.scrollLeft + links(k) - links(spur) - 4 });
+  zuKarte = (i, sanft = true) => {
+    const ziel = Math.max(0, Math.min(karten.length - 1, i));
+    if (anheft.an) {
+      // Seite so weit scrollen, dass die Karte links neben dem Foto steht
+      const raum = $('#baukasten-raum');
+      const t = anheft.d1 + Math.min(anheft.d2, kartenPositionen()[ziel]);
+      const oben = raum.getBoundingClientRect().top + scrollY - kopfHoehe();
+      window.scrollTo({ top: oben + t, behavior: sanft ? 'smooth' : 'instant' });
+      return;
+    }
+    spur.scrollTo({ left: spur.scrollLeft + links(karten[ziel]) - links(spur) - 4 });
   };
   const proSeite = () => {
     const b = karten[0].getBoundingClientRect().width;
-    return Math.max(1, Math.floor((spur.clientWidth + 16) / (b + 16)));
+    return Math.max(1, Math.floor((rahmen.clientWidth + 16) / (b + 16)));
   };
 
   leisteAktualisieren = () => {
-    const max = spur.scrollWidth - spur.clientWidth;
-    const zurueck = spur.scrollLeft > 8;
-    const vor = spur.scrollLeft < max - 8;
+    let zurueck;
+    let vor;
+    if (anheft.an) {
+      zurueck = anheft.schub > 8;
+      vor = anheft.schub < anheft.d2 - 8;
+    } else {
+      const max = spur.scrollWidth - spur.clientWidth;
+      zurueck = spur.scrollLeft > 8;
+      vor = spur.scrollLeft < max - 8;
+    }
     $('#leiste-zurueck').disabled = !zurueck;
     $('#leiste-vor').disabled = !vor;
     rahmen.classList.toggle('kann-zurueck', zurueck);
     rahmen.classList.toggle('kann-vor', vor);
     const i = aktuell();
     reiter.querySelectorAll('button').forEach((b, j) => b.setAttribute('aria-current', String(j === i)));
-    reiter.querySelector(`[data-index="${i}"]`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   };
 
   reiter.addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (b) zuKarte(Number(b.dataset.index));
   });
-  $('#leiste-vor').addEventListener('click', () => zuKarte(aktuell() + proSeite()));
-  $('#leiste-zurueck').addEventListener('click', () => zuKarte(aktuell() - proSeite()));
+  $('#leiste-vor').addEventListener('click', () => zuKarte(aktuell() + (anheft.an ? 1 : proSeite())));
+  $('#leiste-zurueck').addEventListener('click', () => zuKarte(aktuell() - (anheft.an ? 1 : proSeite())));
+  // Mit der Tastatur in eine verdeckte Karte: Karte herholen
+  spur.addEventListener('focusin', (e) => {
+    if (!anheft.an) return;
+    const k = e.target.closest('.baukasten-optionen > .karte');
+    const i = karten.indexOf(k);
+    const r = k.getBoundingClientRect();
+    const sicht = rahmen.getBoundingClientRect();
+    if (r.left < sicht.left - 1 || r.right > sicht.right + 1) zuKarte(i, false);
+  });
 
-  let rahmenAnfrage = 0;
-  const spaeter = () => {
-    cancelAnimationFrame(rahmenAnfrage);
-    rahmenAnfrage = requestAnimationFrame(leisteAktualisieren);
+  const spaeter = (f) => {
+    let anfrage = 0;
+    return () => {
+      cancelAnimationFrame(anfrage);
+      anfrage = requestAnimationFrame(f);
+    };
   };
-  spur.addEventListener('scroll', spaeter, { passive: true });
-  window.addEventListener('resize', spaeter);
+  spur.addEventListener('scroll', spaeter(() => leisteAktualisieren()), { passive: true });
+  window.addEventListener('scroll', spaeter(anheftenRollen), { passive: true });
+  window.addEventListener('resize', spaeter(anheftenMessen));
+  anheftMedien.addEventListener('change', anheftenMessen);
 
+  // Mausrad ohne Anheften: Ist die Leiste im Blick, blättert das Rad nach rechts (bzw. links),
+  // am Ende scrollt die Seite normal weiter. Angeheftet erledigt das die Seite selbst;
+  // dann wird nur waagrechtes Wischen (Trackpad) in Scrollen umgesetzt.
   let radPause = 0;
-  // Mausrad: Ist die Leiste im Blick, blättert das Rad nach rechts (bzw. links),
-  // am Ende scrollt die Seite normal weiter.
   spur.addEventListener(
     'wheel',
     (e) => {
-      if (e.ctrlKey || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      if (e.ctrlKey) return;
+      if (anheft.an) {
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+          e.preventDefault();
+          window.scrollBy({ top: e.deltaX, behavior: 'instant' });
+        }
+        return;
+      }
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
       for (let el = e.target; el && el !== spur; el = el.parentElement) {
         const kannSelbst = el.scrollHeight > el.clientHeight + 1 && /(auto|scroll)/.test(getComputedStyle(el).overflowY);
         if (kannSelbst && (e.deltaY > 0 ? el.scrollTop < el.scrollHeight - el.clientHeight - 1 : el.scrollTop > 0)) return;

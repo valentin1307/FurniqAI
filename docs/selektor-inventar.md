@@ -29,7 +29,8 @@ Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf
 
 **Schritt 2 (Baukasten, Bühne, Chat)**
 - `.baukasten-buehne` (Ziel für `#buehne`), `.baukasten-optionen` / `#baukasten-optionen` (change-Listener, waagrechte Leiste; Klasse `rad` während des Mausrads)
-- Leiste: `.baukasten-leiste`, `.leiste-kopf` (enthält `.preisleiste`), `#leiste-reiter` (`button[data-index]`, `aria-current`; Namen aus `fieldset[data-reiter]`), `.leiste-spur` (Klassen `kann-zurueck`, `kann-vor`), `#leiste-zurueck`, `#leiste-vor` (`disabled` am Rand)
+- Angeheftet (ab 901 × 600 px, ohne „Bewegung reduzieren“): `#baukasten-raum` (Klasse `angeheftet`, Variable `--raum-hoehe`), `.baukasten` bekommt `--p1`, `--schub`, `--rand`, `--wb`, `--fs`, `--fx`, `--px`, `--py`, `--ly`
+- Leiste: `.baukasten-leiste`, `.leiste-kopf`, `#leiste-reiter` (`button[data-index]`, `aria-current`; Namen aus `fieldset[data-reiter]`), `.leiste-spur` (Klassen `kann-zurueck`, `kann-vor`), `#leiste-zurueck`, `#leiste-vor` (`disabled` am Rand)
 - Ecken: `#karte-form`, `#ecken-block`, `#regler-ecken`, `#wert-ecken`, `#grenze-ecken`
 - Skizze: `#skizze` (details), `#skizze-svg`; aus JS `.skizze-griff[data-griff=laenge|breite|beide]` (Klasse `zieht`), `.punkt`
 - `#buehne`, `#buehne-flaeche` (Klassen `zeigt-draufsicht`, `laedt`, `data-etikett`, CSS-Variable `--buehne-bild`), `#buehne-bild`, `#buehne-draufsicht`, `#draufsicht`, `#buehne-etikett`, `#buehne-laden`, `#laden-sekunden`

@@ -452,7 +452,7 @@ fieldset.karte > legend ~ * { clear: both; }
 .baukasten-buehne { width: 100%; max-width: 960px; margin-inline: auto; }
 @media (min-width: 901px) {
   /* Bild im 16:9-Format, so groß, dass darunter die Optionen noch Platz haben */
-  .baukasten-buehne { max-width: min(960px, max(540px, calc((100dvh - var(--kopf-hoehe) - 27rem) * 16 / 9))); }
+  .baukasten-buehne { max-width: min(960px, max(540px, calc((100dvh - var(--kopf-hoehe) - 31rem) * 16 / 9))); }
   .baukasten-buehne .buehne-flaeche { aspect-ratio: 16 / 9; max-height: none; min-height: 0; }
   .baukasten-buehne .buehne { margin-bottom: 0.75rem; }
 }
@@ -472,14 +472,6 @@ fieldset.karte > legend ~ * { clear: both; }
 }
 .leiste-reiter button:hover { color: var(--text-primaer); border-color: var(--akzent); }
 .leiste-reiter button[aria-current="true"] { background: var(--akzent); border-color: var(--akzent); color: #fff; font-weight: 600; }
-@media (min-width: 901px) {
-  /* Preis und Weiter rechts neben den Reitern, damit die Optionen höher rücken */
-  .leiste-kopf .preisleiste { flex: none; gap: var(--a2); padding: 0.375rem 0.375rem 0.375rem 1.25rem; border-radius: 999px; box-shadow: var(--schatten-weich); }
-  .leiste-kopf .preis-label { display: none; }
-  .leiste-kopf .preis-summe { font-size: var(--s-kopf); }
-  .leiste-kopf .preis-rahmen { line-height: 1.2; }
-  .leiste-kopf .preisleiste .knopf { border-radius: 999px; }
-}
 
 .leiste-spur { position: relative; }
 .baukasten-optionen {
@@ -543,6 +535,55 @@ fieldset.karte > legend ~ * { clear: both; }
 .skizze-griff .punkt { fill: #fff; stroke: var(--akzent); transition: r 150ms var(--kurve); }
 .skizze-griff:hover .punkt, .skizze-griff.zieht .punkt { fill: var(--akzent); }
 .skizze-griff:focus-visible .punkt { stroke: var(--fokus); fill: var(--akzent); }
+
+/* ---------- Baukasten angeheftet (große Bildschirme, js/app.js anheftenMessen) ----------
+   Der Raum ist so hoch wie der Scrollweg. Darin bleibt .baukasten stehen:
+   --p1 (0 → 1): Foto wandert aus der Mitte nach links, die Optionen rücken daneben.
+   --schub: danach ziehen die Karten beim Scrollen nach links hinter das Foto. */
+.baukasten-raum.angeheftet { height: var(--raum-hoehe, auto); }
+.angeheftet .baukasten {
+  --p1: 0; --schub: 0px; --gegen: calc(1 - var(--p1));
+  position: sticky; top: var(--kopf-hoehe);
+  height: calc(100dvh - var(--kopf-hoehe));
+  display: grid; grid-template-columns: var(--wb, 440px) minmax(0, 1fr); column-gap: var(--a3);
+  align-items: start; padding-top: var(--a2); overflow: clip;
+}
+.angeheftet .baukasten-buehne { position: relative; z-index: 2; max-width: none; margin: 0; }
+/* Deckfläche: Karten verschwinden unter dem Foto, mit weichem Rand */
+.angeheftet .baukasten-buehne::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  top: calc(-1 * var(--a2) - 1px); bottom: -100vh; left: -50vw; right: calc(-1 * var(--a3) + 2px);
+  background: var(--hintergrund);
+}
+.angeheftet .baukasten-buehne::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  top: 3.25rem; bottom: -100vh; left: calc(100% + var(--a3) - 2px); width: 48px; /* erst unter den Reitern */
+  background: linear-gradient(90deg, var(--hintergrund), transparent);
+  opacity: var(--rand, 0);
+}
+.angeheftet .baukasten-buehne .buehne-flaeche { aspect-ratio: 16 / 9; max-height: none; min-height: 0; }
+.angeheftet .baukasten-buehne > .buehne {
+  transform-origin: 0 0;
+  transform: translateX(calc(var(--gegen) * var(--fx, 0px))) scale(calc(1 + var(--gegen) * (var(--fs, 1) - 1)));
+}
+.angeheftet .baukasten-buehne > :not(.buehne) {
+  transform: translate(calc(var(--gegen) * var(--px, 0px)), calc(var(--gegen) * var(--py, 0px)));
+}
+.angeheftet .baukasten-leiste {
+  position: relative; z-index: 1;
+  transform: translateY(calc(var(--gegen) * var(--ly, 0px)));
+}
+.angeheftet .baukasten-optionen {
+  overflow: visible; scroll-snap-type: none; padding-bottom: 0;
+  transform: translateX(calc(-1 * var(--schub)));
+}
+.angeheftet .baukasten-optionen > .karte {
+  max-height: calc(100dvh - var(--kopf-hoehe) - 7.5rem); overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin; scrollbar-color: var(--trenner-stark) transparent;
+}
+.angeheftet .leiste-spur::before { display: none; }
+.angeheftet .leiste-pfeil-zurueck { left: 4px; }
+.angeheftet .leiste-pfeil-vor { right: 4px; }
 
 /* Bühne */
 .buehne { margin: 0 0 var(--a2); }
@@ -621,7 +662,7 @@ fieldset.karte > legend ~ * { clear: both; }
 .laden-zeit { margin: 0; font-size: var(--s-fein); opacity: 0.85; font-variant-numeric: tabular-nums; }
 
 .baukasten-buehne .hinweis-veraltet { margin: 0.75rem 0 0; }
-.baukasten > .link-zurueck { align-self: flex-start; margin-top: calc(-1 * var(--a2)); }
+.baukasten-buehne .link-zurueck { margin-top: var(--a1); }
 
 /* Preisleiste */
 .preisleiste {
