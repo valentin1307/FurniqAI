@@ -101,3 +101,12 @@ test('Prompt-Zusatz aus Optionen und Sonderwünschen', () => {
   assert.equal(promptZusatz(z, B), 'With a lower shelf. Extra: Schublade. With an inset glass panel.');
   assert.equal(promptZusatz({ optionIds: [], sonderwuensche: [] }, B), '');
 });
+
+test('Denkstufe je Modell: 2.5 ohne Nachdenken, Gemini 3 niedrigste unterstützte Stufe', async () => {
+  const { denkEinstellung } = await import('../supabase/functions/feinschliff/regeln.ts');
+  assert.deepEqual(denkEinstellung('gemini-2.5-flash').thinkingConfig, { thinkingBudget: 0 });
+  assert.deepEqual(denkEinstellung('gemini-3.5-flash-lite'), { thinkingConfig: { thinkingLevel: 'minimal' } });
+  assert.deepEqual(denkEinstellung('gemini-3.6-flash'), { thinkingConfig: { thinkingLevel: 'minimal' } });
+  assert.deepEqual(denkEinstellung('gemini-3.8-flash'), { thinkingConfig: { thinkingLevel: 'low' } });
+  assert.equal(denkEinstellung('gemini-3.8-flash').temperature, undefined);
+});

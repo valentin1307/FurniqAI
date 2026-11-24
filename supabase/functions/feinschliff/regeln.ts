@@ -152,3 +152,18 @@ export function verlaufFuerModell(verlauf: Roh): { role: 'user' | 'model'; parts
     .filter((n) => (n?.rolle === 'kunde' || n?.rolle === 'assistent') && typeof n.text === 'string' && n.text.trim())
     .map((n) => ({ role: n.rolle === 'kunde' ? 'user' : 'model', parts: [{ text: n.text.trim().slice(0, 600) }] }));
 }
+
+/**
+ * Generierungs-Einstellungen je Modell (ohne Schema).
+ * 2.5: Nachdenken aus (thinkingBudget 0). Gemini 3: niedrigste Denkstufe, damit die Antwort
+ * unter dem Zeitlimit bleibt – „minimal“ können Flash-Lite, 3.6-Flash und 3-Flash-Preview,
+ * alle anderen (z. B. 3.8-Flash) höchstens „low“. temperature ignorieren Gemini-3-Modelle.
+ */
+export function denkEinstellung(modell: string): Roh {
+  if (modell.startsWith('gemini-2.5')) return { temperature: 0.2, thinkingConfig: { thinkingBudget: 0 } };
+  if (modell.startsWith('gemini-3')) {
+    const minimal = modell.includes('flash-lite') || modell.startsWith('gemini-3.6-flash') || modell.startsWith('gemini-3-flash');
+    return { thinkingConfig: { thinkingLevel: minimal ? 'minimal' : 'low' } };
+  }
+  return { temperature: 0.2 };
+}

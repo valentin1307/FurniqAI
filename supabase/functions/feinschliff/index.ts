@@ -5,17 +5,17 @@
 //   → 200 { antwort, aenderungen:[{ typ, aktion, option_id?, feld?, wert?, beschreibung, prompt_zusatz? }], modell }
 // POST { aktion: "modelle" } → verfügbare Text-Modelle (Flash)
 //
-// Secrets: GEMINI_API_KEY, DEMO_CODE; optional GEMINI_TEXT_MODEL (Standard gemini-2.5-flash)
+// Secrets: GEMINI_API_KEY, DEMO_CODE; optional GEMINI_TEXT_MODEL (Standard gemini-3.5-flash-lite)
 
 import { json, vorpruefung } from '../_shared/http.ts';
 import { pruefeDemoCode } from '../_shared/zugang.ts';
 import { istFreigeschaltet, moebelAus } from '../_shared/moebel.ts';
 import { ordneHttpFehlerEin } from '../render-table/anbieter/gemini.ts';
 import { AnbieterFehler, fehler } from '../render-table/anbieter/typ.ts';
-import { ANTWORT_SCHEMA, baueAnweisung, bereinigeAntwort, verlaufFuerModell, type BetriebDaten } from './regeln.ts';
+import { ANTWORT_SCHEMA, baueAnweisung, denkEinstellung, bereinigeAntwort, verlaufFuerModell, type BetriebDaten } from './regeln.ts';
 
 const API = 'https://generativelanguage.googleapis.com/v1beta';
-const STANDARD_MODELL = 'gemini-2.5-flash';
+const STANDARD_MODELL = 'gemini-3.5-flash-lite';
 const ZEITLIMIT_MS = 30_000;
 
 // deno-lint-ignore no-explicit-any
@@ -33,10 +33,8 @@ async function frageModell(schluessel: string, modell: string, anweisung: string
   const generationConfig: Roh = {
     responseMimeType: 'application/json',
     responseSchema: ANTWORT_SCHEMA,
-    temperature: 0.2,
+    ...denkEinstellung(modell),
   };
-  // 2.5-Modelle: ohne „Nachdenken“ antworten sie deutlich schneller
-  if (modell.startsWith('gemini-2.5')) generationConfig.thinkingConfig = { thinkingBudget: 0 };
 
   const abbruch = new AbortController();
   const uhr = setTimeout(() => abbruch.abort(), ZEITLIMIT_MS);
