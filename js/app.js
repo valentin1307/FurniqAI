@@ -173,12 +173,35 @@ function schritt0Einrichten() {
       </label>`;
     })
     .join('');
+  const moebelSetzen = (wert) => {
+    zustand.moebel = wert;
+    $('#kv-titel').textContent = `Kostenvoranschlag · ${moebelName()}`;
+  };
+  // Pfeiltasten wechseln nur die Auswahl …
   $('#wahl-moebel').addEventListener('change', (e) => {
     if (e.target.name !== 'moebel' || !istFreigeschaltet(e.target.value)) return;
-    zustand.moebel = e.target.value;
-    $('#kv-titel').textContent = `Kostenvoranschlag · ${moebelName()}`;
+    moebelSetzen(e.target.value);
   });
-  $('#weiter-0').addEventListener('click', () => zeigeSchritt(1));
+  // … ein Klick auf die Karte (oder Enter/Leertaste) wählt das Möbel und geht direkt weiter zum Raum.
+  // Klicks auf das Radio selbst kommen nur als Folge des Label-Klicks und werden übersprungen.
+  const waehlenUndWeiter = (input) => {
+    if (!input || input.disabled || !istFreigeschaltet(input.value)) return;
+    input.checked = true;
+    moebelSetzen(input.value);
+    zeigeSchritt(1);
+  };
+  $('#moebel-raster').addEventListener('click', (e) => {
+    if (e.target.matches('input')) return;
+    const karte = e.target.closest('.moebel-karte');
+    if (!karte) return;
+    e.preventDefault();
+    waehlenUndWeiter(karte.querySelector('input[name="moebel"]'));
+  });
+  $('#moebel-raster').addEventListener('keydown', (e) => {
+    if ((e.key !== 'Enter' && e.key !== ' ') || !e.target.matches('input[name="moebel"]')) return;
+    e.preventDefault();
+    waehlenUndWeiter(e.target);
+  });
   $('#kv-titel').textContent = `Kostenvoranschlag · ${moebelName()}`;
 }
 

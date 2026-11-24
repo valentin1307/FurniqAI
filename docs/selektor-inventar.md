@@ -15,7 +15,7 @@ Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf
 
 **Schritt 0 (Möbel wählen)**
 - `#wahl-moebel` (change-Listener), `#moebel-raster`, `.moebel-karte` (Klasse `bald` = noch nicht freigeschaltet), `input[type=radio][name=moebel]` (`disabled` wenn nicht freigeschaltet), `.moebel-symbol`, `.moebel-name`, `.moebel-status`
-- `#weiter-0`, `#zurueck-1` (Schritt 1 → 0), `#kv-titel` (Titel des Kostenvoranschlags mit Möbelname)
+- Klick auf eine `.moebel-karte` (oder Enter/Leertaste) wählt und geht direkt zu Schritt 1; `#zurueck-1` (Schritt 1 → 0), `#kv-titel` (Titel des Kostenvoranschlags mit Möbelname)
 - `.nur-vorleser` (nur für Screenreader)
 
 **Schritt 1**
