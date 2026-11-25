@@ -92,7 +92,7 @@
                   <!-- immer sichtbar, damit das Foto beim Markieren nicht verrutscht -->
                   <label class="feld feld-referenz" id="referenz-feld">
                     <span>Länge des Gegenstands</span>
-                    <span class="einheit-feld"><input type="number" id="referenz-laenge" inputmode="numeric" min="20" max="1000" placeholder="220"><span>cm</span></span>
+                    <span class="einheit-feld"><input type="text" id="referenz-laenge" inputmode="numeric" autocomplete="off" placeholder="z. B. 220"><span>cm</span></span>
                   </label>
                 </div>
               </li>
@@ -125,12 +125,12 @@
             <div class="feldreihe">
               <label class="feld">
                 <span>Länge</span>
-                <span class="einheit-feld"><input type="number" id="frei-laenge" inputmode="numeric" min="1" max="1000" placeholder="160"><span>cm</span></span>
+                <span class="einheit-feld"><input type="text" id="frei-laenge" inputmode="decimal" autocomplete="off" placeholder="z. B. 160"><span>cm</span></span>
               </label>
               <span class="mal" aria-hidden="true">×</span>
               <label class="feld">
                 <span>Breite</span>
-                <span class="einheit-feld"><input type="number" id="frei-breite" inputmode="numeric" min="1" max="1000" placeholder="90"><span>cm</span></span>
+                <span class="einheit-feld"><input type="text" id="frei-breite" inputmode="decimal" autocomplete="off" placeholder="z. B. 90"><span>cm</span></span>
               </label>
             </div>
           </div>
@@ -146,12 +146,12 @@
               <div class="feldreihe">
                 <label class="feld">
                   <span>Länge</span>
-                  <span class="einheit-feld"><input type="text" id="raum-laenge" inputmode="decimal" placeholder="4,50"><span>m</span></span>
+                  <span class="einheit-feld"><input type="text" id="raum-laenge" inputmode="decimal" autocomplete="off" placeholder="z. B. 4,50"><span>m</span></span>
                 </label>
                 <span class="mal" aria-hidden="true">×</span>
                 <label class="feld">
                   <span>Breite</span>
-                  <span class="einheit-feld"><input type="text" id="raum-breite" inputmode="decimal" placeholder="3,80"><span>m</span></span>
+                  <span class="einheit-feld"><input type="text" id="raum-breite" inputmode="decimal" autocomplete="off" placeholder="z. B. 3,80"><span>m</span></span>
                 </label>
               </div>
             </div>
@@ -162,15 +162,15 @@
               <div class="feldreihe feldreihe-drei">
                 <label class="feld">
                   <span>Länge</span>
-                  <span class="einheit-feld"><input type="number" id="wunsch-laenge" inputmode="numeric" min="1" max="1000" placeholder="120"><span>cm</span></span>
+                  <span class="einheit-feld"><input type="text" id="wunsch-laenge" inputmode="numeric" autocomplete="off" placeholder="z. B. 120"><span>cm</span></span>
                 </label>
                 <label class="feld">
                   <span>Breite</span>
-                  <span class="einheit-feld"><input type="number" id="wunsch-breite" inputmode="numeric" min="1" max="1000" placeholder="60"><span>cm</span></span>
+                  <span class="einheit-feld"><input type="text" id="wunsch-breite" inputmode="numeric" autocomplete="off" placeholder="z. B. 60"><span>cm</span></span>
                 </label>
                 <label class="feld">
                   <span>Höhe</span>
-                  <span class="einheit-feld"><input type="number" id="wunsch-hoehe" inputmode="numeric" min="1" max="1000" placeholder="40"><span>cm</span></span>
+                  <span class="einheit-feld"><input type="text" id="wunsch-hoehe" inputmode="numeric" autocomplete="off" placeholder="z. B. 40"><span>cm</span></span>
                 </label>
               </div>
             </div>
@@ -191,7 +191,7 @@
       <header class="schritt-kopf">
         <p class="kicker"></p>
         <h1 id="titel-2">Gestalten Sie Ihr Traumprojekt</h1>
-        <p class="einleitung">Form, Material, Maße und Gestell – der Preis rechnet sofort mit.</p>
+        <p class="einleitung">Erzählen Sie uns Ihre Ideen und wählen Sie Form, Material, Maße und Gestell. Der Preis rechnet sofort mit.</p>
       </header>
 
       <!-- Auf großen Bildschirmen angeheftet: beim Scrollen wandert das Foto nach links, die Optionen ziehen dahinter nach links (js/app.js anheftenMessen) -->
@@ -222,6 +222,34 @@
             </div>
           </figure>
 
+          <!-- Ideen-Chat (Herzstück): fest unter dem Foto. Wünsche in eigenen Worten, eingeordnet als Option, Sonderwunsch oder Einstellung -->
+          <section class="karte feinschliff" id="feinschliff" aria-labelledby="titel-ideen">
+            <h2 id="titel-ideen"><span class="ideen-symbol" aria-hidden="true">✦</span> Teilen Sie uns Ihre Ideen mit</h2>
+            <p class="tipp">In eigenen Worten. Extras rechnen sofort mit, Sonderwünsche prüft die Tischlerei.</p>
+            <div class="chat-verlauf" id="chat-verlauf" aria-live="polite"></div>
+            <div class="chat-vorschlaege" id="chat-vorschlaege">
+              <button type="button">Eine Ablage unten</button>
+              <button type="button">Kanten abgerundet</button>
+              <button type="button">5 cm niedriger</button>
+              <button type="button">Eingelassene Glasplatte</button>
+            </div>
+            <label class="feld chat-code" id="chat-code-feld" hidden>
+              <span>Demo-Code</span>
+              <input type="password" id="chat-code" autocomplete="off">
+            </label>
+            <div class="chat-eingabe">
+              <input type="text" id="chat-text" maxlength="600" placeholder="z. B. „Gern mit Schublade“" aria-label="Ihr Wunsch">
+              <button type="button" class="knopf knopf-senden" id="chat-senden" aria-label="Wunsch senden">
+                <span aria-hidden="true">↑</span>
+              </button>
+            </div>
+            <p class="fehler" id="fehler-chat" role="alert" hidden></p>
+            <div class="extras" id="extras" hidden>
+              <h3>Ihre Extras</h3>
+              <ul class="extras-liste" id="extras-liste"></ul>
+            </div>
+          </section>
+
           <div class="preisleiste" aria-live="polite">
             <div class="preis-info">
               <span class="preis-label">Geschätzter Preis</span>
@@ -242,7 +270,7 @@
           <button type="button" class="link-zurueck" id="zurueck-2"><span aria-hidden="true">←</span> Raum und Maße ändern</button>
         </div>
 
-        <!-- Optionen als Leiste nebeneinander: Reiter oben, Pfeile zum Weiterblättern, Mausrad blättert nach rechts (js/app.js leisteEinrichten) -->
+        <!-- Optionen als Leiste nebeneinander (Form, Material, Maße, Gestell, Oberfläche): Reiter oben, Pfeile zum Weiterblättern, Mausrad blättert nach rechts (js/app.js leisteEinrichten) -->
         <div class="baukasten-leiste">
           <div class="leiste-kopf">
             <nav class="leiste-reiter" id="leiste-reiter" aria-label="Bereiche des Baukastens"></nav>
@@ -313,36 +341,6 @@
             <div class="wahl wahl-segmente" id="wahl-oberflaeche"></div>
           </fieldset>
 
-          <!-- Feinschliff-Chat: Wünsche in eigenen Worten, eingeordnet als Option, Sonderwunsch oder Einstellung -->
-          <fieldset class="karte feinschliff" id="feinschliff" data-reiter="Feinschliff">
-            <legend>Feinschliff</legend>
-            <p class="tipp">
-              Beschreiben Sie weitere Wünsche in eigenen Worten. Extras mit festem Preis rechnen sofort mit,
-              Sonderwünsche prüft die Tischlerei.
-            </p>
-            <div class="chat-verlauf" id="chat-verlauf" aria-live="polite"></div>
-            <div class="chat-vorschlaege" id="chat-vorschlaege">
-              <button type="button">Eine Ablage unten</button>
-              <button type="button">Kanten abgerundet</button>
-              <button type="button">5 cm niedriger</button>
-              <button type="button">Eingelassene Glasplatte</button>
-            </div>
-            <label class="feld chat-code" id="chat-code-feld" hidden>
-              <span>Demo-Code</span>
-              <input type="password" id="chat-code" autocomplete="off">
-            </label>
-            <div class="chat-eingabe">
-              <input type="text" id="chat-text" maxlength="600" placeholder="z. B. „Gern mit Schublade“" aria-label="Ihr Wunsch">
-              <button type="button" class="knopf knopf-senden" id="chat-senden" aria-label="Wunsch senden">
-                <span aria-hidden="true">↑</span>
-              </button>
-            </div>
-            <p class="fehler" id="fehler-chat" role="alert" hidden></p>
-            <div class="extras" id="extras" hidden>
-              <h3>Ihre Extras</h3>
-              <ul class="extras-liste" id="extras-liste"></ul>
-            </div>
-          </fieldset>
         </div>
             <button type="button" class="leiste-pfeil leiste-pfeil-vor" id="leiste-vor" aria-label="Weitere Optionen" aria-controls="baukasten-optionen">
               <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
@@ -351,6 +349,12 @@
         </div>
       </div>
       </div>
+
+      <!-- Wegweiser zu den Optionen: sichtbar, solange die Leiste noch unterhalb des Bildschirms liegt (js/app.js wegweiserAktualisieren) -->
+      <nav class="wegweiser" id="wegweiser" aria-label="Zu den Optionen springen" hidden>
+        <button type="button" class="wegweiser-text" data-index="0"><span class="wegweiser-pfeil" aria-hidden="true">↓</span> <span class="wegweiser-lang">Hier gestalten Sie weiter:</span><span class="wegweiser-kurz">Form, Material, Maße und mehr</span></button>
+        <span class="wegweiser-ziele" id="wegweiser-ziele"></span>
+      </nav>
     </section>
 
     <!-- Schritt 4: Bild (KI-Vorschau) -->

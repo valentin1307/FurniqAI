@@ -988,6 +988,7 @@ let leisteAktualisieren = () => {};
 let zuKarte = () => {};
 
 // Angeheftete Szene (große Bildschirme): Scrollweg d1 für das Foto, d2 für die Karten
+// Auf niedrigen Bildschirmen wird die linke Spalte kompakt (Klasse „eng“), siehe anheftenMessen
 const anheftMedien = window.matchMedia('(min-width: 901px) and (min-height: 600px) and (prefers-reduced-motion: no-preference)');
 const anheft = { an: false, d1: 1, d2: 0, schub: 0 };
 
@@ -1013,27 +1014,79 @@ function anheftenMessen() {
   anheft.an = an;
   raum.classList.toggle('angeheftet', an);
   if (!an) {
+    raum.classList.remove('eng');
     raum.style.removeProperty('--raum-hoehe');
     leisteAktualisieren();
+    wegweiserAktualisieren();
     return;
   }
   const H = innerHeight - kopfHoehe();
   const cw = bk.clientWidth;
   const abstand = parseFloat(getComputedStyle(bk).columnGap) || 24;
-  // Endlage: Foto links (16:9), darunter Preis; Startlage: Foto groß in der Mitte
-  const wb = Math.round(Math.max(340, Math.min(cw * 0.4, 520, ((H - 200) * 16) / 9)));
-  bk.style.setProperty('--wb', `${wb}px`);
-  const startB = Math.max(wb, Math.min(cw * 0.8, 900, ((H - 320) * 16) / 9));
+  const oben = parseFloat(getComputedStyle(bk).paddingTop) || 16;
   const panel = bk.querySelector('.baukasten-buehne');
-  const rest = panel.offsetHeight - $('#buehne').offsetHeight;
+  /** Höhe links ohne Foto und Chatverlauf (ungedeckelt gemessen). */
+  const messen = () => {
+    panel.style.maxHeight = 'none';
+    const verlauf = $('#chat-verlauf').offsetHeight;
+    const m = { ohne: panel.offsetHeight - $('#buehne').offsetHeight - verlauf };
+    panel.style.maxHeight = '';
+    return m;
+  };
+  // Endlage: Foto links (16:9), darunter Ideen-Chat und Preis, dazu Platz für ein paar Nachrichten.
+  // Erst bei Wunschbreite messen, dann ggf. schmaler und neu messen (Chat und Preis brechen dann um).
+  const wunsch = Math.round(Math.min(cw * 0.4, 520));
+  /** Spaltenbreite fürs Foto: so groß, dass darunter Chat und Preis Platz haben. */
+  const breiteFinden = () => {
+    bk.style.setProperty('--wb', `${wunsch}px`);
+    const vorab = messen();
+    const b = Math.round(Math.max(raum.classList.contains('eng') ? 300 : 320, Math.min(wunsch, ((H - oben - vorab.ohne - 96) * 16) / 9)));
+    bk.style.setProperty('--wb', `${b}px`);
+    return { wb: b, m: messen() };
+  };
+  const passt = ({ wb: b, m: mm }) => oben + (b * 9) / 16 + mm.ohne + 28 <= H;
+  // Erst normal, auf niedrigen Bildschirmen kompakt (ohne Hinweistext und Zurück-Link)
+  raum.classList.remove('eng');
+  let wahl = breiteFinden();
+  if (!passt(wahl) || wahl.wb < 420) {
+    // kompakt nehmen, wenn es sonst nicht passt oder das Foto dadurch deutlich größer wird
+    raum.classList.add('eng');
+    const eng = breiteFinden();
+    if ((!passt(wahl) || eng.wb > wahl.wb + 20) && passt(eng)) wahl = eng;
+    else if (passt(wahl)) {
+      raum.classList.remove('eng');
+      wahl = breiteFinden();
+    } else wahl = eng;
+  }
+  const { wb, m } = wahl;
+  if (!passt(wahl)) {
+    // Bildschirm zu niedrig: lieber normal untereinander als ein abgeschnittener Chat
+    anheft.an = false;
+    raum.classList.remove('angeheftet', 'eng');
+    raum.style.removeProperty('--raum-hoehe');
+    bk.style.removeProperty('--wb');
+    leisteAktualisieren();
+    wegweiserAktualisieren();
+    return;
+  }
+  const rest = panel.offsetHeight - $('#buehne').offsetHeight; // Chat, Preis, Link unter dem Foto
+  const restOben = $('#feinschliff').offsetTop; // in der Endlage: Fotohöhe + Abstand
+  const restH = panel.offsetHeight - restOben;
+  // Startlage: Foto groß links, rechts daneben Ideen-Chat und Preis – zusammen über die ganze Breite
+  const startB = Math.max(wb, Math.min(cw - wb - abstand, 980, ((H - oben - 96) * 16) / 9));
   const fotoStart = (startB * 9) / 16;
   const fotoEnde = (wb * 9) / 16;
+  const fx = Math.max(0, (cw - startB - abstand - wb) / 2);
+  const versatzY = Math.max(0, (fotoStart - restH) / 2); // rechte Spalte mittig zum Foto
   const setze = (name, wert) => bk.style.setProperty(name, `${Math.round(wert * 1000) / 1000}${name === '--fs' ? '' : 'px'}`);
   setze('--fs', startB / wb);
-  setze('--fx', (cw - startB) / 2);
-  setze('--px', (cw - wb) / 2);
-  setze('--py', fotoStart - fotoEnde);
-  setze('--ly', fotoStart + rest + abstand);
+  setze('--fx', fx);
+  setze('--px', fx + startB + abstand);
+  setze('--py', versatzY - restOben);
+  // Optionen: am Anfang unter Foto und rechter Spalte, nach Phase 1 unter der linken Spalte
+  const ly = fotoEnde + rest + abstand;
+  setze('--ly', ly);
+  setze('--lya', Math.max(fotoStart, versatzY + restH) + abstand - ly);
 
   const karten = leistenKarten();
   const letzte = karten[karten.length - 1];
@@ -1042,6 +1095,7 @@ function anheftenMessen() {
   anheft.d2 = Math.max(0, Math.round(breite - bk.querySelector('.leiste-spur').clientWidth + 8));
   raum.style.setProperty('--raum-hoehe', `${Math.round(H + anheft.d1 + anheft.d2)}px`);
   anheftenRollen();
+  wegweiserAktualisieren();
 }
 
 /** Scrollstand in Bewegung umrechnen. */
@@ -1056,6 +1110,28 @@ function anheftenRollen() {
   bk.style.setProperty('--schub', `${Math.round(anheft.schub)}px`);
   bk.style.setProperty('--rand', String(Math.min(1, anheft.schub / 40))); // weicher Rand erst, wenn Karten darunter laufen
   leisteAktualisieren();
+}
+
+/** Wegweiser zeigen, solange die Reiter der Optionen noch unterhalb des Bildschirms liegen. */
+function wegweiserAktualisieren() {
+  const weg = $('#wegweiser');
+  if (zustand.schritt !== 2) {
+    weg.classList.remove('sichtbar');
+    return;
+  }
+  weg.hidden = false;
+  const r = $('#leiste-reiter').getBoundingClientRect();
+  const unten = getComputedStyle(document.documentElement).getPropertyValue('--preisleiste-hoehe');
+  const frei = innerHeight - (anheft.an ? 0 : parseFloat(unten) || 0) - 70;
+  // Nie über Foto (mit Tisch-Skizze) oder Ideen-Chat und nicht, während jemand im Chat schreibt
+  const w = weg.getBoundingClientRect();
+  const versatz = weg.classList.contains('sichtbar') ? 0 : 12; // ausgeblendet liegt er 12 px tiefer
+  const verdeckt = ['#buehne', '#feinschliff'].some((sel) => {
+    const e = $(sel).getBoundingClientRect();
+    return e.bottom > w.top - versatz - 6 && e.top < w.bottom && e.right > w.left && e.left < w.right;
+  });
+  const schreibt = $('#feinschliff').contains(document.activeElement);
+  weg.classList.toggle('sichtbar', r.top > frei && !verdeckt && !schreibt);
 }
 
 function leisteEinrichten() {
@@ -1125,6 +1201,20 @@ function leisteEinrichten() {
     const b = e.target.closest('button');
     if (b) zuKarte(Number(b.dataset.index));
   });
+
+  // Wegweiser: dieselben Bereiche als Sprungziele
+  $('#wegweiser-ziele').innerHTML = reiter.innerHTML;
+  $('#wegweiser').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-index]');
+    if (!b) return;
+    const i = Number(b.dataset.index);
+    if (!anheft.an) {
+      // Leiste ins Bild holen (unter den festen Kopf), dann die Karte
+      const oben = rahmen.closest('.baukasten-leiste').getBoundingClientRect().top + scrollY - kopfHoehe() - 12;
+      window.scrollTo({ top: oben, behavior: 'smooth' });
+    }
+    zuKarte(i);
+  });
   $('#leiste-vor').addEventListener('click', () => zuKarte(aktuell() + (anheft.an ? 1 : proSeite())));
   $('#leiste-zurueck').addEventListener('click', () => zuKarte(aktuell() - (anheft.an ? 1 : proSeite())));
   // Mit der Tastatur in eine verdeckte Karte: Karte herholen
@@ -1145,7 +1235,14 @@ function leisteEinrichten() {
     };
   };
   spur.addEventListener('scroll', spaeter(() => leisteAktualisieren()), { passive: true });
-  window.addEventListener('scroll', spaeter(anheftenRollen), { passive: true });
+  window.addEventListener(
+    'scroll',
+    spaeter(() => {
+      anheftenRollen();
+      wegweiserAktualisieren();
+    }),
+    { passive: true },
+  );
   window.addEventListener('resize', spaeter(anheftenMessen));
   anheftMedien.addEventListener('change', anheftenMessen);
 
@@ -1185,7 +1282,7 @@ function leisteEinrichten() {
   );
 }
 
-// ---------- Schritt 2: Feinschliff-Chat ----------
+// ---------- Schritt 2: Ideen-Chat (fest unter dem Foto, intern weiter „Feinschliff“) ----------
 
 const chatLauf = { laeuft: false };
 
@@ -1224,6 +1321,7 @@ function chatZeichnen() {
   $('#chat-vorschlaege').hidden = zustand.chat.length > 0;
   $('#chat-senden').disabled = chatLauf.laeuft;
   $('#chat-text').disabled = chatLauf.laeuft;
+  if (anheft.an) requestAnimationFrame(anheftenMessen); // Chat unter dem Foto ändert die Höhe links
 }
 
 function extrasZeichnen() {
@@ -1238,6 +1336,7 @@ function extrasZeichnen() {
   );
   $('#extras').hidden = optionen.length + sonder.length === 0;
   $('#extras-liste').innerHTML = [...optionen, ...sonder].join('');
+  if (anheft.an) requestAnimationFrame(anheftenMessen);
 }
 
 /** Änderungen aus dem Chat übernehmen und Baukasten aktualisieren. */
@@ -1315,6 +1414,8 @@ function feinschliffEinrichten() {
       chatSenden($('#chat-text').value);
     }
   });
+  $('#feinschliff').addEventListener('focusin', wegweiserAktualisieren);
+  $('#feinschliff').addEventListener('focusout', () => requestAnimationFrame(wegweiserAktualisieren));
   $('#chat-vorschlaege').addEventListener('click', (e) => {
     const knopf = e.target.closest('button');
     if (knopf) chatSenden(knopf.textContent);

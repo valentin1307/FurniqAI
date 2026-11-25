@@ -334,6 +334,8 @@ fieldset.karte > legend ~ * { clear: both; }
 .feld input.ungueltig { border-color: var(--fehler); box-shadow: 0 0 0 3px color-mix(in srgb, var(--fehler) 14%, transparent); }
 .einheit-feld { display: flex; align-items: center; gap: var(--a1); }
 .einheit-feld input { flex: 1; min-width: 0; font-variant-numeric: tabular-nums; }
+/* Beispielwert klar als Beispiel erkennbar, nicht als schon eingetragener Wert */
+.einheit-feld input::placeholder { font-style: italic; font-size: var(--s-klein); }
 .einheit-feld span { color: var(--text-sekundaer); font-size: var(--s-klein); }
 
 .feldreihe { display: flex; align-items: flex-end; gap: 0.75rem; margin-top: var(--a2); }
@@ -482,7 +484,36 @@ fieldset.karte > legend ~ * { clear: both; }
 }
 .baukasten-optionen > .karte { flex: 0 0 min(360px, 84%); margin: 0; scroll-snap-align: start; }
 .baukasten-optionen.rad { scroll-snap-type: none; scroll-behavior: auto; } /* beim Mausrad nicht Karte für Karte springen */
-.baukasten-optionen > .feinschliff { flex-basis: min(420px, 88%); }
+
+/* Wegweiser: fest am unteren Rand, solange die Optionen noch unterhalb des Bildschirms liegen (js/app.js wegweiserAktualisieren) */
+.wegweiser {
+  position: fixed; z-index: 35; left: 50%; bottom: calc(var(--a3) + env(safe-area-inset-bottom));
+  translate: -50% 0; width: max-content; max-width: calc(100% - 2 * var(--a2));
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; justify-content: center;
+  padding: 0.5rem 0.5rem 0.5rem 1.125rem; border-radius: 999px;
+  background: color-mix(in srgb, var(--holz-dunkel) 92%, transparent); color: #fffaf3;
+  -webkit-backdrop-filter: saturate(180%) blur(16px); backdrop-filter: saturate(180%) blur(16px);
+  box-shadow: 0 14px 34px -14px rgba(35, 28, 22, 0.6);
+  opacity: 0; transform: translateY(12px); pointer-events: none;
+  transition: opacity 260ms var(--kurve), transform 260ms var(--kurve);
+}
+.wegweiser.sichtbar { opacity: 1; transform: none; pointer-events: auto; }
+.wegweiser-text {
+  display: flex; align-items: center; gap: 0.5rem; min-height: 36px; padding: 0; border: 0; background: none; cursor: pointer;
+  font: inherit; font-size: var(--s-klein); font-weight: 600; color: inherit; white-space: nowrap;
+}
+.wegweiser-pfeil { display: inline-block; animation: wegweiser-wippen 1.6s var(--kurve) infinite; }
+@keyframes wegweiser-wippen { 0%, 100% { transform: none; } 50% { transform: translateY(3px); } }
+.wegweiser-kurz { display: none; }
+.wegweiser-ziele { display: flex; gap: 0.375rem; flex-wrap: wrap; justify-content: center; }
+.wegweiser-ziele button {
+  font: inherit; font-size: var(--s-klein); font-weight: 500; cursor: pointer; white-space: nowrap;
+  min-height: 36px; padding: 0.3rem 0.85rem; border-radius: 999px;
+  border: 1px solid rgba(255, 250, 243, 0.35); background: rgba(255, 250, 243, 0.1); color: #fffaf3;
+  transition: background-color var(--dauer) var(--kurve), color var(--dauer) var(--kurve);
+}
+.wegweiser-ziele button:hover { background: #fffaf3; color: var(--holz-dunkel); }
+@media (prefers-reduced-motion: reduce) { .wegweiser-pfeil { animation: none; } }
 
 /* Pfeile zum Weiterblättern, mit weichem Verlauf am Rand */
 .leiste-pfeil {
@@ -538,17 +569,52 @@ fieldset.karte > legend ~ * { clear: both; }
 
 /* ---------- Baukasten angeheftet (große Bildschirme, js/app.js anheftenMessen) ----------
    Der Raum ist so hoch wie der Scrollweg. Darin bleibt .baukasten stehen:
-   --p1 (0 → 1): Foto wandert aus der Mitte nach links, die Optionen rücken daneben.
+   Startlage: Foto groß links, Ideen-Chat und Preis rechts daneben (zusammen über die ganze Breite).
+   --p1 (0 → 1) in zwei Phasen, damit sich nichts überlappt:
+     --ga (1 → 0, erste Hälfte): Foto schrumpft in die linke Spalte, Chat und Preis gleiten darunter
+       (hinter dem Foto entlang),
+     --gb (1 → 0, zweite Hälfte): danach steigen die Optionen rechts daneben hoch.
    --schub: danach ziehen die Karten beim Scrollen nach links hinter das Foto. */
 .baukasten-raum.angeheftet { height: var(--raum-hoehe, auto); }
 .angeheftet .baukasten {
-  --p1: 0; --schub: 0px; --gegen: calc(1 - var(--p1));
+  --p1: 0; --schub: 0px;
+  --ga: clamp(0, 1 - 2 * var(--p1), 1); --gb: clamp(0, 2 - 2 * var(--p1), 1);
   position: sticky; top: var(--kopf-hoehe);
   height: calc(100dvh - var(--kopf-hoehe));
   display: grid; grid-template-columns: var(--wb, 440px) minmax(0, 1fr); column-gap: var(--a3);
   align-items: start; padding-top: var(--a2); overflow: clip;
 }
-.angeheftet .baukasten-buehne { position: relative; z-index: 2; max-width: none; margin: 0; }
+.angeheftet .baukasten-buehne {
+  position: relative; z-index: 2; max-width: none; margin: 0;
+  /* Foto, Ideen-Chat und Preis passen immer in die Höhe; der Chatverlauf gibt nach */
+  display: flex; flex-direction: column; max-height: calc(100dvh - var(--kopf-hoehe) - var(--a2) - 8px);
+}
+.angeheftet .baukasten-buehne > * { flex: none; }
+.angeheftet .baukasten-buehne > .buehne { position: relative; z-index: 1; } /* Chat gleitet beim Scrollen hinter dem Foto entlang */
+.angeheftet .baukasten-buehne > .feinschliff { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.angeheftet .feinschliff > * { flex: none; }
+.angeheftet .feinschliff > .chat-verlauf { flex: 1 1 auto; min-height: 2.75rem; max-height: none; }
+.angeheftet .feinschliff > .extras { flex: 0 1 auto; min-height: 5.75rem; overflow-y: auto; } /* Überschrift + mindestens ein Extra */
+.angeheftet .chat-vorschlaege {
+  flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0.75rem -0.25rem; padding: 4px 0.25rem;
+}
+.angeheftet .chat-vorschlaege::-webkit-scrollbar { display: none; }
+.angeheftet .chat-vorschlaege button { flex: none; }
+/* Kompakt, damit das Foto in der schmalen Spalte möglichst groß bleibt */
+.angeheftet .baukasten-buehne { container-type: inline-size; }
+.angeheftet .feinschliff > h2 { font-size: 1.1875rem; }
+.angeheftet .preisleiste { padding: 0.75rem var(--a2); }
+.angeheftet .preis-info { flex: 1; }
+.angeheftet .preis-zeile { flex-wrap: nowrap; }
+.angeheftet .preis-summe { font-size: var(--s-kopf); white-space: nowrap; }
+.angeheftet .feinschliff { padding: var(--a2); }
+@container (max-width: 440px) {
+  .preisleiste .nur-gross { display: none; }
+  .preisleiste .nur-klein { display: inline; }
+  .preis-label { display: none; }
+  .preis-mwst { font-size: 0.75rem; font-weight: 500; }
+  .preis-rahmen { font-size: 0.75rem; white-space: nowrap; }
+}
 /* Deckfläche: Karten verschwinden unter dem Foto, mit weichem Rand */
 .angeheftet .baukasten-buehne::before {
   content: ""; position: absolute; z-index: -1; pointer-events: none;
@@ -564,14 +630,23 @@ fieldset.karte > legend ~ * { clear: both; }
 .angeheftet .baukasten-buehne .buehne-flaeche { aspect-ratio: 16 / 9; max-height: none; min-height: 0; }
 .angeheftet .baukasten-buehne > .buehne {
   transform-origin: 0 0;
-  transform: translateX(calc(var(--gegen) * var(--fx, 0px))) scale(calc(1 + var(--gegen) * (var(--fs, 1) - 1)));
+  transform: translateX(calc(var(--ga) * var(--fx, 0px))) scale(calc(1 + var(--ga) * (var(--fs, 1) - 1)));
 }
+/* Niedrige Bildschirme: linke Spalte kompakt, damit das Anheften erhalten bleibt (Raum bleibt über die Schrittleiste erreichbar) */
+.angeheftet.eng .feinschliff > .tipp, .angeheftet.eng .baukasten-buehne > .link-zurueck { display: none; }
+.angeheftet.eng .feinschliff { padding: 0.75rem var(--a2); }
+.angeheftet.eng .feinschliff > h2 { font-size: 1.0625rem; white-space: nowrap; }
+.angeheftet.eng .chat-vorschlaege { margin: 0.5rem -0.25rem; }
+/* Bedienelemente auf dem Foto bleiben trotz Vergrößerung in normaler Größe */
+.angeheftet .buehne .umschalter { transform-origin: 100% 0; scale: calc(1 / (1 + var(--ga) * (var(--fs, 1) - 1))); }
+.angeheftet .buehne .buehne-etikett { transform-origin: 0 100%; scale: calc(1 / (1 + var(--ga) * (var(--fs, 1) - 1))); }
 .angeheftet .baukasten-buehne > :not(.buehne) {
-  transform: translate(calc(var(--gegen) * var(--px, 0px)), calc(var(--gegen) * var(--py, 0px)));
+  transform: translate(calc(var(--ga) * var(--px, 0px)), calc(var(--ga) * var(--py, 0px)));
 }
 .angeheftet .baukasten-leiste {
   position: relative; z-index: 1;
-  transform: translateY(calc(var(--gegen) * var(--ly, 0px)));
+  /* bleibt unter Foto und rechter Spalte, bis alles links steht; dann hoch neben das Foto */
+  transform: translateY(calc(var(--ga) * var(--lya, 0px) + var(--gb) * var(--ly, 0px)));
 }
 .angeheftet .baukasten-optionen {
   overflow: visible; scroll-snap-type: none; padding-bottom: 0;
@@ -856,7 +931,18 @@ fieldset.karte > legend ~ * { clear: both; }
 .regler input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px var(--fokus); }
 .regler input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 4px var(--fokus); }
 
-/* Feinschliff-Chat */
+/* Ideen-Chat (Herzstück, fest unter dem Foto) */
+.feinschliff {
+  margin: 0 0 0.75rem; padding: var(--a2) var(--a3) var(--a3);
+  border-color: color-mix(in srgb, var(--akzent) 45%, var(--trenner));
+  box-shadow: 0 10px 28px -18px color-mix(in srgb, var(--akzent) 70%, transparent);
+}
+.feinschliff > h2 {
+  display: flex; align-items: center; gap: 0.5rem; margin: 0;
+  font-size: var(--s-kopf); font-weight: 550; line-height: 1.25;
+}
+.ideen-symbol { color: var(--akzent); font-size: 0.9em; }
+.feinschliff > .tipp { margin-top: 0.25rem; }
 .chat-verlauf {
   display: flex; flex-direction: column; gap: var(--a1); margin: var(--a2) 0 0.75rem;
   max-height: min(22rem, calc(100vh - var(--kopf-hoehe) - 14rem));
@@ -1117,6 +1203,8 @@ html.bewegt .kicker.tippt::after {
     -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
     box-shadow: 0 -8px 24px -16px rgba(43, 35, 28, 0.35);
   }
+  /* Wegweiser über der festen Preisleiste; auf dem Handy nur der Sprung zu den Optionen */
+  .wegweiser { bottom: calc(var(--preisleiste-hoehe) + 0.75rem + env(safe-area-inset-bottom)); padding-right: 1.125rem; }
   .preis-label { display: none; }
   .preis-summe { font-size: var(--s-kopf); }
   .nur-gross { display: none; }
@@ -1138,6 +1226,10 @@ html.bewegt .kicker.tippt::after {
 }
 
 @media (max-width: 600px) {
+  .wegweiser-ziele { display: none; }
+  .wegweiser-lang { display: none; }
+  .wegweiser-kurz { display: inline; }
+  .wegweiser-text { font-size: var(--s-text); }
   .moebel-raster { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
   .moebel-karte { min-height: 140px; padding: var(--a2); border-radius: var(--r-element); }
   .moebel-symbol { width: 3.25rem; height: 3.25rem; }

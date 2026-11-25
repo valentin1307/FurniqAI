@@ -29,7 +29,7 @@ Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf
 
 **Schritt 2 (Baukasten, Bühne, Chat)**
 - `.baukasten-buehne` (Ziel für `#buehne`), `.baukasten-optionen` / `#baukasten-optionen` (change-Listener, waagrechte Leiste; Klasse `rad` während des Mausrads)
-- Angeheftet (ab 901 × 600 px, ohne „Bewegung reduzieren“): `#baukasten-raum` (Klasse `angeheftet`, Variable `--raum-hoehe`), `.baukasten` bekommt `--p1`, `--schub`, `--rand`, `--wb`, `--fs`, `--fx`, `--px`, `--py`, `--ly`
+- Angeheftet (ab 901 × 600 px, ohne „Bewegung reduzieren“): `#baukasten-raum` (Klassen `angeheftet`, `eng` auf niedrigen Bildschirmen, Variable `--raum-hoehe`), `.baukasten` bekommt `--p1` (daraus in CSS `--ga`, `--gb`), `--schub`, `--rand`, `--wb`, `--fs`, `--fx`, `--px`, `--py`, `--ly`, `--lya`
 - Leiste: `.baukasten-leiste`, `.leiste-kopf`, `#leiste-reiter` (`button[data-index]`, `aria-current`; Namen aus `fieldset[data-reiter]`), `.leiste-spur` (Klassen `kann-zurueck`, `kann-vor`), `#leiste-zurueck`, `#leiste-vor` (`disabled` am Rand)
 - Ecken: `#karte-form`, `#ecken-block`, `#regler-ecken`, `#wert-ecken`, `#grenze-ecken`
 - Skizze: `#skizze` (details), `#skizze-svg`; aus JS `.skizze-griff[data-griff=laenge|breite|beide]` (Klasse `zieht`), `.punkt`
@@ -40,6 +40,8 @@ Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf
 - `#form-hinweis`, `#wunsch-hinweis`, `#platz-hinweis`
 - `#regler-laenge|breite|hoehe` (Variable `--fuellung`), `#wert-*`, `#grenze-*`, `#label-laenge`, `#regler-breite-block`
 - `#preis-summe` (Klasse `aendert`), `#preis-rahmen`, `#weiter-2`, `#zurueck-2`, `#veraltet-2`
+- Ideen-Chat „Teilen Sie uns Ihre Ideen mit“ (`#feinschliff`, `section`) sitzt fest in `.baukasten-buehne` unter `#buehne`, nicht in der Leiste
+- Wegweiser zu den Optionen: `#wegweiser` (Klasse `sichtbar`), `#wegweiser-ziele` (`button[data-index]` wie die Reiter), `.wegweiser-text[data-index=0]`
 - `#chat-verlauf`, `#chat-vorschlaege` (`button`), `#chat-code-feld`, `#chat-code`, `#chat-text`, `#chat-senden`, `#fehler-chat`
 - Chat-Klassen aus JS: `chat-nachricht`, `chat-kunde`, `chat-assistent`, `chat-tippt`, `chat-hinweise`, `art-option|sonderwunsch|einstellung|entfernt`
 - `#extras`, `#extras-liste` (`button[data-option]`, `button[data-sonder]`, `extra-name`, `extra-preis`, `auf-anfrage`)
