@@ -202,6 +202,16 @@ h1 em, h2 em {
   background: var(--verlauf); transform: scaleX(0); transform-origin: left; transition: transform 0.3s var(--weich);
 }
 #hauptnavigation a:not(.knopf):hover::after { transform: scaleX(1); }
+/* Umfrage als Symbol ganz oben: am Desktop rechts neben „Pilot anfragen“, am Handy neben dem Menü */
+.kopf .innen > .marke { margin-right: auto; }
+.umfrage-icon {
+  flex: none; min-height: 40px; padding: 0 16px 0 12px; margin-left: -8px; border-radius: 999px; gap: 7px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font: 600 0.9375rem/1 var(--sans);
+  color: var(--akzent-text); border: 1.5px solid rgba(243, 154, 99, 0.45); text-decoration: none;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s, transform 0.25s var(--weich);
+}
+.umfrage-icon:hover { background: var(--akzent-text); border-color: var(--akzent-text); color: #2a1712; transform: translateY(-1px); }
 .menue-knopf {
   display: none; width: 48px; height: 48px; margin-right: -12px;
   align-items: center; justify-content: center;
@@ -209,7 +219,8 @@ h1 em, h2 em {
 }
 
 @media (max-width: 860px) {
-  .menue-knopf { display: inline-flex; }
+  .menue-knopf { display: inline-flex; order: 5; }
+  .umfrage-icon { margin-left: 0; min-height: 40px; padding: 0 14px 0 10px; }
   #hauptnavigation {
     position: absolute; inset: 100% 0 auto 0;
     flex-direction: column; align-items: stretch; gap: 0;
@@ -407,6 +418,13 @@ h1 em, h2 em {
   width: 14px; height: 8px; border-left: 2px solid var(--dunkel-akzent); border-bottom: 2px solid var(--dunkel-akzent);
   transform: rotate(-45deg);
 }
+/* Umfrage als Alternative zum Pilot */
+.umfrage-hinweis {
+  display: grid; gap: 14px; justify-items: start; margin-top: 12px; padding: 20px 22px;
+  border: 1px solid rgba(242, 164, 119, 0.28); border-radius: 16px; background: rgba(247, 239, 231, 0.04);
+}
+.umfrage-hinweis p { color: var(--dunkel-text-2); }
+.umfrage-hinweis strong { color: var(--dunkel-text); }
 @media (max-width: 900px) { .pilot-raster { grid-template-columns: 1fr; } }
 
 .formular-karte {
