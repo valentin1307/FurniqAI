@@ -468,6 +468,7 @@ h1 em, h2 em {
 .fuss nav { display: flex; flex-wrap: wrap; gap: 8px 28px; }
 .fuss nav a { color: var(--text-2); text-decoration: none; }
 .fuss nav a:hover { color: var(--akzent-text); text-decoration: underline; }
+.fuss .fuss-instagram { display: inline-flex; align-items: center; gap: 6px; }
 
 /* ---------- Rechtstexte (Impressum, Datenschutz) ---------- */
 /* Zurück zur Startseite: Haus-Symbol im Kopf */
