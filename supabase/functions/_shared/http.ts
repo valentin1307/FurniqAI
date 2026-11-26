@@ -4,6 +4,8 @@ const STANDARD_URSPRUENGE = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
   'https://valentin1307.github.io',
+  'https://werkbuilt.com',
+  'https://www.werkbuilt.com',
 ];
 const erlaubteUrspruenge = (Deno.env.get('ERLAUBTE_URSPRUENGE') ?? '')
   .split(',')

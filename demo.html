@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Möbel nach Maß</title>
+  <link rel="preload" href="fonts/fraunces-latin-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/kopf.js"></script>
+  <script type="module" src="js/bewegung.js"></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div class="kopf-sentinel" aria-hidden="true"></div>
+  <div class="kopfbereich">
+    <header class="kopf">
+      <div class="kopf-innen">
+        <div class="marke">
+          <img class="marke-logo" id="betrieb-logo" alt="" hidden>
+          <span class="marke-monogramm" id="betrieb-monogramm" aria-hidden="true"></span>
+          <span class="marke-text">
+            <span class="marke-name" id="betrieb-name"></span>
+            <span class="marke-claim" id="betrieb-claim"></span>
+          </span>
+        </div>
+        <div class="kopf-rechts">
+          <span class="kopf-produkt">Bauen Sie Ihre neuen Möbel</span>
+          <a class="zur-startseite" href="./" aria-label="Zur Startseite von FurniqAI" title="Zur Startseite">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <nav class="schritte" aria-label="Fortschritt">
+      <ol>
+        <li><button type="button" data-schritt="0"><span class="nr"></span><span class="txt">Möbel</span></button></li>
+        <li><button type="button" data-schritt="1"><span class="nr"></span><span class="txt">Raum</span></button></li>
+        <li><button type="button" data-schritt="2"><span class="nr"></span><span class="txt">Baukasten</span></button></li>
+        <!-- Schritt 3 bleibt ausgeblendet: Der Feinschliff-Chat sitzt im Baukasten (Schritt 2). -->
+        <li hidden><button type="button" data-schritt="3" disabled><span class="nr"></span><span class="txt">Feinschliff</span></button></li>
+        <li><button type="button" data-schritt="4" disabled><span class="nr"></span><span class="txt">Bild</span></button></li>
+        <li><button type="button" data-schritt="5"><span class="nr"></span><span class="txt">Kostenvoranschlag</span></button></li>
+      </ol>
+    </nav>
+  </div>
+
+  <main>
+    <!-- Schritt 0: Möbel wählen (Auswahl aus dem Portfolio der Tischlerei, js/portfolio.js) -->
+    <section class="schritt" id="schritt-0" aria-labelledby="titel-0">
+      <header class="schritt-kopf">
+        <p class="kicker"></p>
+        <h1 id="titel-0">Wählen Sie Ihr neues Herzstück</h1>
+        <p class="einleitung">Jedes Stück entsteht in unserer Werkstatt nach Ihren Maßen. Den Couchtisch können Sie schon heute online gestalten, die weiteren Möbel folgen bald.</p>
+      </header>
+
+      <fieldset class="moebel-wahl" id="wahl-moebel">
+        <legend class="nur-vorleser">Möbelstück</legend>
+        <div class="moebel-raster" id="moebel-raster"></div>
+      </fieldset>
+    </section>
+
+    <!-- Schritt 1: Raum -->
+    <section class="schritt" id="schritt-1" aria-labelledby="titel-1" hidden>
+      <header class="schritt-kopf">
+        <p class="kicker"></p>
+        <h1 id="titel-1">Zeigen Sie uns Ihren Raum</h1>
+        <p class="einleitung">Ein Foto und ein paar Maße genügen. Daraus bauen wir Ihr neues Traummöbelstück.</p>
+      </header>
+
+      <div class="raum-raster">
+        <div class="karte karte-foto">
+          <h2>Foto des Raums</h2>
+          <label class="upload" id="upload-zone">
+            <input type="file" id="foto-input" accept="image/*">
+            <div class="upload-leer" id="upload-leer">
+              <span class="upload-symbol" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l2-2.5h6L17 7h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+              </span>
+              <strong>Foto auswählen</strong>
+              <span>oder hierher ziehen · JPG oder PNG</span>
+            </div>
+          </label>
+
+          <!-- Referenzmarkierung: erscheint nach dem Upload -->
+          <div class="markierung" id="markierung" hidden>
+            <ol class="markier-schritte">
+              <li class="markier-schritt" id="markier-schritt-ref">
+                <span class="markier-nr" aria-hidden="true">1</span>
+                <div class="markier-text">
+                  <p>Tippen Sie auf <strong>beide Enden</strong> eines Gegenstands, dessen Länge Sie kennen, z. B. das Sofa.</p>
+                  <!-- immer sichtbar, damit das Foto beim Markieren nicht verrutscht -->
+                  <label class="feld feld-referenz" id="referenz-feld">
+                    <span>Länge des Gegenstands</span>
+                    <span class="einheit-feld"><input type="text" id="referenz-laenge" inputmode="numeric" autocomplete="off" placeholder="z. B. 220"><span>cm</span></span>
+                  </label>
+                </div>
+              </li>
+              <li class="markier-schritt" id="markier-schritt-tisch">
+                <span class="markier-nr" aria-hidden="true">2</span>
+                <div class="markier-text">
+                  <p>Tippen Sie, wo das <strong>Möbelstück</strong> stehen soll.</p>
+                </div>
+              </li>
+            </ol>
+
+            <div class="markier-flaeche" id="markier-flaeche">
+              <img id="foto-vorschau" class="foto-vorschau" alt="Ihr Raumfoto zum Markieren" draggable="false">
+              <svg class="markier-svg" id="markier-svg" aria-hidden="true"></svg>
+            </div>
+            <p class="markier-status" id="markier-status" aria-live="polite"></p>
+
+            <div class="upload-aktionen">
+              <button type="button" class="knopf knopf-leise" id="neu-markieren">Neu markieren</button>
+              <button type="button" class="knopf knopf-leise" id="foto-wechseln">Anderes Foto wählen</button>
+            </div>
+          </div>
+          <p class="tipp" id="foto-tipp">Tipp: Fotografieren Sie so, dass der Boden gut zu sehen ist und die KI einen Anhaltspunkt hat, z. B. ein Sofa.</p>
+        </div>
+
+        <div class="raum-masse">
+          <div class="karte karte-pflicht">
+            <h2>Freier Platz <span class="pflicht">Pflichtangabe</span></h2>
+            <p class="tipp">Die Fläche, die das Möbelstück höchstens einnehmen darf.</p>
+            <div class="feldreihe">
+              <label class="feld">
+                <span>Länge</span>
+                <span class="einheit-feld"><input type="text" id="frei-laenge" inputmode="decimal" autocomplete="off" placeholder="z. B. 160"><span>cm</span></span>
+              </label>
+              <span class="mal" aria-hidden="true">×</span>
+              <label class="feld">
+                <span>Breite</span>
+                <span class="einheit-feld"><input type="text" id="frei-breite" inputmode="decimal" autocomplete="off" placeholder="z. B. 90"><span>cm</span></span>
+              </label>
+            </div>
+          </div>
+
+          <details class="weitere-angaben">
+            <summary>
+              <span class="weitere-titel">Weitere Angaben <span class="optional">optional</span></span>
+              <span class="weitere-text">Raummaße und ungefähre Maße des Möbelstücks</span>
+            </summary>
+            <div class="karte karte-leise">
+              <h2>Raummaße <span class="optional">optional</span></h2>
+              <p class="tipp">Wie groß ist der Raum, in dem das Möbelstück stehen soll?</p>
+              <div class="feldreihe">
+                <label class="feld">
+                  <span>Länge</span>
+                  <span class="einheit-feld"><input type="text" id="raum-laenge" inputmode="decimal" autocomplete="off" placeholder="z. B. 4,50"><span>m</span></span>
+                </label>
+                <span class="mal" aria-hidden="true">×</span>
+                <label class="feld">
+                  <span>Breite</span>
+                  <span class="einheit-feld"><input type="text" id="raum-breite" inputmode="decimal" autocomplete="off" placeholder="z. B. 3,80"><span>m</span></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="karte karte-leise">
+              <h2>Ungefähre Maße des Möbelstücks <span class="optional">optional</span></h2>
+              <p class="tipp">Haben Sie schon eine Größe im Kopf? Dann starten wir damit.</p>
+              <div class="feldreihe feldreihe-drei">
+                <label class="feld">
+                  <span>Länge</span>
+                  <span class="einheit-feld"><input type="text" id="wunsch-laenge" inputmode="numeric" autocomplete="off" placeholder="z. B. 120"><span>cm</span></span>
+                </label>
+                <label class="feld">
+                  <span>Breite</span>
+                  <span class="einheit-feld"><input type="text" id="wunsch-breite" inputmode="numeric" autocomplete="off" placeholder="z. B. 60"><span>cm</span></span>
+                </label>
+                <label class="feld">
+                  <span>Höhe</span>
+                  <span class="einheit-feld"><input type="text" id="wunsch-hoehe" inputmode="numeric" autocomplete="off" placeholder="z. B. 40"><span>cm</span></span>
+                </label>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <p class="fehler" id="fehler-1" role="alert" hidden></p>
+
+      <div class="aktionen aktionen-zwischen">
+        <button type="button" class="link-zurueck" id="zurueck-1"><span aria-hidden="true">←</span> Anderes Möbelstück</button>
+        <button type="button" class="knopf knopf-haupt" id="weiter-1">Weiter zum Baukasten <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+
+    <!-- Schritt 2: Baukasten -->
+    <section class="schritt" id="schritt-2" aria-labelledby="titel-2" hidden>
+      <header class="schritt-kopf">
+        <p class="kicker"></p>
+        <h1 id="titel-2">Gestalten Sie Ihr Traumprojekt</h1>
+        <p class="einleitung">Erzählen Sie uns Ihre Ideen und wählen Sie Form, Material, Maße und Gestell. Der Preis rechnet sofort mit.</p>
+      </header>
+
+      <!-- Auf großen Bildschirmen angeheftet: beim Scrollen wandert das Foto nach links, die Optionen ziehen dahinter nach links (js/app.js anheftenMessen) -->
+      <div class="baukasten-raum" id="baukasten-raum">
+      <div class="baukasten">
+        <div class="baukasten-buehne">
+          <!--
+            Bühne: zeigt Raumfoto, KI-Bild oder Draufsicht. Wird in Schritt 4 (Bild) dorthin verschoben.
+            Ansicht wechseln über buehneAnsicht('raum' | 'ki' | 'draufsicht') in js/app.js.
+          -->
+          <figure class="buehne" id="buehne">
+            <div class="buehne-flaeche" id="buehne-flaeche">
+              <img id="buehne-bild" class="buehne-bild" alt="Ihr Raum">
+              <div class="buehne-draufsicht" id="buehne-draufsicht" hidden>
+                <svg id="draufsicht" class="draufsicht" role="img" aria-label="Draufsicht: Möbelstück im freien Platz"></svg>
+              </div>
+              <figcaption class="buehne-etikett" id="buehne-etikett">Ihr Raum</figcaption>
+              <div class="buehne-laden" id="buehne-laden" hidden>
+                <span class="laden-kreis" aria-hidden="true"></span>
+                <p class="laden-text">Ihr Möbelstück wird in Ihren Raum gesetzt …</p>
+                <p class="laden-zeit"><span id="laden-sekunden">0</span> s · dauert etwa 10–30 Sekunden</p>
+              </div>
+              <div class="umschalter" role="group" aria-label="Ansicht">
+                <button type="button" data-ansicht="raum" aria-pressed="true">Foto</button>
+                <button type="button" data-ansicht="ki" aria-pressed="false" hidden>KI-Bild</button>
+                <button type="button" data-ansicht="draufsicht" aria-pressed="false">Draufsicht</button>
+              </div>
+            </div>
+          </figure>
+
+          <!-- Ideen-Chat (Herzstück): fest unter dem Foto. Wünsche in eigenen Worten, eingeordnet als Option, Sonderwunsch oder Einstellung -->
+          <section class="karte feinschliff" id="feinschliff" aria-labelledby="titel-ideen">
+            <h2 id="titel-ideen"><span class="ideen-symbol" aria-hidden="true">✦</span> Teilen Sie uns Ihre Ideen mit</h2>
+            <p class="tipp">In eigenen Worten. Extras rechnen sofort mit, Sonderwünsche prüft die Tischlerei.</p>
+            <div class="chat-verlauf" id="chat-verlauf" aria-live="polite"></div>
+            <div class="chat-vorschlaege" id="chat-vorschlaege">
+              <button type="button">Eine Ablage unten</button>
+              <button type="button">Kanten abgerundet</button>
+              <button type="button">5 cm niedriger</button>
+              <button type="button">Eingelassene Glasplatte</button>
+            </div>
+            <label class="feld chat-code" id="chat-code-feld" hidden>
+              <span>Demo-Code</span>
+              <input type="password" id="chat-code" autocomplete="off">
+            </label>
+            <div class="chat-eingabe">
+              <input type="text" id="chat-text" maxlength="600" placeholder="z. B. „Gern mit Schublade“" aria-label="Ihr Wunsch">
+              <button type="button" class="knopf knopf-senden" id="chat-senden" aria-label="Wunsch senden">
+                <span aria-hidden="true">↑</span>
+              </button>
+            </div>
+            <p class="fehler" id="fehler-chat" role="alert" hidden></p>
+            <div class="extras" id="extras" hidden>
+              <h3>Ihre Extras</h3>
+              <ul class="extras-liste" id="extras-liste"></ul>
+            </div>
+          </section>
+
+          <div class="preisleiste" aria-live="polite">
+            <div class="preis-info">
+              <span class="preis-label">Geschätzter Preis</span>
+              <span class="preis-zeile">
+                <strong class="preis-summe" id="preis-summe">–</strong>
+                <span class="preis-mwst">inkl. MwSt.</span>
+              </span>
+              <span class="preis-rahmen" id="preis-rahmen"></span>
+            </div>
+            <button type="button" class="knopf knopf-haupt" id="weiter-2">
+              <span class="nur-gross">Weiter zum Bild</span><span class="nur-klein">Weiter</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+          <p class="hinweis-veraltet" id="veraltet-2" hidden>
+            Bild veraltet, neu erzeugen: Ihre Auswahl hat sich seit der KI-Vorschau geändert.
+          </p>
+          <button type="button" class="link-zurueck" id="zurueck-2"><span aria-hidden="true">←</span> Raum und Maße ändern</button>
+        </div>
+
+        <!-- Optionen als Leiste nebeneinander (Form, Material, Maße, Gestell, Oberfläche): Reiter oben, Pfeile zum Weiterblättern, Mausrad blättert nach rechts (js/app.js leisteEinrichten) -->
+        <div class="baukasten-leiste">
+          <div class="leiste-kopf">
+            <nav class="leiste-reiter" id="leiste-reiter" aria-label="Bereiche des Baukastens"></nav>
+          </div>
+          <div class="leiste-spur">
+            <button type="button" class="leiste-pfeil leiste-pfeil-zurueck" id="leiste-zurueck" aria-label="Vorherige Optionen" aria-controls="baukasten-optionen">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+            </button>
+        <div class="baukasten-optionen" id="baukasten-optionen">
+          <fieldset class="karte" id="karte-form" data-reiter="Form">
+            <legend>Form</legend>
+            <div class="wahl wahl-segmente wahl-formen" id="wahl-form"></div>
+            <p class="tipp" id="form-hinweis" hidden></p>
+
+            <div class="regler regler-ecken" id="ecken-block">
+              <label for="regler-ecken">Ecken abrunden</label>
+              <output id="wert-ecken">eckig</output>
+              <input type="range" id="regler-ecken" min="0" max="25" step="1" value="0">
+              <span class="grenze" id="grenze-ecken"></span>
+            </div>
+
+            <details class="skizze" id="skizze">
+              <summary>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l4-1 11-11-3-3L4 17z"/><path d="M14 6l3 3"/></svg>
+                <span>Form in der Skizze ziehen</span>
+              </summary>
+              <svg id="skizze-svg" class="skizze-svg" role="group" aria-label="Skizze der Tischplatte: an den Punkten ziehen, um Länge und Breite zu ändern"></svg>
+              <p class="tipp">Ziehen Sie an den Punkten. Länge und Breite passen sich an, der Preis rechnet mit.</p>
+            </details>
+          </fieldset>
+
+          <fieldset class="karte" data-reiter="Material">
+            <legend>Material</legend>
+            <div class="wahl wahl-material" id="wahl-material"></div>
+          </fieldset>
+
+          <fieldset class="karte" data-reiter="Maße">
+            <legend>Maße</legend>
+            <p class="hinweis-wunsch" id="wunsch-hinweis" hidden></p>
+            <p class="hinweis-platz" id="platz-hinweis" role="status" hidden></p>
+            <div class="regler">
+              <label for="regler-laenge" id="label-laenge">Länge</label>
+              <output id="wert-laenge"></output>
+              <input type="range" id="regler-laenge" step="1">
+              <span class="grenze" id="grenze-laenge"></span>
+            </div>
+            <div class="regler" id="regler-breite-block">
+              <label for="regler-breite">Breite</label>
+              <output id="wert-breite"></output>
+              <input type="range" id="regler-breite" step="1">
+              <span class="grenze" id="grenze-breite"></span>
+            </div>
+            <div class="regler">
+              <label for="regler-hoehe">Höhe</label>
+              <output id="wert-hoehe"></output>
+              <input type="range" id="regler-hoehe" step="1">
+              <span class="grenze" id="grenze-hoehe"></span>
+            </div>
+          </fieldset>
+
+          <fieldset class="karte" data-reiter="Gestell">
+            <legend>Gestell</legend>
+            <div class="wahl wahl-liste" id="wahl-gestell"></div>
+          </fieldset>
+
+          <fieldset class="karte" data-reiter="Oberfläche">
+            <legend>Oberfläche</legend>
+            <div class="wahl wahl-segmente" id="wahl-oberflaeche"></div>
+          </fieldset>
+
+        </div>
+            <button type="button" class="leiste-pfeil leiste-pfeil-vor" id="leiste-vor" aria-label="Weitere Optionen" aria-controls="baukasten-optionen">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <!-- Wegweiser zu den Optionen: sichtbar, solange die Leiste noch unterhalb des Bildschirms liegt (js/app.js wegweiserAktualisieren) -->
+      <nav class="wegweiser" id="wegweiser" aria-label="Zu den Optionen springen" hidden>
+        <button type="button" class="wegweiser-text" data-index="0"><span class="wegweiser-pfeil" aria-hidden="true">↓</span> <span class="wegweiser-lang">Hier gestalten Sie weiter:</span><span class="wegweiser-kurz">Form, Material, Maße und mehr</span></button>
+        <span class="wegweiser-ziele" id="wegweiser-ziele"></span>
+      </nav>
+    </section>
+
+    <!-- Schritt 4: Bild (KI-Vorschau) -->
+    <section class="schritt" id="schritt-4" aria-labelledby="titel-4" hidden>
+      <header class="schritt-kopf">
+        <p class="kicker"></p>
+        <h1 id="titel-4">Ihre neue Einrichtung</h1>
+        <p class="einleitung">Eine KI-Vorschau zeigt Ihr Möbelstück an der markierten Stelle in Ihrem Foto.</p>
+      </header>
+
+      <div class="bild-raster">
+        <div class="bild-buehne" id="bild-buehne-platz"></div>
+
+        <div class="karte bild-seite">
+          <h2>Ihre Auswahl</h2>
+          <dl class="kv-daten bild-auswahl" id="bild-auswahl"></dl>
+          <p class="hinweis-veraltet" id="veraltet-4" hidden>
+            Bild veraltet, neu erzeugen: Sie haben Ihre Auswahl seit der Vorschau geändert.
+          </p>
+          <p class="fehler" id="fehler-4" role="alert" hidden></p>
+          <form class="demo-code" id="demo-code-form" hidden>
+            <label class="feld">
+              <span>Demo-Code</span>
+              <input type="password" id="demo-code" autocomplete="off" required>
+            </label>
+            <p class="tipp">Die Bild-KI ist in dieser Demo geschützt. Der Code wird nur auf diesem Gerät gespeichert.</p>
+            <button type="submit" class="knopf knopf-haupt bild-knopf">Freischalten und Bild erzeugen</button>
+          </form>
+          <button type="button" class="knopf knopf-leise bild-knopf" id="bild-erzeugen">
+            <span aria-hidden="true">↻</span> <span id="bild-erzeugen-text">Neu erzeugen</span>
+          </button>
+          <p class="tipp">Die Vorschau ist eine KI-Visualisierung zur Orientierung, keine maßgenaue Zeichnung.</p>
+        </div>
+      </div>
+
+      <div class="aktionen aktionen-zwischen">
+        <button type="button" class="link-zurueck" id="zurueck-4"><span aria-hidden="true">←</span> Möbelstück ändern</button>
+        <button type="button" class="knopf knopf-haupt" id="weiter-4">Zum Kostenvoranschlag <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+
+    <!-- Schritt 5: Kostenvoranschlag -->
+    <section class="schritt" id="schritt-5" aria-labelledby="titel-5" hidden>
+      <header class="schritt-kopf">
+        <p class="kicker"></p>
+        <h1 id="titel-5">Ihr Kostenvoranschlag</h1>
+        <p class="einleitung">Prüfen Sie Ihre Auswahl und senden Sie die Anfrage an die Tischlerei.</p>
+      </header>
+
+      <div class="kv">
+        <div class="karte kv-zusammenfassung">
+          <img id="kv-foto" class="kv-foto" alt="Ihr Raumfoto">
+          <h2>Ihre Auswahl</h2>
+          <dl class="kv-daten" id="kv-daten"></dl>
+          <button type="button" class="knopf knopf-leise" id="zurueck-5">Zurück zum Bild</button>
+        </div>
+
+        <article class="karte kv-dokument">
+          <header class="kv-briefkopf">
+            <div>
+              <span class="kv-betrieb" id="kv-betrieb"></span>
+              <span class="kv-titel" id="kv-titel">Kostenvoranschlag · Couchtisch</span>
+            </div>
+            <span class="kv-datum" id="kv-datum"></span>
+          </header>
+          <table class="positionen">
+            <thead>
+              <tr><th scope="col">Position</th><th scope="col" class="betrag">Betrag inkl. MwSt.</th></tr>
+            </thead>
+            <tbody id="kv-positionen"></tbody>
+            <tfoot>
+              <tr class="summe"><th scope="row">Schätzung inkl. MwSt.</th><td class="betrag" id="kv-summe"></td></tr>
+              <tr class="rahmen"><th scope="row">Preisrahmen <span id="kv-prozent"></span></th><td class="betrag" id="kv-rahmen"></td></tr>
+            </tfoot>
+          </table>
+
+          <div id="kv-sonder" hidden>
+            <h3>Sonderwünsche</h3>
+            <ul class="sonderliste" id="kv-sonderliste"></ul>
+          </div>
+
+          <p class="disclaimer">Unverbindliche Schätzung. Der endgültige Preis folgt nach dem Vor-Ort-Termin.</p>
+        </article>
+
+        <form class="karte kv-kunde" id="kunden-form" novalidate>
+          <h2>Ihre Kontaktdaten</h2>
+          <div class="feld-raster">
+            <label class="feld">
+              <span>Name *</span>
+              <input type="text" name="name" autocomplete="name" required>
+            </label>
+            <label class="feld">
+              <span>E-Mail *</span>
+              <input type="email" name="email" autocomplete="email" required>
+            </label>
+            <label class="feld">
+              <span>Telefon</span>
+              <input type="tel" name="telefon" autocomplete="tel">
+            </label>
+            <label class="feld">
+              <span>PLZ und Ort</span>
+              <input type="text" name="ort" autocomplete="address-level2">
+            </label>
+          </div>
+          <label class="feld">
+            <span>Nachricht an die Tischlerei</span>
+            <textarea name="nachricht" rows="3"></textarea>
+          </label>
+          <label class="feld" id="kunden-code-feld" hidden>
+            <span>Demo-Code *</span>
+            <input type="password" name="demoCode" autocomplete="off">
+          </label>
+          <p class="fehler" id="fehler-5" role="alert" hidden></p>
+          <button type="submit" class="knopf knopf-haupt">An Tischlerei senden <span aria-hidden="true">→</span></button>
+        </form>
+
+        <div class="karte erfolg" id="erfolg" hidden>
+          <span class="erfolg-symbol" aria-hidden="true">✓</span>
+          <h2>Vielen Dank!</h2>
+          <p>Ihre Anfrage ist bei der Tischlerei eingegangen. Sie meldet sich bei Ihnen, um einen Vor-Ort-Termin zu vereinbaren.</p>
+          <button type="button" class="knopf knopf-leise" id="neu-starten">Neue Anfrage starten</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="fuss">
+    <span class="fuss-demo">Demo · Alle Preise sind Beispielwerte und keine Preise eines echten Betriebs. · <a href="tischler.html">Zur Tischlerseite</a></span>
+    <span class="fuss-powered">powered by <strong>FurniqAI</strong></span>
+  </footer>
+</body>
+</html>

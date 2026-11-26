@@ -3,7 +3,7 @@
 Diese Selektoren benutzen `js/app.js`, `js/tischler.js`, `js/kopf.js` und `js/bewegung.js` (liest `.schritt`, `.t-bereich`, `.schritt-kopf .kicker`, `main .karte`, `.schritte [aria-current]`; setzt `html.bewegt`, `--fortschritt`, `.gleitet`/`--ein`, `.tippt`). Sie bleiben beim Umbau von Markup und CSS unverändert.
 Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf das DOM zu.
 
-## Kundenseite (index.html, js/app.js)
+## Kundenseite (demo.html, js/app.js)
 
 **Struktur und Navigation**
 - `.schritt` (alle Schritt-Sections), `#schritt-0`, `#schritt-1`, `#schritt-2`, `#schritt-4`, `#schritt-5`, `#schritt-N .kicker`
@@ -76,6 +76,6 @@ Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf
 ## Neu in dieser Runde (js/kopf.js)
 - `.kopfbereich` (fester Container), Klassen `verdichtet`, `kopf-weg`, `nicht-fest`; `.kopf-sentinel`; CSS-Variable `--kopf-hoehe` auf `html`
 
-## Landingpage (tischlereien.html, js/landing.js)
+## Landingpage (index.html, js/landing.js)
 - `#menue-knopf` (`aria-expanded`), `#hauptnavigation` (`hidden` auf schmalen Bildschirmen)
 - `#pilot-form` (Felder name, betrieb, ort, email, telefon, nachricht, einwilligung, website = Spamfalle), `#pilot-fehler`, `#pilot-senden`, `#pilot-erfolg`
