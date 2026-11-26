@@ -1,4 +1,4 @@
-/* FurniqAI – gemeinsame Gestaltung für Kunden- und Tischlerseite.
+/* WerkBuilt – gemeinsame Gestaltung für Kunden- und Tischlerseite.
    Grundlage: Apple Human Interface Guidelines (Klarheit, Inhalt vor Oberfläche, gleiche Muster).
    Charakter: ruhiger Showroom einer Tischlerei – warme Papier- und Holztöne, Fraunces nur für Überschriften,
    Preise und den Kostenvoranschlag, sonst Systemschrift. Raster 8 px.
@@ -175,7 +175,7 @@ a { color: var(--akzent-text); }
 }
 .kopf-produkt { font-size: var(--s-klein); color: var(--text-sekundaer); white-space: nowrap; }
 .kopf-rechts { display: flex; align-items: center; gap: var(--a2); flex: none; }
-/* Haus-Symbol: zurück zur FurniqAI-Startseite (tischlereien.html) */
+/* Haus-Symbol: zurück zur WerkBuilt-Startseite (index.html) */
 .zur-startseite {
   flex: none; width: 44px; height: 44px; border-radius: 50%;
   display: grid; place-items: center;
