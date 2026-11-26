@@ -17,7 +17,7 @@ import {
   alsJpeg,
   bildAnfordern,
 } from './bildki.js';
-import { demoCodeLesen, demoCodeSpeichern, rufeFunction } from './supabase.js';
+import { rufeFunction } from './supabase.js';
 import { wendeAenderungenAn, promptZusatz, betriebFuerChat } from './feinschliff.js';
 import { DEMO_MOEBEL, istFreigeschaltet, moebelSymbol, portfolioLaden } from './portfolio.js';
 import { ECKEN_OPTION, hatEcken, maxEckenRadius, eckenSetzen, eckenAbgleichen, eckenText } from './ecken.js';
@@ -701,7 +701,6 @@ function baukastenAnzeigen() {
   }
   buehneVerschieben(2);
   buehneAnsicht(zustand.kiBild && !kiVeraltet() ? 'ki' : 'raum');
-  $('#chat-code-feld').hidden = Boolean(demoCodeLesen());
   extrasZeichnen();
   chatZeichnen();
   reglerAktualisieren();
@@ -1365,16 +1364,6 @@ async function chatSenden(text) {
   text = text.trim();
   if (!text || chatLauf.laeuft) return;
   zeigeFehler('fehler-chat', null);
-  if (!$('#chat-code-feld').hidden) {
-    const code = $('#chat-code').value.trim();
-    if (!code) {
-      zeigeFehler('fehler-chat', 'Bitte geben Sie zuerst den Demo-Code ein.');
-      $('#chat-code').focus();
-      return;
-    }
-    demoCodeSpeichern(code);
-    $('#chat-code-feld').hidden = true;
-  }
 
   const verlauf = zustand.chat.slice(-8).map(({ rolle, text: t }) => ({ rolle, text: t }));
   zustand.chat.push({ rolle: 'kunde', text });
@@ -1394,10 +1383,6 @@ async function chatSenden(text) {
     console.warn('[Feinschliff] Fehler:', err.code || '', err.message);
     zustand.chat.pop(); // Nachricht zurück ins Eingabefeld
     $('#chat-text').value = text;
-    if (err.code === 'demo_code') {
-      demoCodeSpeichern('');
-      $('#chat-code-feld').hidden = false;
-    }
     zeigeFehler('fehler-chat', err.message);
   } finally {
     chatLauf.laeuft = false;
@@ -1471,15 +1456,7 @@ function bildSchrittAnzeigen() {
   veraltetHinweisZeigen();
   bildKnopfAktualisieren();
   // Beim ersten Besuch automatisch erzeugen; danach nur auf Knopfdruck (jeder Aufruf kostet).
-  // Ohne Demo-Code erst nach dem Code fragen.
-  if (!demoCodeLesen()) demoCodeAbfragen(true);
-  else if (!zustand.kiBild && !kiLauf.abbruch) bildErzeugen();
-}
-
-function demoCodeAbfragen(an) {
-  $('#demo-code-form').hidden = !an;
-  $('#bild-erzeugen').hidden = an;
-  if (an) $('#demo-code').value = '';
+  if (!zustand.kiBild && !kiLauf.abbruch) bildErzeugen();
 }
 
 function bildKnopfAktualisieren() {
@@ -1545,10 +1522,6 @@ async function bildErzeugen() {
   } catch (err) {
     console.warn('[Bild-KI] Fehler:', err.code || '', err.message);
     zeigeFehler('fehler-4', err.message || 'Das Bild konnte nicht erzeugt werden. Bitte versuchen Sie es erneut.');
-    if (err.code === 'demo_code') {
-      demoCodeSpeichern(''); // falscher oder fehlender Code: neu abfragen
-      demoCodeAbfragen(true);
-    }
   } finally {
     clearTimeout(zeitlimit);
     kiLauf.abbruch = null;
@@ -1561,14 +1534,6 @@ async function bildErzeugen() {
 
 function schritt4Einrichten() {
   $('#bild-erzeugen').addEventListener('click', bildErzeugen);
-  $('#demo-code-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const code = $('#demo-code').value.trim();
-    if (!code) return;
-    demoCodeSpeichern(code);
-    demoCodeAbfragen(false);
-    bildErzeugen();
-  });
   $('#zurueck-4').addEventListener('click', () => zeigeSchritt(2));
   $('#weiter-4').addEventListener('click', () => zeigeSchritt(5));
 }
@@ -1609,7 +1574,6 @@ function kostenvoranschlagAnzeigen() {
   const n = namen();
   const preis = berechnePreis(konfiguration(), BETRIEB);
 
-  $('#kunden-code-feld').hidden = Boolean(demoCodeLesen()); // evtl. schon in Schritt 4 eingegeben
   $('#kv-foto').src = aktuellesKiBild() || zustand.foto;
   $('#kv-foto').alt = aktuellesKiBild() ? 'KI-Vorschau Ihres Möbelstücks in Ihrem Raum' : 'Ihr Raumfoto';
   $('#kv-betrieb').textContent = BETRIEB.name;
@@ -1664,8 +1628,6 @@ function schritt5Einrichten() {
     e.preventDefault();
     if (sendeKnopf.disabled) return;
     const daten = Object.fromEntries(new FormData(form));
-    const code = (daten.demoCode || '').trim();
-    delete daten.demoCode;
     const fehlend = [];
     form.querySelectorAll('input').forEach((i) => i.classList.remove('ungueltig'));
     if (!daten.name.trim()) fehlend.push(form.elements.name);
@@ -1675,15 +1637,6 @@ function schritt5Einrichten() {
       fehlend[0].focus();
       zeigeFehler('fehler-5', 'Bitte geben Sie Ihren Namen und eine gültige E-Mail-Adresse an.');
       return;
-    }
-    if (!$('#kunden-code-feld').hidden) {
-      if (!code) {
-        form.elements.demoCode.classList.add('ungueltig');
-        form.elements.demoCode.focus();
-        zeigeFehler('fehler-5', 'Bitte geben Sie den Demo-Code ein.');
-        return;
-      }
-      demoCodeSpeichern(code);
     }
     zeigeFehler('fehler-5', null);
 
@@ -1713,10 +1666,6 @@ function schritt5Einrichten() {
       await anfrageSenden(anfrage, zustand.foto, aktuellesKiBild());
     } catch (err) {
       console.warn('[Anfrage] Fehler:', err.code || '', err.message);
-      if (err.code === 'demo_code') {
-        demoCodeSpeichern('');
-        $('#kunden-code-feld').hidden = false;
-      }
       zeigeFehler('fehler-5', err.message || 'Ihre Anfrage konnte leider nicht gesendet werden. Bitte versuchen Sie es erneut.');
       return;
     } finally {

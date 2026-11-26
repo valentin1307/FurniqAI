@@ -42,18 +42,18 @@ Die Tests (`tests/*.test.js`) prüfen nur reine Funktionen und greifen nicht auf
 - `#preis-summe` (Klasse `aendert`), `#preis-rahmen`, `#weiter-2`, `#zurueck-2`, `#veraltet-2`
 - Ideen-Chat „Teilen Sie uns Ihre Ideen mit“ (`#feinschliff`, `section`) sitzt fest in `.baukasten-buehne` unter `#buehne`, nicht in der Leiste
 - Wegweiser zu den Optionen: `#wegweiser` (Klasse `sichtbar`), `#wegweiser-ziele` (`button[data-index]` wie die Reiter), `.wegweiser-text[data-index=0]`
-- `#chat-verlauf`, `#chat-vorschlaege` (`button`), `#chat-code-feld`, `#chat-code`, `#chat-text`, `#chat-senden`, `#fehler-chat`
+- `#chat-verlauf`, `#chat-vorschlaege` (`button`), `#chat-text`, `#chat-senden`, `#fehler-chat`
 - Chat-Klassen aus JS: `chat-nachricht`, `chat-kunde`, `chat-assistent`, `chat-tippt`, `chat-hinweise`, `art-option|sonderwunsch|einstellung|entfernt`
 - `#extras`, `#extras-liste` (`button[data-option]`, `button[data-sonder]`, `extra-name`, `extra-preis`, `auf-anfrage`)
 
 **Schritt 4 (Bild)**
 - `#bild-buehne-platz`, `#bild-auswahl`, `#veraltet-4`, `#fehler-4`
-- `#demo-code-form`, `#demo-code`, `#bild-erzeugen` (Klassen `knopf-haupt`/`knopf-leise` werden umgeschaltet), `#bild-erzeugen-text`
+- `#bild-erzeugen` (Klassen `knopf-haupt`/`knopf-leise` werden umgeschaltet), `#bild-erzeugen-text`
 - `#zurueck-4`, `#weiter-4`
 
 **Schritt 5 (Kostenvoranschlag)**
 - `#kv-foto`, `#kv-daten`, `#kv-betrieb`, `#kv-datum`, `#kv-positionen` (`.detail`), `#kv-summe`, `#kv-prozent`, `#kv-rahmen`, `#kv-sonder`, `#kv-sonderliste`
-- `#kunden-form` (`button[type=submit]`, `input`, Feldnamen name/email/telefon/ort/nachricht/demoCode), `#kunden-code-feld`, `#fehler-5`
+- `#kunden-form` (`button[type=submit]`, `input`, Feldnamen name/email/telefon/ort/nachricht), `#fehler-5`
 - `#erfolg`, `#neu-starten`, `#zurueck-5`
 
 ## Tischlerseite (tischler.html, js/tischler.js)

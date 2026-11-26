@@ -1,5 +1,5 @@
 // Zugang zu den Supabase Edge Functions für Kunden- und Tischlerseite.
-// Supabase-URL und anon key kommen aus js/config.js, der Demo-Code aus dem Browser-Speicher.
+// Supabase-URL und anon key kommen aus js/config.js, der Demo-Code (nur Tischlerseite) aus dem Browser-Speicher.
 
 // Demo-Code: nur auf diesem Gerät gemerkt (Browser-Speicher), nie im Code
 const DEMO_CODE_SCHLUESSEL = 'furniqai.demoCode';

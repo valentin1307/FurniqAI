@@ -233,10 +233,6 @@
               <button type="button">5 cm niedriger</button>
               <button type="button">Eingelassene Glasplatte</button>
             </div>
-            <label class="feld chat-code" id="chat-code-feld" hidden>
-              <span>Demo-Code</span>
-              <input type="password" id="chat-code" autocomplete="off">
-            </label>
             <div class="chat-eingabe">
               <input type="text" id="chat-text" maxlength="600" placeholder="z. B. „Gern mit Schublade“" aria-label="Ihr Wunsch">
               <button type="button" class="knopf knopf-senden" id="chat-senden" aria-label="Wunsch senden">
@@ -375,14 +371,6 @@
             Bild veraltet, neu erzeugen: Sie haben Ihre Auswahl seit der Vorschau geändert.
           </p>
           <p class="fehler" id="fehler-4" role="alert" hidden></p>
-          <form class="demo-code" id="demo-code-form" hidden>
-            <label class="feld">
-              <span>Demo-Code</span>
-              <input type="password" id="demo-code" autocomplete="off" required>
-            </label>
-            <p class="tipp">Die Bild-KI ist in dieser Demo geschützt. Der Code wird nur auf diesem Gerät gespeichert.</p>
-            <button type="submit" class="knopf knopf-haupt bild-knopf">Freischalten und Bild erzeugen</button>
-          </form>
           <button type="button" class="knopf knopf-leise bild-knopf" id="bild-erzeugen">
             <span aria-hidden="true">↻</span> <span id="bild-erzeugen-text">Neu erzeugen</span>
           </button>
@@ -462,10 +450,6 @@
           <label class="feld">
             <span>Nachricht an die Tischlerei</span>
             <textarea name="nachricht" rows="3"></textarea>
-          </label>
-          <label class="feld" id="kunden-code-feld" hidden>
-            <span>Demo-Code *</span>
-            <input type="password" name="demoCode" autocomplete="off">
           </label>
           <p class="fehler" id="fehler-5" role="alert" hidden></p>
           <button type="submit" class="knopf knopf-haupt">An Tischlerei senden <span aria-hidden="true">→</span></button>

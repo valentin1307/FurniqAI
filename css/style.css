@@ -975,7 +975,6 @@ fieldset.karte > legend ~ * { clear: both; }
 .chat-vorschlaege button::after { content: ""; position: absolute; inset: -4px 0; }
 .chat-vorschlaege button:hover { border-color: var(--akzent); }
 .chat-vorschlaege button:active { background: var(--akzent-flaeche); }
-.chat-code { margin-bottom: 0.75rem; }
 .chat-eingabe {
   display: flex; gap: var(--a1); align-items: center; padding: 4px 4px 4px var(--a2);
   border: 1px solid var(--trenner-stark); border-radius: 26px; background: var(--feld);
@@ -1022,9 +1021,6 @@ fieldset.karte > legend ~ * { clear: both; }
 .bild-buehne .buehne { margin: 0; }
 .bild-seite h2 { margin-top: 0; }
 .bild-knopf { width: 100%; }
-.demo-code { margin: 0 0 var(--a2); display: grid; gap: 0.75rem; }
-.demo-code .feld { margin: 0; }
-.demo-code .tipp { margin: 0; }
 
 /* ---------- Schritt 5: Kostenvoranschlag ---------- */
 .kv { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: var(--a2) var(--a3); align-items: start; }

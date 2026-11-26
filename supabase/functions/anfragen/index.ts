@@ -1,6 +1,7 @@
 // Edge Function anfragen: Anfragen speichern (Kundenseite), lesen und bearbeiten (Tischlerseite).
 //
-// Alle Aufrufe POST mit Header x-demo-code (Secret DEMO_CODE).
+// Alle Aufrufe POST. "anlegen" (Kundenseite) ohne Code, mit Tageslimit (_shared/limit.ts);
+// "liste", "detail", "status" (Tischlerseite, Kundendaten) nur mit Header x-demo-code (Secret DEMO_CODE).
 //   { aktion: "anlegen", anfrage: { moebel?, moebelName?, ... }, foto: dataURL, kiBild?: dataURL } → { id }
 //     (moebel fehlt → 'couchtisch'; nur freigeschaltete Möbel, siehe _shared/moebel.ts)
 //   { aktion: "liste" }                                                  → { anfragen: [...] } (neueste zuerst)
@@ -13,6 +14,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { json, vorpruefung } from '../_shared/http.ts';
 import { pruefeDemoCode } from '../_shared/zugang.ts';
+import { nutzungPruefen } from '../_shared/nutzung.ts';
 import { anfrageAusZeile, bildAusDataUrl, DatenFehler, pruefeStatus, zeileAusAnfrage } from './daten.ts';
 
 const BUCKET = 'anfrage-bilder';
@@ -118,15 +120,21 @@ Deno.serve(async (req) => {
   const origin = req.headers.get('origin');
 
   try {
+    const e: Roh = await req.json().catch(() => ({}));
+
+    if (e.aktion === 'anlegen') {
+      const gesperrt = await nutzungPruefen('anfrage', req);
+      if (gesperrt) throw new HttpFehler('limit', gesperrt, 429);
+      return json(await anlegen(e), 201, origin);
+    }
+
+    // Tischlerseite: Kundendaten nur mit Demo-Code
     const zugang = pruefeDemoCode(req.headers.get('x-demo-code'), Deno.env.get('DEMO_CODE'));
     if (zugang === 'nicht_eingerichtet') throw new HttpFehler('demo_code', 'Der Demo-Code ist in Supabase nicht eingerichtet.', 401);
     if (zugang === 'falsch') throw new HttpFehler('demo_code', 'Der Demo-Code stimmt nicht. Bitte prüfen Sie ihn.', 401);
     if (zugang === 'fehlt') throw new HttpFehler('demo_code', 'Bitte geben Sie den Demo-Code ein.', 401);
 
-    const e: Roh = await req.json().catch(() => ({}));
     switch (e.aktion) {
-      case 'anlegen':
-        return json(await anlegen(e), 201, origin);
       case 'liste':
         return json(await liste(), 200, origin);
       case 'detail':

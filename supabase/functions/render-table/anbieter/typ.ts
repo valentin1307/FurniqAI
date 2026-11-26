@@ -38,6 +38,7 @@ export type FehlerCode =
   | 'modell'
   | 'eingabe'
   | 'demo_code'
+  | 'limit'
   | 'unbekannt';
 
 /** Fehler mit deutschem Text für die Kundenseite und HTTP-Status. */
@@ -63,7 +64,8 @@ export const MELDUNG: Record<FehlerCode, string> = {
   schluessel: 'Der API-Schlüssel für die Bild-KI fehlt oder ist ungültig.',
   modell: 'Das eingestellte Bildmodell ist nicht verfügbar.',
   eingabe: 'Die Angaben für das Bild sind unvollständig.',
-  demo_code: 'Bitte geben Sie den Demo-Code ein, um die Bild-KI zu nutzen.',
+  demo_code: 'Bitte geben Sie den Demo-Code ein.',
+  limit: 'Für heute sind keine weiteren KI-Bilder möglich. Bitte versuchen Sie es morgen erneut.',
   unbekannt: 'Die Bild-KI ist gerade nicht erreichbar. Bitte versuchen Sie es später erneut.',
 };
 
@@ -77,6 +79,7 @@ export const STATUS: Record<FehlerCode, number> = {
   modell: 500,
   eingabe: 400,
   demo_code: 401,
+  limit: 429,
   unbekannt: 502,
 };
 

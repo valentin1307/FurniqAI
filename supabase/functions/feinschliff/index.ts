@@ -1,14 +1,16 @@
 // Edge Function feinschliff: ordnet Kundenwünsche aus dem Chat ein (Option, Sonderwunsch, Einstellung).
 //
-// POST (Header x-demo-code) { moebel?, nachricht, verlauf:[{rolle:'kunde'|'assistent', text}], konfiguration, betrieb }
+// POST { moebel?, nachricht, verlauf:[{rolle:'kunde'|'assistent', text}], konfiguration, betrieb }
 //   moebel fehlt → 'couchtisch'; nur freigeschaltete Möbel (_shared/moebel.ts)
 //   → 200 { antwort, aenderungen:[{ typ, aktion, option_id?, feld?, wert?, beschreibung, prompt_zusatz? }], modell }
-// POST { aktion: "modelle" } → verfügbare Text-Modelle (Flash)
+// POST { aktion: "modelle" } → verfügbare Text-Modelle (Flash), nur mit Header x-demo-code
+// Ohne Demo-Code nutzbar; Schutz vor Kosten durch das Tageslimit (_shared/limit.ts, Tabelle nutzung).
 //
 // Secrets: GEMINI_API_KEY, DEMO_CODE; optional GEMINI_TEXT_MODEL (Standard gemini-3.5-flash-lite)
 
 import { json, vorpruefung } from '../_shared/http.ts';
 import { pruefeDemoCode } from '../_shared/zugang.ts';
+import { nutzungPruefen } from '../_shared/nutzung.ts';
 import { istFreigeschaltet, moebelAus } from '../_shared/moebel.ts';
 import { ordneHttpFehlerEin } from '../render-table/anbieter/gemini.ts';
 import { AnbieterFehler, fehler } from '../render-table/anbieter/typ.ts';
@@ -71,17 +73,13 @@ Deno.serve(async (req) => {
   const start = Date.now();
 
   try {
-    const zugang = pruefeDemoCode(req.headers.get('x-demo-code'), Deno.env.get('DEMO_CODE'));
-    if (zugang === 'nicht_eingerichtet') throw fehler('demo_code', 'Secret DEMO_CODE fehlt', 'Der Demo-Code ist in Supabase nicht eingerichtet.');
-    if (zugang === 'falsch') throw fehler('demo_code', 'falscher Code', 'Der Demo-Code stimmt nicht. Bitte prüfen Sie ihn.');
-    if (zugang === 'fehlt') throw fehler('demo_code', 'kein Code', 'Bitte geben Sie den Demo-Code ein.');
-
     const schluessel = Deno.env.get('GEMINI_API_KEY');
     if (!schluessel) throw fehler('schluessel', 'Secret GEMINI_API_KEY fehlt');
     const modell = Deno.env.get('GEMINI_TEXT_MODEL') || STANDARD_MODELL;
     const e: Roh = await req.json().catch(() => ({}));
 
     if (e.aktion === 'modelle') {
+      if (pruefeDemoCode(req.headers.get('x-demo-code'), Deno.env.get('DEMO_CODE')) !== 'ok') throw fehler('demo_code', 'Diagnose ohne Code');
       const r = await fetch(`${API}/models?pageSize=1000`, { headers: { 'x-goog-api-key': schluessel } });
       const d = await r.json();
       const flash = (d.models ?? [])
@@ -96,6 +94,8 @@ Deno.serve(async (req) => {
     const nachricht = typeof e.nachricht === 'string' ? e.nachricht.trim().slice(0, 600) : '';
     if (!nachricht) throw fehler('eingabe', 'nachricht fehlt', 'Bitte schreiben Sie Ihren Wunsch.');
     const betrieb = pruefeBetrieb(e.betrieb);
+    const gesperrt = await nutzungPruefen('chat', req);
+    if (gesperrt) throw fehler('limit', 'Tageslimit erreicht', gesperrt);
     const anweisung = baueAnweisung(betrieb, e.konfiguration ?? {});
     const inhalte = [...verlaufFuerModell(e.verlauf), { role: 'user', parts: [{ text: nachricht }] }];
 

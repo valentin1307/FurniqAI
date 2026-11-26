@@ -8,13 +8,15 @@
 //   → 4xx/5xx { fehler: { code, meldung } }   (meldung auf Deutsch für die Kundenseite)
 // POST { aktion: "modelle" } → { modell, verfuegbar: [...] }   (Prüfung, welche Bildmodelle der Schlüssel kann)
 //
-// Header x-demo-code: muss dem Secret DEMO_CODE entsprechen (Schutz vor fremden Aufrufen auf unsere Kosten).
-// Secrets: GEMINI_API_KEY und DEMO_CODE (Pflicht), GEMINI_MODEL, ERLAUBTE_URSPRUENGE (optional, kommagetrennt)
+// Ohne Demo-Code nutzbar; Schutz vor Kosten durch das Tageslimit (_shared/limit.ts, Tabelle nutzung).
+// Nur aktion "modelle" (Diagnose) braucht den Header x-demo-code (Secret DEMO_CODE).
+// Secrets: GEMINI_API_KEY (Pflicht), DEMO_CODE, GEMINI_MODEL, ERLAUBTE_URSPRUENGE (optional, kommagetrennt)
 
 import { type BildAnbieter, AnbieterFehler, fehler } from './anbieter/typ.ts';
 import { GeminiAnbieter } from './anbieter/gemini.ts';
 import { naechstesSeitenverhaeltnis, PROMPTS } from './prompt.ts';
 import { pruefeDemoCode } from '../_shared/zugang.ts';
+import { nutzungPruefen } from '../_shared/nutzung.ts';
 import { istFreigeschaltet, moebelAus } from '../_shared/moebel.ts';
 import { json, vorpruefung } from '../_shared/http.ts';
 
@@ -78,23 +80,19 @@ Deno.serve(async (req) => {
 
   const start = Date.now();
   try {
-    const zugang = pruefeDemoCode(req.headers.get('x-demo-code'), Deno.env.get('DEMO_CODE'));
-    if (zugang === 'nicht_eingerichtet') {
-      throw fehler('demo_code', 'Secret DEMO_CODE fehlt', 'Die Bild-KI ist noch nicht freigeschaltet (Demo-Code fehlt in Supabase).');
-    }
-    if (zugang === 'falsch') throw fehler('demo_code', 'falscher Code', 'Der Demo-Code stimmt nicht. Bitte prüfen Sie ihn.');
-    if (zugang === 'fehlt') throw fehler('demo_code', 'kein Code');
-
     const eingabe: Roh = await req.json().catch(() => {
       throw fehler('eingabe', 'kein JSON');
     });
     const anbieter = anbieterWaehlen();
 
     if (eingabe?.aktion === 'modelle') {
+      if (pruefeDemoCode(req.headers.get('x-demo-code'), Deno.env.get('DEMO_CODE')) !== 'ok') throw fehler('demo_code', 'Diagnose ohne Code');
       return json({ modell: anbieter.modell, verfuegbar: await anbieter.bildModelle() }, 200, origin);
     }
 
     const moebel = pruefeEingabe(eingabe);
+    const gesperrt = await nutzungPruefen('bild', req);
+    if (gesperrt) throw fehler('limit', 'Tageslimit erreicht', gesperrt);
     const seitenverhaeltnis = naechstesSeitenverhaeltnis(eingabe.fotoBreite, eingabe.fotoHoehe);
     const prompt = PROMPTS[moebel](eingabe.tisch, eingabe.referenz.laengeCm);
 
